@@ -1,6 +1,15 @@
 #include "./MessageParse.hpp"
 #include "../color.hpp"
 
+/*
+ * 拡張BNF記法
+ * message	= [ ":" prefix SPACE ] command [ params ] crlf
+ *
+ * command	= 1*letter / 3digit
+ * letter	= %x41-5A / %x61-7A	; A-Z / a-z
+ * digit	= %x30-39			; 0-9
+ */
+
 MessageParse::MessageParse(const std::string &message) :
 	message_(message) {
 }
