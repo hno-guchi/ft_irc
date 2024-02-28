@@ -8,15 +8,19 @@
 #include <vector>
 
 enum kTokenType {
-	kUnknown = 0,
-	kCommand,
+	kCommand = 0,
 	kParam
 };
 
 enum kCommandType {
-	kNotType = 0,
-	kString,
+	kString = 0,
 	kDigit
+};
+
+enum kParamType {
+	kNone = 0,
+	kmiddle,
+	ktrailing
 };
 
 class Token {
@@ -37,11 +41,30 @@ class Token {
 		void	printToken() const;
 };
 
+class Param {
+	private:
+		kParamType	type_;
+		std::string	value_;
+	public:
+		Param();
+		~Param();
+
+		// SETTER
+		void	setType(const kParamType type);
+		void	setValue(const std::string &value);
+		// GETTER
+		kParamType			getType() const;
+		const std::string&	getValue() const;
+		// debug
+		void	printParam() const;
+};
+
 class Command {
 	private:
-		kCommandType				type_;
-		std::string					command_;
-		std::vector<std::string>	params_;
+		kCommandType		type_;
+		std::string			command_;
+		// TODO(hnoguchi): Arrayを実装しても良い
+		std::vector<Param>	params_;
 	public:
 		Command();
 		~Command();
@@ -49,10 +72,9 @@ class Command {
 		// SETTER
 		void	setCommand(const std::string &command);
 		void	setParam(const std::string &param);
-
 		// GETTER
-		const std::string&				getCommand() const;
-		const std::vector<std::string>&	getParams() const;
+		const std::string&			getCommand() const;
+		const std::vector<Param>&	getParams() const;
 		// debug
 		void	printCommand() const;
 };
