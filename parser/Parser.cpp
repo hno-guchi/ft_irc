@@ -272,6 +272,9 @@ int	main() {
 			i < sizeof(testMessageList) / sizeof(testMessageList[0]); i++) {
 		std::cout << GREEN << "Message: [" << testMessageList[i] << "]" << END << std::endl;
 
+		// TODO(hnoguchi):crlfをデリミタに、メッセージの分割処理を実装する（複数のメッセージが一度に来る場合がある。）
+		// TODO(hnoguchi):終端にcrlfがあるかチェックする。
+		// TODO(hnoguchi):メッセージの長さが512文字(crlfを含む)を超えていないかチェックする。
 		Parser	parser(testMessageList[i]);
 
 		parser.tokenize();
