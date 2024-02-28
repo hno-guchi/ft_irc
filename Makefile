@@ -5,8 +5,8 @@ RM = rm -r -f
 
 .PHONY: parser
 parser:
-	$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) -o ./parser/parser ./parser/MessageParse.cpp
+	$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) -o ./parser/parser ./parser/Parser.cpp
 	./parser/parser
-	$(CXX) $(CXXFLAGS) -DLEAKS -o ./parser/parser ./parser/MessageParse.cpp
+	$(CXX) $(CXXFLAGS) -DLEAKS -o ./parser/parser ./parser/Parser.cpp
 	./parser/parser
 	$(RM) ./parser/parser ./parser/*.d ./parser/*.dSYM
