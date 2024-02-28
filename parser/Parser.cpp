@@ -6,8 +6,18 @@
  * message	= [ ":" prefix SPACE ] command [ params ] crlf
  *
  * command	= 1*letter / 3digit
- * 			letter	= %x41-5A / %x61-7A	; A-Z / a-z
- * 			digit	= %x30-39			; 0-9
+ *
+ * letter	= %x41-5A / %x61-7A	; A-Z / a-z
+ * digit	= %x30-39			; 0-9
+ *
+ * params	= *14( SPACE middle ) [ SPACE ":" trailing ]
+ * 			=/ 14( SPACE middle ) [ SPACE [ ":" ] trailing ]
+ *
+ * middle     =  nospcrlfcl *( ":" / nospcrlfcl )
+ * trailing   =  *( ":" / " " / nospcrlfcl )
+ *
+ * nospcrlfcl = %x01-09 / %x0B-0C / %x0E-1F / %x21-39 / %x3B-FF
+ * 				; any octet except NUL, CR, LF, " " and ":"
  *
  */
 
@@ -15,7 +25,6 @@ static void	printErrorMessage(const std::string &message) {
 	std::cerr << RED << message << END << std::endl;
 	return;
 }
-
 
 // Token class
 Token::Token() {}
@@ -42,6 +51,37 @@ const std::string&	Token::getValue() const {
 
 // debug
 void	Token::printToken() const {
+	std::cout << "Type   : " << this->type_ << " | " << std::flush;
+	std::cout << "Value  : [" << this->value_ << "]" << std::endl;
+	return;
+}
+
+// Param class
+Param::Param() {}
+Param::~Param() {}
+
+void	Param::setType(const kParamType type) {
+	this->type_ = type;
+	return;
+}
+
+// SETTER
+void	Param::setValue(const std::string &value) {
+	this->value_ = value;
+	return;
+}
+
+// GETTER
+kParamType	Param::getType() const {
+	return (this->type_);
+}
+
+const std::string&	Param::getValue() const {
+	return (this->value_);
+}
+
+// debug
+void	Param::printParam() const {
 	std::cout << "Type   : " << this->type_ << " | " << std::flush;
 	std::cout << "Value  : [" << this->value_ << "]" << std::endl;
 	return;
@@ -79,17 +119,32 @@ void	Command::setCommand(const std::string &command) {
 		this->type_ = kDigit;
 		this->command_ = command;
 	} else {
-		printErrorMessage("Command is not alphabet and digit.");
+		printErrorMessage("Command is not alphabet or digit.");
 	}
 	return;
 }
 
+/*
+ * middle     =  nospcrlfcl *( ":" / nospcrlfcl )
+ * trailing   =  *( ":" / " " / nospcrlfcl )
+ * １文字目が、コロンかスペースならばtrailing
+ * １文字目がnospcrlfclで、残りの全ての文字列がコロンかnospcrlfclならばmiddle。
+ * １文字目がnospcrlfclで、残りの文字列にスペースがあれば、trailing。
+ */
 void	Command::setParam(const std::string &param) {
 	if (param.empty()) {
 		printErrorMessage("Empty param.");
 		return;
 	}
-	this->params_.push_back(param);
+	Param	p;
+	// TODO(hnoguchi): paramのパースは途中
+	if (param[0] == ':' || param[0] == ' ') {
+		p.setType(ktrailing);
+	} else {
+		p.setType(kmiddle);
+	}
+	p.setValue(param);
+	this->params_.push_back(p);
 	return;
 }
 
@@ -97,7 +152,7 @@ const std::string&	Command::getCommand() const {
 	return (this->command_);
 }
 
-const std::vector<std::string>&	Command::getParams() const {
+const std::vector<Param>&	Command::getParams() const {
 	return (this->params_);
 }
 
@@ -110,13 +165,10 @@ void	Command::printCommand() const {
 	if (this->params_.empty()) {
 		return;
 	}
-	std::cout << "             " << std::flush;
-	std::cout << "Param  : " << std::flush;
-	for (std::vector<std::string>::const_iterator it = this->params_.begin(); \
+	for (std::vector<Param>::const_iterator it = this->params_.begin(); \
 			it != this->params_.end(); it++) {
-		std::cout << "[" << *it << "], " << std::flush;
+		it->printParam();
 	}
-	std::cout << std::endl;
 	return;
 }
 
@@ -167,7 +219,6 @@ void	Parser::parse() {
 		}
 	}
 	this->commands_.push_back(command);
-	command.printCommand();
 }
 
 // GETTER
@@ -204,30 +255,30 @@ void	Parser::printCommands() const {
 int	main() {
 	std::string	testMessageList[] = {
 		"COMMAND param1 param2 param3",
-		"   COMMAND    param1     param2   param3    ",
+		"   COMMAND   param1    param2     param3    ",
 		"",
 		"     ",
-		"111 param1 param2 param3",
+		"COMMAND",
+		"COMMAND ",
+		"command",
+		"coMMAnd",
+		"111",
+		"11a ",
+		"11",
+		"COMMAND param1 :param2",
 	};
 
 	for (size_t i = 0; \
 			i < sizeof(testMessageList) / sizeof(testMessageList[0]); i++) {
-		std::cout << "Message: [" << testMessageList[i] << "]" << std::endl;
+		std::cout << GREEN << "Message: [" << testMessageList[i] << "]" << END << std::endl;
 
 		Parser	parser(testMessageList[i]);
+
 		parser.tokenize();
 		parser.printTokens();
+
 		parser.parse();
 		parser.printCommands();
-
-		// if (parser.getTokens().empty()) {
-		// 	continue;
-		// }
-		// Command	command;
-		// command.setCommand(parser.getTokens().front());
-		// command.printCommand();
-		// // command.setParams(parser.getTokens().front());
-		// std::cout << std::endl;
 	}
 #ifdef LEAKS
 	system("leaks -q parser");
