@@ -42,8 +42,8 @@ const std::string&	Token::getValue() const {
 
 // debug
 void	Token::printToken() const {
-	std::cout << "Type  : " << this->type_ << " | " << std::flush;
-	std::cout << "Value : " << this->value_ << std::endl;
+	std::cout << "Type   : " << this->type_ << " | " << std::flush;
+	std::cout << "Value  : [" << this->value_ << "]" << std::endl;
 	return;
 }
 
@@ -78,12 +78,17 @@ void	Command::setCommand(const std::string &command) {
 		// TODO(hnoguchi): Check exist digit
 		this->type_ = kDigit;
 		this->command_ = command;
+	} else {
+		printErrorMessage("Command is not alphabet and digit.");
 	}
-	printErrorMessage("Command is not alphabet and digit.");
 	return;
 }
 
-void	Command::setParams(const std::string &param) {
+void	Command::setParam(const std::string &param) {
+	if (param.empty()) {
+		printErrorMessage("Empty param.");
+		return;
+	}
 	this->params_.push_back(param);
 	return;
 }
@@ -100,10 +105,12 @@ void	Command::printCommand() const {
 	if (this->command_.empty()) {
 		return;
 	}
+	std::cout << "Type   : " << this->type_ << " | " << std::flush;
 	std::cout << "Command: [" << this->command_ << "]" << std::endl;
 	if (this->params_.empty()) {
 		return;
 	}
+	std::cout << "             " << std::flush;
 	std::cout << "Param  : " << std::flush;
 	for (std::vector<std::string>::const_iterator it = this->params_.begin(); \
 			it != this->params_.end(); it++) {
@@ -145,6 +152,24 @@ void	Parser::tokenize() {
 	return;
 }
 
+void	Parser::parse() {
+	if (this->tokens_.empty()) {
+		printErrorMessage("Empty this->tokens_;");
+		return;
+	}
+	Command	command;
+	for (std::vector<Token>::const_iterator it = this->tokens_.begin(); \
+			it != this->tokens_.end(); it++) {
+		if (it->getType() == kParam) {
+			command.setParam(it->getValue());
+		} else if (it->getType() == kCommand) {
+			command.setCommand(it->getValue());
+		}
+	}
+	this->commands_.push_back(command);
+	command.printCommand();
+}
+
 // GETTER
 const std::vector<Token>&	Parser::getTokens() const {
 	return (this->tokens_);
@@ -163,12 +188,26 @@ void	Parser::printTokens() const {
 	return;
 }
 
+void	Parser::printCommands() const {
+	if (this->commands_.empty()) {
+		return;
+	}
+	std::cout << "[Parsed]    ____________________" << std::endl;
+	for (std::vector<Command>::const_iterator it = this->commands_.begin(); \
+			it != this->commands_.end(); it++) {
+		it->printCommand();
+	}
+	std::cout << std::endl;
+	return;
+}
+
 int	main() {
 	std::string	testMessageList[] = {
 		"COMMAND param1 param2 param3",
 		"   COMMAND    param1     param2   param3    ",
 		"",
-		"     "
+		"     ",
+		"111 param1 param2 param3",
 	};
 
 	for (size_t i = 0; \
@@ -178,11 +217,12 @@ int	main() {
 		Parser	parser(testMessageList[i]);
 		parser.tokenize();
 		parser.printTokens();
+		parser.parse();
+		parser.printCommands();
 
 		// if (parser.getTokens().empty()) {
 		// 	continue;
 		// }
-		// std::cout << "Parsed   ______________________________" << std::endl;
 		// Command	command;
 		// command.setCommand(parser.getTokens().front());
 		// command.printCommand();

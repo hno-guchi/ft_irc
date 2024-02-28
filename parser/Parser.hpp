@@ -48,7 +48,7 @@ class Command {
 
 		// SETTER
 		void	setCommand(const std::string &command);
-		void	setParams(const std::string &param);
+		void	setParam(const std::string &param);
 
 		// GETTER
 		const std::string&				getCommand() const;
@@ -74,6 +74,7 @@ class Parser {
 		const std::vector<Token>&	getTokens() const;
 		// debug
 		void	printTokens() const;
+		void	printCommands() const;
 };
 
 #endif  // PARSER_HPP
