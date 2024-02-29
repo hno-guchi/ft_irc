@@ -1,5 +1,6 @@
 #include "./Parser.hpp"
 #include "../color.hpp"
+#include "../error/error.hpp"
 
 /*
  * 拡張BNF記法
@@ -20,11 +21,6 @@
  * 				; any octet except NUL, CR, LF, " " and ":"
  *
  */
-
-static void	printErrorMessage(const std::string &message) {
-	std::cerr << RED << message << END << std::endl;
-	return;
-}
 
 // Token class
 Token::Token() {}
@@ -139,9 +135,9 @@ void	Command::setParam(const std::string &param) {
 	Param	p;
 	// TODO(hnoguchi): paramのパースは途中
 	if (param[0] == ':' || param[0] == ' ') {
-		p.setType(ktrailing);
+		p.setType(kTrailing);
 	} else {
-		p.setType(kmiddle);
+		p.setType(kMiddle);
 	}
 	p.setValue(param);
 	this->params_.push_back(p);

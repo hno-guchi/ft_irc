@@ -19,84 +19,84 @@ enum kCommandType {
 
 enum kParamType {
 	kNone = 0,
-	kmiddle,
-	ktrailing
+	kMiddle,
+	kTrailing
 };
 
 class Token {
-	private:
-		kTokenType	type_;
-		std::string	value_;
-	public:
-		Token();
-		~Token();
+ private:
+	 kTokenType	type_;
+	 std::string	value_;
+ public:
+	 Token();
+	 ~Token();
 
-		// SETTER
-		void	setType(const kTokenType type);
-		void	setValue(const std::string &value);
-		// GETTER
-		kTokenType			getType() const;
-		const std::string&	getValue() const;
-		// debug
-		void	printToken() const;
+	// SETTER
+	void	setType(const kTokenType type);
+	void	setValue(const std::string &value);
+	// GETTER
+	kTokenType			getType() const;
+	const std::string&	getValue() const;
+	// debug
+	void	printToken() const;
 };
 
 class Param {
-	private:
-		kParamType	type_;
-		std::string	value_;
-	public:
-		Param();
-		~Param();
+ private:
+	kParamType	type_;
+	std::string	value_;
+ public:
+	Param();
+	~Param();
 
-		// SETTER
-		void	setType(const kParamType type);
-		void	setValue(const std::string &value);
-		// GETTER
-		kParamType			getType() const;
-		const std::string&	getValue() const;
-		// debug
-		void	printParam() const;
+	// SETTER
+	void	setType(const kParamType type);
+	void	setValue(const std::string &value);
+	// GETTER
+	kParamType			getType() const;
+	const std::string&	getValue() const;
+	// debug
+	void	printParam() const;
 };
 
 class Command {
-	private:
-		kCommandType		type_;
-		std::string			command_;
-		// TODO(hnoguchi): Arrayを実装しても良い
-		std::vector<Param>	params_;
-	public:
-		Command();
-		~Command();
+ private:
+	kCommandType		type_;
+	std::string			command_;
+	// TODO(hnoguchi): Arrayを実装しても良い
+	std::vector<Param>	params_;
+ public:
+	Command();
+	~Command();
 
-		// SETTER
-		void	setCommand(const std::string &command);
-		void	setParam(const std::string &param);
-		// GETTER
-		const std::string&			getCommand() const;
-		const std::vector<Param>&	getParams() const;
-		// debug
-		void	printCommand() const;
+	// SETTER
+	void	setCommand(const std::string &command);
+	void	setParam(const std::string &param);
+	// GETTER
+	const std::string&			getCommand() const;
+	const std::vector<Param>&	getParams() const;
+	// debug
+	void	printCommand() const;
 };
 
 class Parser {
-	private:
-		std::string				message_;
-		// std::vector<std::string>	messages_;
-		std::vector<Token>		tokens_;
-		std::vector<Command>	commands_;
-	public:
-		explicit Parser(const std::string &message);
-		~Parser();
+ private:
+	std::string				message_;
+	// std::vector<std::string>	messages_;
+	std::vector<Token>		tokens_;
+	std::vector<Command>	commands_;
+ public:
+	explicit Parser(const std::string &message);
+	~Parser();
 
-		// SETTER
-		void	tokenize();
-		void	parse();
-		// GETTER
-		const std::vector<Token>&	getTokens() const;
-		// debug
-		void	printTokens() const;
-		void	printCommands() const;
+	// SETTER
+	void	tokenize();
+	void	parse();
+	// GETTER
+	const std::vector<Token>&	getTokens() const;
+	// debug
+	void	printTokens() const;
+	void	printCommands() const;
 };
 
 #endif  // PARSER_HPP
