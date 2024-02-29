@@ -95,6 +95,7 @@ void	Server::handleServerSocket() {
 	for (int i = 1; i <= maxClients_; ++i) {
 		if (fds_[i].fd == -1) {
 			fds_[i].fd = newSocket;
+			// Reply welcome message.
 			std::cout << "New client connected. Socket: " \
 				<< newSocket << std::endl;
 			break;
@@ -135,7 +136,10 @@ void	Server::handleReceivedData(int clientIndex) {
 	// execute
 	// create replies message
 	// send
-	sendMsgSize = sendNonBlocking(clientIndex, buffer, recvMsgSize);
+	// sendMsgSize = sendNonBlocking(clientIndex, buffer, recvMsgSize);
+	std::string sample = "001 ようこそ。\r\n002 Your host...\r\n003 This server...\r\n004 ...";
+	recvMsgSize = sample.size();
+	sendMsgSize = sendNonBlocking(clientIndex, sample.c_str(), recvMsgSize);
 	if (sendMsgSize <= 0) {
 		handleClientDisconnect(clientIndex);
 		return;
