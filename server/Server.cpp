@@ -95,6 +95,10 @@ void	Server::initializeErrReplyMessageList() {
 	r.setMessage("<command> :Unknown command");
 	this->errReplyMessageList_.insert(std::make_pair(kERR_UNKNOWNCOMMAND, r));
 
+	r.setNumeric("461");
+	r.setMessage("<command> :Not enough parameters");
+	this->errReplyMessageList_.insert(std::make_pair(kERR_NEEDMOREPARAMS, r));
+
 	return;
 }
 
@@ -135,28 +139,9 @@ void	Server::handleServerSocket() {
 	for (int i = 1; i <= maxClients_; ++i) {
 		if (fds_[i].fd == -1) {
 			fds_[i].fd = newSocket;
-			// Reply welcome message.
-			// TODO(hnoguchi): Error handling.
+			// TODO(hnoguchi): Welcome messageはここで送信するか？？.
 			std::cout << "New client connected. Socket: " \
 				<< newSocket << std::endl;
-			// std::string	message(this->replyMessageList_.at(kRPL_WELCOME).getMessage());
-			// message += "\r\n";
-			// message += this->replyMessageList_.at(kRPL_YOURHOST).getMessage();
-			// message += "\r\n";
-			// message += this->replyMessageList_.at(kRPL_CREATED).getMessage();
-			// message += "\r\n";
-			// message += this->replyMessageList_.at(kRPL_MYINFO).getMessage();
-			// message += "\r\n";
-			// ssize_t	recvMsgSize(message.size());
-			// ssize_t	sendMsgSize(0);
-			// sendMsgSize = sendNonBlocking(i, message.c_str(), recvMsgSize);
-			// if (sendMsgSize <= 0) {
-			// 	handleClientDisconnect(i);
-			// 	return;
-			// }
-			// if (recvMsgSize != sendMsgSize) {
-			// 	fatalError("send");
-			// }
 			break;
 		}
 	}
@@ -206,9 +191,11 @@ void	Server::handleReceivedData(int clientIndex) {
 		replyMsg += " ";
 		replyMsg += this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getMessage();
 		replyMsg += "\r\n";
-		replyMsg += this->replyMessageList_.at(kRPL_TOPIC).getNumeric();
+		replyMsg += this->errReplyMessageList_.at(kERR_NEEDMOREPARAMS).getNumeric();
+		// replyMsg += this->replyMessageList_.at(kRPL_TOPIC).getNumeric();
 		replyMsg += " ";
-		replyMsg += this->replyMessageList_.at(kRPL_TOPIC).getMessage();
+		replyMsg += this->errReplyMessageList_.at(kERR_NEEDMOREPARAMS).getMessage();
+		// replyMsg += this->replyMessageList_.at(kRPL_TOPIC).getMessage();
 		replyMsg += "\r\n";
 		replyMsg += this->replyMessageList_.at(kRPL_WELCOME).getNumeric();
 		replyMsg += " ";

@@ -13,7 +13,8 @@ enum kReplyNum {
 };
 
 enum kErrNum {
-	kERR_UNKNOWNCOMMAND = 421
+	kERR_UNKNOWNCOMMAND = 421,
+	kERR_NEEDMOREPARAMS = 461
 };
 
 class Reply {
