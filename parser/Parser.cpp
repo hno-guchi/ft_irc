@@ -222,6 +222,10 @@ const std::vector<Token>&	Parser::getTokens() const {
 	return (this->tokens_);
 }
 
+const std::vector<Command>&	Parser::getCommands() const {
+	return (this->commands_);
+}
+
 void	Parser::printTokens() const {
 	if (this->tokens_.empty()) {
 		return;

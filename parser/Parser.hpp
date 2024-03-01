@@ -94,6 +94,7 @@ class Parser {
 	void	parse();
 	// GETTER
 	const std::vector<Token>&	getTokens() const;
+	const std::vector<Command>&	getCommands() const;
 	// debug
 	void	printTokens() const;
 	void	printCommands() const;

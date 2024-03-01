@@ -24,7 +24,9 @@ Server::Server(unsigned short port) : \
 	socketFd_(0), socketAddressLen_(sizeof(socketAddress_)), maxClients_(5) {
 		initializeServerSocket(port);
 		initializeClientSockets();
+		// TODO(hnoguchi): Message class??
 		initializeReplyMessageList();
+		initializeErrReplyMessageList();
 }
 
 void	Server::initializeServerSocket(unsigned short port) {
@@ -79,6 +81,21 @@ void	Server::initializeReplyMessageList() {
 	r.setNumeric("004");
 	r.setMessage("<servername> <version> <available user modes> <available channel modes>");
 	this->replyMessageList_.insert(std::make_pair(kRPL_MYINFO, r));
+
+	r.setNumeric("332");
+	r.setMessage("<channel> :<topic>");
+	this->replyMessageList_.insert(std::make_pair(kRPL_TOPIC, r));
+
+	return;
+}
+
+void	Server::initializeErrReplyMessageList() {
+	Reply	r;
+	r.setNumeric("421");
+	r.setMessage("<command> :Unknown command");
+	this->errReplyMessageList_.insert(std::make_pair(kERR_UNKNOWNCOMMAND, r));
+
+	return;
 }
 
 Server::~Server() {
@@ -122,24 +139,24 @@ void	Server::handleServerSocket() {
 			// TODO(hnoguchi): Error handling.
 			std::cout << "New client connected. Socket: " \
 				<< newSocket << std::endl;
-			std::string	message(this->replyMessageList_.at(kRPL_WELCOME).getMessage());
-			message += "\r\n";
-			message += this->replyMessageList_.at(kRPL_YOURHOST).getMessage();
-			message += "\r\n";
-			message += this->replyMessageList_.at(kRPL_CREATED).getMessage();
-			message += "\r\n";
-			message += this->replyMessageList_.at(kRPL_MYINFO).getMessage();
-			message += "\r\n";
-			ssize_t	recvMsgSize(message.size());
-			ssize_t	sendMsgSize(0);
-			sendMsgSize = sendNonBlocking(i, message.c_str(), recvMsgSize);
-			if (sendMsgSize <= 0) {
-				handleClientDisconnect(i);
-				return;
-			}
-			if (recvMsgSize != sendMsgSize) {
-				fatalError("send");
-			}
+			// std::string	message(this->replyMessageList_.at(kRPL_WELCOME).getMessage());
+			// message += "\r\n";
+			// message += this->replyMessageList_.at(kRPL_YOURHOST).getMessage();
+			// message += "\r\n";
+			// message += this->replyMessageList_.at(kRPL_CREATED).getMessage();
+			// message += "\r\n";
+			// message += this->replyMessageList_.at(kRPL_MYINFO).getMessage();
+			// message += "\r\n";
+			// ssize_t	recvMsgSize(message.size());
+			// ssize_t	sendMsgSize(0);
+			// sendMsgSize = sendNonBlocking(i, message.c_str(), recvMsgSize);
+			// if (sendMsgSize <= 0) {
+			// 	handleClientDisconnect(i);
+			// 	return;
+			// }
+			// if (recvMsgSize != sendMsgSize) {
+			// 	fatalError("send");
+			// }
 			break;
 		}
 	}
@@ -182,8 +199,43 @@ void	Server::handleReceivedData(int clientIndex) {
 	parser.printCommands();
 	// execute
 	// create replies message
+	std::string	replyMsg;
+	std::vector<Command> commands = parser.getCommands();
+	if (parser.getCommands()[0].getCommand() == "CAP") {
+		replyMsg = this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getNumeric();
+		replyMsg += " ";
+		replyMsg += this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getMessage();
+		replyMsg += "\r\n";
+		replyMsg += this->replyMessageList_.at(kRPL_TOPIC).getNumeric();
+		replyMsg += " ";
+		replyMsg += this->replyMessageList_.at(kRPL_TOPIC).getMessage();
+		replyMsg += "\r\n";
+		replyMsg += this->replyMessageList_.at(kRPL_WELCOME).getNumeric();
+		replyMsg += " ";
+		replyMsg += this->replyMessageList_.at(kRPL_WELCOME).getMessage();
+		replyMsg += "\r\n";
+		replyMsg += this->replyMessageList_.at(kRPL_YOURHOST).getNumeric();
+		replyMsg += " ";
+		replyMsg += this->replyMessageList_.at(kRPL_YOURHOST).getMessage();
+		replyMsg += "\r\n";
+		replyMsg += this->replyMessageList_.at(kRPL_CREATED).getNumeric();
+		replyMsg += " ";
+		replyMsg += this->replyMessageList_.at(kRPL_CREATED).getMessage();
+		replyMsg += "\r\n";
+		replyMsg += this->replyMessageList_.at(kRPL_MYINFO).getNumeric();
+		replyMsg += " ";
+		replyMsg += this->replyMessageList_.at(kRPL_MYINFO).getMessage();
+		replyMsg += "\r\n";
+		recvMsgSize = replyMsg.size();
+	} else {
+		replyMsg = this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getNumeric();
+		replyMsg += " ";
+		replyMsg += this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getMessage();
+		replyMsg += "\r\n";
+	}
 	// send
-	sendMsgSize = sendNonBlocking(clientIndex, buffer, recvMsgSize);
+	sendMsgSize = sendNonBlocking(clientIndex, replyMsg.c_str(), recvMsgSize);
+	// sendMsgSize = sendNonBlocking(clientIndex, buffer, recvMsgSize);
 	if (sendMsgSize <= 0) {
 		handleClientDisconnect(clientIndex);
 		return;
@@ -251,7 +303,12 @@ void	Server::handleClientDisconnect(int clientIndex) {
 	fds_[clientIndex].fd = -1;
 }
 
-int	main() {
+int	main(int argc, char* argv[]) {
+	if (argc != 3) {
+		std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
+	}
+
+	(void)argv;
 	Server	Server(8080);
 
 	Server.run();
