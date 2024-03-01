@@ -21,11 +21,16 @@ class Server {
 		const int					maxClients_;
 		struct sockaddr_in			socketAddress_;
 		struct pollfd				fds_[7];
+		// TODO(hnoguchi): Message class??
 		std::map<kReplyNum, Reply>	replyMessageList_;
+		std::map<kErrNum, Reply>	errReplyMessageList_;
 
 		void	initializeServerSocket(unsigned short port);
 		void	initializeClientSockets();
+		// TODO(hnoguchi): Message class??
 		void	initializeReplyMessageList();
+		void	initializeErrReplyMessageList();
+
 		void	handleServerSocket();
 		void	handleStandardInput();
 		void	handleClientSocket(int clientIndex);

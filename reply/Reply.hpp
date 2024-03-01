@@ -8,7 +8,12 @@ enum kReplyNum {
 	kRPL_WELCOME = 1,
 	kRPL_YOURHOST = 2,
 	kRPL_CREATED = 3,
-	kRPL_MYINFO = 4
+	kRPL_MYINFO = 4,
+	kRPL_TOPIC = 332
+};
+
+enum kErrNum {
+	kERR_UNKNOWNCOMMAND = 421
 };
 
 class Reply {
