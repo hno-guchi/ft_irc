@@ -1,20 +1,58 @@
+###########
+# General #
+###########
+
+NAME = ircserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
 DEBUGFLAGS = -g -fsanitize=undefined -fsanitize=integer -fsanitize=address -DDEBUG
 RM = rm -r -f
+SRCS = Server.cpp \
+	   Parser.cpp \
+	   Reply.cpp \
+	   error.cpp
+OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
+OBJS_DIR = ./objs
+DEPENDS = $(addprefix $(OBJS_DIR)/, $(OBJS:%.o=%.d))
+
+#################
+# General Rules #
+#################
+
+.PHONY: all
+all: $(NAME)
+
+$(NAME): $(OBJS_DIR) $(OBJS)
+	$(CXX) -o $@ $(OBJS)
+
+$(OBJS_DIR):
+	mkdir -p $(OBJS_DIR)
+
+$(OBJS_DIR)/%.o: ./server/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./parser/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./reply/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./error/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.PHONY: clean
+clean:
+	$(RM) *.dSYM
+	$(RM) $(OBJS_DIR)
+
+.PHONY: fclean
+fclean: clean
+	$(RM) $(NAME)
+
+.PHONY: re
+re: fclean all
 
 .PHONY: parser
 parser:
-	$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) -o ./parser/parser ./parser/Parser.cpp ./error/error.cpp
-	./parser/parser
-	$(CXX) $(CXXFLAGS) -DLEAKS -o ./parser/parser ./parser/Parser.cpp ./error/error.cpp
-	./parser/parser
-	$(RM) ./parser/parser ./parser/*.d ./parser/*.dSYM
+	make -C ./parser
 
 .PHONY: reply
 reply:
-	$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) -o ./reply/reply ./reply/Reply.cpp ./error/error.cpp
-	./reply/reply
-	$(CXX) $(CXXFLAGS) -DLEAKS -o ./reply/reply ./reply/Reply.cpp ./error/error.cpp
-	./reply/reply
-	$(RM) ./reply/reply ./reply/*.d ./reply/*.dSYM
+	make -C ./reply
