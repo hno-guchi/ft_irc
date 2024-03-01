@@ -1,4 +1,7 @@
 #include "./Server.hpp"
+#include "../color.hpp"
+#include "../parser/Parser.hpp"
+#include "../reply/Reply.hpp"
 
 static void fatalError(const std::string& message) {
 	std::perror(message.c_str());
@@ -21,6 +24,7 @@ Server::Server(unsigned short port) : \
 	socketFd_(0), socketAddressLen_(sizeof(socketAddress_)), maxClients_(5) {
 		initializeServerSocket(port);
 		initializeClientSockets();
+		initializeReplyMessageList();
 }
 
 void	Server::initializeServerSocket(unsigned short port) {
@@ -56,6 +60,25 @@ void	Server::initializeClientSockets() {
 		fds_[i].events = POLLIN;
 		fds_[i].revents = 0;
 	}
+}
+
+void	Server::initializeReplyMessageList() {
+	Reply	r;
+	r.setNumeric("001");
+	r.setMessage("Welcome to the Internet Relay Network <nick>!<user>@<host>");
+	this->replyMessageList_.insert(std::make_pair(kRPL_WELCOME, r));
+
+	r.setNumeric("002");
+	r.setMessage("Your host is <servername>, running version <ver>");
+	this->replyMessageList_.insert(std::make_pair(kRPL_YOURHOST, r));
+
+	r.setNumeric("003");
+	r.setMessage("This server was created <date>");
+	this->replyMessageList_.insert(std::make_pair(kRPL_CREATED, r));
+
+	r.setNumeric("004");
+	r.setMessage("<servername> <version> <available user modes> <available channel modes>");
+	this->replyMessageList_.insert(std::make_pair(kRPL_MYINFO, r));
 }
 
 Server::~Server() {
@@ -96,8 +119,27 @@ void	Server::handleServerSocket() {
 		if (fds_[i].fd == -1) {
 			fds_[i].fd = newSocket;
 			// Reply welcome message.
+			// TODO(hnoguchi): Error handling.
 			std::cout << "New client connected. Socket: " \
 				<< newSocket << std::endl;
+			std::string	message(this->replyMessageList_.at(kRPL_WELCOME).getMessage());
+			message += "\r\n";
+			message += this->replyMessageList_.at(kRPL_YOURHOST).getMessage();
+			message += "\r\n";
+			message += this->replyMessageList_.at(kRPL_CREATED).getMessage();
+			message += "\r\n";
+			message += this->replyMessageList_.at(kRPL_MYINFO).getMessage();
+			message += "\r\n";
+			ssize_t	recvMsgSize(message.size());
+			ssize_t	sendMsgSize(0);
+			sendMsgSize = sendNonBlocking(i, message.c_str(), recvMsgSize);
+			if (sendMsgSize <= 0) {
+				handleClientDisconnect(i);
+				return;
+			}
+			if (recvMsgSize != sendMsgSize) {
+				fatalError("send");
+			}
 			break;
 		}
 	}
@@ -131,15 +173,17 @@ void	Server::handleReceivedData(int clientIndex) {
 		return;
 	}
 	// std::cout << "Client socket " << fds_[clientIndex].fd << " message: " << buffer << std::endl;
-	std::cout << buffer << std::endl;
+	std::cout << GREEN << buffer << END << std::endl;
 	// parse
+	Parser	parser(buffer);
+	parser.tokenize();
+	// parser.printTokens();
+	parser.parse();
+	parser.printCommands();
 	// execute
 	// create replies message
 	// send
-	// sendMsgSize = sendNonBlocking(clientIndex, buffer, recvMsgSize);
-	std::string sample = "001 ようこそ。\r\n002 Your host...\r\n003 This server...\r\n004 ...";
-	recvMsgSize = sample.size();
-	sendMsgSize = sendNonBlocking(clientIndex, sample.c_str(), recvMsgSize);
+	sendMsgSize = sendNonBlocking(clientIndex, buffer, recvMsgSize);
 	if (sendMsgSize <= 0) {
 		handleClientDisconnect(clientIndex);
 		return;

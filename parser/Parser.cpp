@@ -248,6 +248,7 @@ void	Parser::printCommands() const {
 	return;
 }
 
+#ifdef DEBUG
 int	main() {
 	std::string	testMessageList[] = {
 		"COMMAND param1 param2 param3",
@@ -284,3 +285,4 @@ int	main() {
 #endif  // LEAKS
 	return(0);
 }
+#endif  // DEBUG

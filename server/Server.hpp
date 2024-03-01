@@ -10,6 +10,10 @@
 #include <string>
 #include <cstring>
 
+// reply
+#include <map>
+#include "../reply/Reply.hpp"
+
 class Server {
 	private:
 		int							socketFd_;
@@ -17,9 +21,11 @@ class Server {
 		const int					maxClients_;
 		struct sockaddr_in			socketAddress_;
 		struct pollfd				fds_[7];
+		std::map<kReplyNum, Reply>	replyMessageList_;
 
 		void	initializeServerSocket(unsigned short port);
 		void	initializeClientSockets();
+		void	initializeReplyMessageList();
 		void	handleServerSocket();
 		void	handleStandardInput();
 		void	handleClientSocket(int clientIndex);
