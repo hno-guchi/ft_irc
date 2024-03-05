@@ -101,15 +101,26 @@ static bool	isFuncString(const std::string &str, bool (*func)(const char&)) {
 	return (std::find_if(str.begin(), str.end(), func) == str.end());
 }
 
+static std::string	toUpperString(const std::string& str) {
+	std::string	ret = str;
+	std::locale	l = std::locale::classic();
+
+
+	for (std::string::iterator it = ret.begin(); it != ret.end(); it++) {
+		*it = std::toupper(*it, l);
+	}
+	return (ret);
+}
+
 void	Command::setCommand(const std::string &command) {
 	if (command.empty()) {
 		printErrorMessage("Command is empty.");
 		return;
 	}
 	if (isFuncString(command, isNotAlpha)) {
-		// TODO(hnoguchi): Check exist command
+		// TODO(hnoguchi): Check exist command ?? (Now Execute command)
 		this->type_ = kString;
-		this->command_ = command;
+		this->command_ = toUpperString(command);
 	} else if (isFuncString(command, isNotDigit)) {
 		// TODO(hnoguchi): Check exist digit
 		this->type_ = kDigit;
@@ -156,6 +167,7 @@ void	Command::printCommand() const {
 	if (this->command_.empty()) {
 		return;
 	}
+	std::cout << "[Parsed]    ____________________" << std::endl;
 	std::cout << "Type   : " << this->type_ << " | " << std::flush;
 	std::cout << "Command: [" << this->command_ << "]" << std::endl;
 	if (this->params_.empty()) {
@@ -205,16 +217,14 @@ void	Parser::parse() {
 		printErrorMessage("Empty this->tokens_;");
 		return;
 	}
-	Command	command;
 	for (std::vector<Token>::const_iterator it = this->tokens_.begin(); \
 			it != this->tokens_.end(); it++) {
 		if (it->getType() == kParam) {
-			command.setParam(it->getValue());
+			this->command_.setParam(it->getValue());
 		} else if (it->getType() == kCommand) {
-			command.setCommand(it->getValue());
+			this->command_.setCommand(it->getValue());
 		}
 	}
-	this->commands_.push_back(command);
 }
 
 // GETTER
@@ -222,8 +232,8 @@ const std::vector<Token>&	Parser::getTokens() const {
 	return (this->tokens_);
 }
 
-const std::vector<Command>&	Parser::getCommands() const {
-	return (this->commands_);
+const Command&	Parser::getCommand() const {
+	return (this->command_);
 }
 
 void	Parser::printTokens() const {
@@ -234,19 +244,6 @@ void	Parser::printTokens() const {
 	for (std::vector<Token>::const_iterator it = tokens_.begin(); \
 			it != tokens_.end(); it++) {
 		it->printToken();
-	}
-	std::cout << std::endl;
-	return;
-}
-
-void	Parser::printCommands() const {
-	if (this->commands_.empty()) {
-		return;
-	}
-	std::cout << "[Parsed]    ____________________" << std::endl;
-	for (std::vector<Command>::const_iterator it = this->commands_.begin(); \
-			it != this->commands_.end(); it++) {
-		it->printCommand();
 	}
 	std::cout << std::endl;
 	return;
@@ -320,7 +317,7 @@ int	main() {
 			parser.printTokens();
 
 			parser.parse();
-			parser.printCommands();
+			parser.getCommand().printCommand();
 			std::cout << YELLOW << "[Execute]   ____________________" << END << std::endl;
 			std::cout << YELLOW << "[Reply]     ____________________" << END << std::endl;
 			std::cout << std::endl;

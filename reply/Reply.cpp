@@ -1,11 +1,6 @@
 #include "./Reply.hpp"
 #include "../error/error.hpp"
 
-// 001  "Welcome to the Internet Relay Network <nick>!<user>@<host>"
-// 002  "Your host is <servername>, running version <ver>"
-// 003  "This server was created <date>"
-// 004  "<servername> <version> <available user modes> <available channel modes>"
-
 // CONSTRUCTOR
 // DESTRUCTOR
 Reply::Reply() {}

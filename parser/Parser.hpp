@@ -83,7 +83,7 @@ class Parser {
  private:
 	std::string					message_;
 	std::vector<Token>			tokens_;
-	std::vector<Command>		commands_;
+	Command						command_;
 
  public:
 	explicit Parser(const std::string &message);
@@ -94,10 +94,9 @@ class Parser {
 	void	parse();
 	// GETTER
 	const std::vector<Token>&	getTokens() const;
-	const std::vector<Command>&	getCommands() const;
+	const Command&				getCommand() const;
 	// debug
 	void	printTokens() const;
-	void	printCommands() const;
 };
 
 #endif  // PARSER_HPP
