@@ -1,6 +1,7 @@
 #include "./Server.hpp"
 #include "../color.hpp"
 #include "../parser/Parser.hpp"
+#include "../execute/Execute.hpp"
 #include "../reply/Reply.hpp"
 
 static void fatalError(const std::string& message) {
@@ -181,45 +182,53 @@ void	Server::handleReceivedData(int clientIndex) {
 	parser.tokenize();
 	// parser.printTokens();
 	parser.parse();
-	parser.printCommands();
+	parser.getCommand().printCommand();
 	// execute
+	// Execute	execute(parser.getCommand());
+	// int		reply = execute.exec();
 	// create replies message
+	// Message		message(reply);
+	// std::string	replyMsg = message.createMessage();
 	std::string	replyMsg;
-	std::vector<Command> commands = parser.getCommands();
-	if (parser.getCommands()[0].getCommand() == "CAP") {
-		replyMsg = this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getNumeric();
-		replyMsg += " ";
-		replyMsg += this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getMessage();
-		replyMsg += "\r\n";
-		replyMsg += this->errReplyMessageList_.at(kERR_NEEDMOREPARAMS).getNumeric();
-		// replyMsg += this->replyMessageList_.at(kRPL_TOPIC).getNumeric();
-		replyMsg += " ";
-		replyMsg += this->errReplyMessageList_.at(kERR_NEEDMOREPARAMS).getMessage();
-		// replyMsg += this->replyMessageList_.at(kRPL_TOPIC).getMessage();
-		replyMsg += "\r\n";
-		replyMsg += this->replyMessageList_.at(kRPL_WELCOME).getNumeric();
-		replyMsg += " ";
-		replyMsg += this->replyMessageList_.at(kRPL_WELCOME).getMessage();
-		replyMsg += "\r\n";
-		replyMsg += this->replyMessageList_.at(kRPL_YOURHOST).getNumeric();
-		replyMsg += " ";
-		replyMsg += this->replyMessageList_.at(kRPL_YOURHOST).getMessage();
-		replyMsg += "\r\n";
-		replyMsg += this->replyMessageList_.at(kRPL_CREATED).getNumeric();
-		replyMsg += " ";
-		replyMsg += this->replyMessageList_.at(kRPL_CREATED).getMessage();
-		replyMsg += "\r\n";
-		replyMsg += this->replyMessageList_.at(kRPL_MYINFO).getNumeric();
-		replyMsg += " ";
-		replyMsg += this->replyMessageList_.at(kRPL_MYINFO).getMessage();
-		replyMsg += "\r\n";
-		recvMsgSize = replyMsg.size();
-	} else {
-		replyMsg = this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getNumeric();
-		replyMsg += " ";
-		replyMsg += this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getMessage();
-		replyMsg += "\r\n";
-	}
+	// Command		command = parser.getCommand();
+	// if (parser.getCommand().getCommand() == "CAP") {
+	// 	replyMsg = this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getNumeric();
+	// 	replyMsg += " ";
+	// 	replyMsg += this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getMessage();
+	// 	replyMsg += "\r\n";
+
+	// 	replyMsg += this->errReplyMessageList_.at(kERR_NEEDMOREPARAMS).getNumeric();
+	// 	replyMsg += " ";
+	// 	replyMsg += this->errReplyMessageList_.at(kERR_NEEDMOREPARAMS).getMessage();
+	// 	replyMsg += "\r\n";
+
+	// 	replyMsg += this->replyMessageList_.at(kRPL_WELCOME).getNumeric();
+	// 	replyMsg += " ";
+	// 	replyMsg += this->replyMessageList_.at(kRPL_WELCOME).getMessage();
+	// 	replyMsg += "\r\n";
+
+	// 	replyMsg += this->replyMessageList_.at(kRPL_YOURHOST).getNumeric();
+	// 	replyMsg += " ";
+	// 	replyMsg += this->replyMessageList_.at(kRPL_YOURHOST).getMessage();
+	// 	replyMsg += "\r\n";
+
+	// 	replyMsg += this->replyMessageList_.at(kRPL_CREATED).getNumeric();
+	// 	replyMsg += " ";
+	// 	replyMsg += this->replyMessageList_.at(kRPL_CREATED).getMessage();
+	// 	replyMsg += "\r\n";
+
+	// 	replyMsg += this->replyMessageList_.at(kRPL_MYINFO).getNumeric();
+	// 	replyMsg += " ";
+	// 	replyMsg += this->replyMessageList_.at(kRPL_MYINFO).getMessage();
+	// 	replyMsg += "\r\n";
+
+	// 	recvMsgSize = replyMsg.size();
+	// } else {
+	// 	replyMsg = this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getNumeric();
+	// 	replyMsg += " ";
+	// 	replyMsg += this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getMessage();
+	// 	replyMsg += "\r\n";
+	// }
 	// send
 	sendMsgSize = sendNonBlocking(clientIndex, replyMsg.c_str(), recvMsgSize);
 	if (sendMsgSize <= 0) {
