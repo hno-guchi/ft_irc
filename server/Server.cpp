@@ -222,7 +222,6 @@ void	Server::handleReceivedData(int clientIndex) {
 	}
 	// send
 	sendMsgSize = sendNonBlocking(clientIndex, replyMsg.c_str(), recvMsgSize);
-	// sendMsgSize = sendNonBlocking(clientIndex, buffer, recvMsgSize);
 	if (sendMsgSize <= 0) {
 		handleClientDisconnect(clientIndex);
 		return;

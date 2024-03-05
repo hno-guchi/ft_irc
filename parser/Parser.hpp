@@ -81,10 +81,10 @@ class Command {
 
 class Parser {
  private:
-	std::string				message_;
-	// std::vector<std::string>	messages_;
-	std::vector<Token>		tokens_;
-	std::vector<Command>	commands_;
+	std::string					message_;
+	std::vector<Token>			tokens_;
+	std::vector<Command>		commands_;
+
  public:
 	explicit Parser(const std::string &message);
 	~Parser();
