@@ -1,5 +1,6 @@
 #include "./Server.hpp"
 #include "../color.hpp"
+#include "../user/User.hpp"
 #include "../parser/Parser.hpp"
 #include "../execute/Execute.hpp"
 #include "../message/Message.hpp"
@@ -28,37 +29,37 @@ Server::Server(unsigned short port) : \
 }
 
 void	Server::initializeServerSocket(unsigned short port) {
-	socketFd_ = socket(AF_INET, SOCK_STREAM, 0);
-	if (socketFd_ < 0) {
+	this->socketFd_ = socket(AF_INET, SOCK_STREAM, 0);
+	if (this->socketFd_ < 0) {
 		fatalError("socket");
 	}
 
-	setFdFlags(socketFd_, O_NONBLOCK);
+	setFdFlags(this->socketFd_, O_NONBLOCK);
 
-	memset(&socketAddress_, 0, sizeof(socketAddress_));
-	socketAddress_.sin_family = AF_INET;
-	socketAddress_.sin_addr.s_addr = INADDR_ANY;
-	socketAddress_.sin_port = htons(port);
+	memset(&this->socketAddress_, 0, sizeof(this->socketAddress_));
+	this->socketAddress_.sin_family = AF_INET;
+	this->socketAddress_.sin_addr.s_addr = INADDR_ANY;
+	this->socketAddress_.sin_port = htons(port);
 
-	if (bind(socketFd_, reinterpret_cast<struct sockaddr*>(&socketAddress_), \
-				sizeof(socketAddress_)) < 0) {
+	if (bind(this->socketFd_, reinterpret_cast<struct sockaddr*>(&this->socketAddress_), \
+				sizeof(this->socketAddress_)) < 0) {
 		fatalError("bind");
 	}
-	if (listen(socketFd_, 3) < 0) {
+	if (listen(this->socketFd_, 3) < 0) {
 		fatalError("listen");
 	}
 	std::cout << "Server is listening on port " << port << "..." << std::endl;
 }
 
 void	Server::initializeClientSockets() {
-	fds_[0].fd = socketFd_;
-	for (int i = 1; i <= maxClients_; ++i) {
-		fds_[i].fd = -1;
+	this->fds_[0].fd = this->socketFd_;
+	for (int i = 1; i <= this->maxClients_; ++i) {
+		this->fds_[i].fd = -1;
 	}
-	fds_[maxClients_].fd = STDIN_FILENO;
-	for (int i = 0; i <= maxClients_; ++i) {
-		fds_[i].events = POLLIN;
-		fds_[i].revents = 0;
+	this->fds_[this->maxClients_].fd = STDIN_FILENO;
+	for (int i = 0; i <= this->maxClients_; ++i) {
+		this->fds_[i].events = POLLIN;
+		this->fds_[i].revents = 0;
 	}
 }
 
@@ -86,26 +87,41 @@ void	Server::run() {
 }
 
 void	Server::handleServerSocket() {
-	if (!(fds_[0].revents & POLLIN)) {
+	if (!(this->fds_[0].revents & POLLIN)) {
 		return;
 	}
-	int newSocket = accept(socketFd_, \
-			reinterpret_cast<struct sockaddr*>(&socketAddress_), &socketAddressLen_);
+	int newSocket = accept(this->socketFd_, \
+			reinterpret_cast<struct sockaddr*>(&this->socketAddress_), &this->socketAddressLen_);
 	if (newSocket < 0) {
 		close(newSocket);
 		fatalError("accept");
 	}
 	setFdFlags(newSocket, O_NONBLOCK);
-	for (int i = 1; i <= maxClients_; ++i) {
-		if (fds_[i].fd == -1) {
-			fds_[i].fd = newSocket;
-			// TODO(hnoguchi): ユーザ登録処理はここか？？
-			// TODO(hnoguchi): Welcome messageはここで送信するか？？.
+	for (int i = 1; i <= this->maxClients_; ++i) {
+		if (this->fds_[i].fd == -1) {
+			this->fds_[i].fd = newSocket;
+			if (static_cast<const int>(this->users_.size()) >= this->maxClients_) {
+				handleClientDisconnect(i);
+				std::cerr << "Max clients reached." << std::endl;
+				return;
+			}
+			// TODO(hnoguchi): ユーザ登録処理を追加する。
+			User	user;
+			user.setFd(newSocket);
+			std::string nickName = "user";
+			nickName += '0' + i;
+			user.setNickName(nickName);
+			user.printData();
+			this->users_.push_back(user);
+			// TODO(hnoguchi): Welcome messageはここで送信する。
 			std::cout << "New client connected. Socket: " \
 				<< newSocket << std::endl;
+			// std::string	replyMsg = ":";
 			std::string	replyMsg;
 			Message		message;
-			replyMsg = message.createMessage(1);
+			replyMsg += user.getNickName();
+			replyMsg += " ";
+			replyMsg += message.createMessage(1);
 			replyMsg += message.createMessage(2);
 			replyMsg += message.createMessage(3);
 			replyMsg += message.createMessage(4);
@@ -126,7 +142,7 @@ void	Server::handleServerSocket() {
 }
 
 void	Server::handleStandardInput() {
-	if (fds_[maxClients_].revents & POLLIN) {
+	if (this->fds_[this->maxClients_].revents & POLLIN) {
 		std::string	input;
 		std::getline(std::cin, input);
 		if (input == "exit") {
@@ -137,7 +153,7 @@ void	Server::handleStandardInput() {
 }
 
 void	Server::handleClientSocket(int clientIndex) {
-	if (fds_[clientIndex].fd != -1 && (fds_[clientIndex].revents & POLLIN)) {
+	if (this->fds_[clientIndex].fd != -1 && (this->fds_[clientIndex].revents & POLLIN)) {
 		handleReceivedData(clientIndex);
 	}
 }

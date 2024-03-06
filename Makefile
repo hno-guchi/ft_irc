@@ -8,6 +8,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
 DEBUGFLAGS = -g -fsanitize=undefined -fsanitize=integer -fsanitize=address -DDEBUG
 RM = rm -r -f
 SRCS = Server.cpp \
+	   User.cpp \
 	   Parser.cpp \
 	   Execute.cpp \
 	   Reply.cpp \
@@ -31,6 +32,8 @@ $(OBJS_DIR):
 	mkdir -p $(OBJS_DIR)
 
 $(OBJS_DIR)/%.o: ./server/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./user/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./parser/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

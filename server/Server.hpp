@@ -7,19 +7,22 @@
 #include <sys/socket.h>
 #include <poll.h>
 #include <iostream>
-#include <string>
-#include <cstring>
-
-// reply
 #include <map>
+#include <string>
+#include <vector>
+#include <cstring>
+#include "../user/User.hpp"
 #include "../reply/Reply.hpp"
 
 class Server {
 	private:
 		int							socketFd_;
-		socklen_t					socketAddressLen_;  // socklen_tはコンパイラによってエラー。intの場合もある。
+		// socklen_tはコンパイラによってエラー。intの場合もある。
+		socklen_t					socketAddressLen_;
 		const int					maxClients_;
 		struct sockaddr_in			socketAddress_;
+		// TODO(hnoguchi): 定数で配列のサイズを指定する。
+		std::vector<User>			users_;
 		struct pollfd				fds_[7];
 
 		void	initializeServerSocket(unsigned short port);
@@ -32,6 +35,8 @@ class Server {
 		ssize_t	recvNonBlocking(int clientIndex, char* buffer, size_t bufferSize);
 		ssize_t	sendNonBlocking(int clientIndex, const char* buffer, size_t dataSize);
 		void	handleClientDisconnect(int clientIndex);
+
+		// User&	getUserByFd(int fd);
 
 	public:
 		explicit Server(unsigned short port);
