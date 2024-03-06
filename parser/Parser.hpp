@@ -81,9 +81,9 @@ class Command {
 
 class Parser {
  private:
-	std::string					message_;
-	std::vector<Token>			tokens_;
-	Command						command_;
+	std::string			message_;
+	std::vector<Token>	tokens_;
+	Command				command_;
 
  public:
 	explicit Parser(const std::string &message);

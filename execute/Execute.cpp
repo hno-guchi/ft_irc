@@ -33,7 +33,8 @@ int Execute::exec() {
 		return (kERR_UNKNOWNCOMMAND);
 	}
 	// TODO(hnoguchi): Exec Command.
-	return (0);
+	return (kERR_UNKNOWNCOMMAND);
+	// return (0);
 }
 
 #ifdef DEBUG

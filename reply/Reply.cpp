@@ -43,7 +43,7 @@ void	Reply::printReply() const {
 #ifdef DEBUG
 #include <map>
 
-static void printReplyList(const std::map<kReplyNum, Reply>& list) {
+static void printReplyList(const std::map<kCmdReplyNum, Reply>& list) {
 	std::cout << std::endl;
 	list.at(kRPL_WELCOME).printReply();
 	list.at(kRPL_YOURHOST).printReply();
@@ -52,7 +52,7 @@ static void printReplyList(const std::map<kReplyNum, Reply>& list) {
 	std::cout << std::endl;
 }
 
-static void	insertReplyList(std::map<kReplyNum, Reply>* list) {
+static void	insertReplyList(std::map<kCmdReplyNum, Reply>* list) {
 	Reply	r;
 	r.setNumeric("001");
 	r.setMessage("Welcome to the Internet Relay Network <nick>!<user>@<host>");
@@ -72,7 +72,7 @@ static void	insertReplyList(std::map<kReplyNum, Reply>* list) {
 }
 
 int	main() {
-	std::map<kReplyNum, Reply> list;
+	std::map<kCmdReplyNum, Reply> list;
 
 	insertReplyList(&list);
 	printReplyList(list);

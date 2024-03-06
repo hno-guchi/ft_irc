@@ -3,7 +3,7 @@
 
 #include <string>
 
-enum kReplyNum {
+enum kCmdReplyNum {
 	kNotSet = 0,
 	kRPL_WELCOME = 1,
 	kRPL_YOURHOST = 2,
@@ -12,7 +12,7 @@ enum kReplyNum {
 	kRPL_TOPIC = 332
 };
 
-enum kErrNum {
+enum kErrReplyNum {
 	kERR_UNKNOWNCOMMAND = 421,
 	kERR_NEEDMOREPARAMS = 461
 };
