@@ -31,10 +31,6 @@ class Server {
 		void	handleServerSocket();
 		void	handleStandardInput();
 		void	handleClientSocket();
-		void	handleReceivedData(int clientIndex);
-		ssize_t	recvNonBlocking(int clientIndex, char* buffer, size_t bufferSize);
-		ssize_t	sendNonBlocking(int clientIndex, const char* buffer, size_t dataSize);
-		void	handleClientDisconnect(int* fd);
 
 		// User&	getUserByFd(int fd);
 

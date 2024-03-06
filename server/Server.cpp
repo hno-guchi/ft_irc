@@ -5,6 +5,9 @@
 #include "../execute/Execute.hpp"
 #include "../message/Message.hpp"
 
+/*
+ * Helper functions
+ */
 static void fatalError(const std::string& message) {
 	std::perror(message.c_str());
     exit(EXIT_FAILURE);
@@ -22,6 +25,125 @@ static void	setFdFlags(const int fd, const int setFlags) {
 	}
 }
 
+static void	handleClientDisconnect(int* fd) {
+	std::cout << "Client socket " << *fd \
+		<< " disconnected." << std::endl;
+	close(*fd);
+	*fd = -1;
+}
+
+static ssize_t	sendNonBlocking(int* fd, const char* buffer, \
+		size_t dataSize) {
+	ssize_t sendMsgSize = 0;
+
+	while (1) {
+		sendMsgSize = send(*fd, buffer, dataSize, MSG_DONTWAIT);
+
+		if (sendMsgSize >= 0) {
+			break;
+		}
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			std::cout << "No data sent." << std::endl;
+			errno = 0;
+			sendMsgSize = 0;
+			continue;
+		} else if (errno == ECONNRESET) {
+			sendMsgSize = -1;
+			break;
+		} else {
+			fatalError("send");
+		}
+	}
+	return (sendMsgSize);
+}
+
+static ssize_t	recvNonBlocking(int* fd, char* buffer, \
+		size_t bufferSize) {
+	ssize_t	recvMsgSize = 0;
+
+	while (1) {
+		recvMsgSize = recv(*fd, buffer, bufferSize, MSG_DONTWAIT);
+
+		if (recvMsgSize >= 0) {
+			break;
+		}
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			errno = 0;
+			recvMsgSize = 0;
+			continue;
+		} else if (errno == ECONNRESET) {
+			recvMsgSize = -1;
+			break;
+		} else {
+			fatalError("recv");
+		}
+	}
+	return (recvMsgSize);
+}
+
+static std::vector<std::string>	split(const std::string& message, \
+		const std::string delim) {
+	std::vector<std::string>	messages;
+	std::string::size_type		startPos(0);
+
+	while (startPos < message.size()) {
+		std::string::size_type	delimPos = message.find(delim, startPos);
+		if (delimPos == message.npos) {
+			break;
+		}
+		std::string	buf = message.substr(startPos, delimPos - startPos);
+		messages.push_back(buf);
+		startPos = delimPos + delim.size();
+	}
+	return (messages);
+}
+
+static void	handleReceivedData(int* fd) {
+	char	buffer[513] = {0};
+	ssize_t	sendMsgSize = 0;
+	ssize_t	recvMsgSize = 0;
+
+	recvMsgSize = recvNonBlocking(fd, buffer, sizeof(buffer) - 1);
+	if (recvMsgSize <= 0) {
+		handleClientDisconnect(fd);
+		return;
+	}
+	// std::cout << "Client socket " << *fd << " message: " << buffer << std::endl;
+	std::cout << GREEN << buffer << END << std::flush;
+	// Split message
+	std::vector<std::string>	messages = split(buffer, "\r\n");
+	std::string					replyMsg;
+	Message						message;
+	for (std::vector<std::string>::iterator it = messages.begin(); \
+			it != messages.end(); ++it) {
+		// parse
+		Parser	parser(*it);
+		parser.tokenize();
+		parser.printTokens();
+		parser.parse();
+		parser.getCommand().printCommand();
+		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
+		// execute
+		Execute	execute(parser.getCommand());
+		int		replyNum = execute.exec();
+		// create replies message
+		replyMsg += message.createMessage(replyNum);
+	}
+	// send
+	sendMsgSize = sendNonBlocking(fd, replyMsg.c_str(), replyMsg.size());
+	if (sendMsgSize <= 0) {
+		handleClientDisconnect(fd);
+		return;
+	}
+	// TODO(hnoguchi): castは使わない実装にする？？
+	if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
+		fatalError("send");
+	}
+}
+
+/*
+ * Server class
+ */
 Server::Server(unsigned short port) : \
 	socketFd_(0), socketAddressLen_(sizeof(socketAddress_)), maxClients_(5) {
 		initializeServerSocket(port);
@@ -136,7 +258,7 @@ void	Server::handleServerSocket() {
 			replyMsg += " ";
 			replyMsg += message.createMessage(4);
 			// send
-			ssize_t	sendMsgSize = sendNonBlocking(i, replyMsg.c_str(), replyMsg.size());
+			ssize_t	sendMsgSize = sendNonBlocking(&this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
 			if (sendMsgSize <= 0) {
 				handleClientDisconnect(&this->fds_[i].fd);
 				return;
@@ -165,127 +287,9 @@ void	Server::handleStandardInput() {
 void	Server::handleClientSocket() {
 	for (int i = 1; i <= this->maxClients_; ++i) {
 		if (this->fds_[i].fd != -1 && (this->fds_[i].revents & POLLIN)) {
-			handleReceivedData(i);
+			handleReceivedData(&this->fds_[i].fd);
 		}
 	}
-}
-
-static std::vector<std::string>	split(const std::string& message, \
-		const std::string delim) {
-	std::vector<std::string>	messages;
-	std::string::size_type		startPos(0);
-
-	while (startPos < message.size()) {
-		std::string::size_type	delimPos = message.find(delim, startPos);
-		if (delimPos == message.npos) {
-			break;
-		}
-		std::string	buf = message.substr(startPos, delimPos - startPos);
-		messages.push_back(buf);
-		startPos = delimPos + delim.size();
-	}
-	return (messages);
-}
-
-void	Server::handleReceivedData(int clientIndex) {
-	char	buffer[513] = {0};
-	ssize_t	sendMsgSize = 0;
-	ssize_t	recvMsgSize = 0;
-
-	recvMsgSize = recvNonBlocking(clientIndex, buffer, sizeof(buffer) - 1);
-	if (recvMsgSize <= 0) {
-		handleClientDisconnect(&this->fds_[clientIndex].fd);
-		return;
-	}
-	// std::cout << "Client socket " << fds_[clientIndex].fd << " message: " << buffer << std::endl;
-	std::cout << GREEN << buffer << END << std::flush;
-	// Split message
-	std::vector<std::string>	messages = split(buffer, "\r\n");
-	std::string					replyMsg;
-	Message						message;
-	for (std::vector<std::string>::iterator it = messages.begin(); \
-			it != messages.end(); ++it) {
-		// parse
-		Parser	parser(*it);
-		parser.tokenize();
-		parser.printTokens();
-		parser.parse();
-		parser.getCommand().printCommand();
-		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
-		// execute
-		Execute	execute(parser.getCommand());
-		int		replyNum = execute.exec();
-		// create replies message
-		replyMsg += message.createMessage(replyNum);
-	}
-	// send
-	sendMsgSize = sendNonBlocking(clientIndex, replyMsg.c_str(), replyMsg.size());
-	if (sendMsgSize <= 0) {
-		handleClientDisconnect(&this->fds_[clientIndex].fd);
-		return;
-	}
-	// TODO(hnoguchi): castは使わない実装にする？？
-	if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
-		fatalError("send");
-	}
-}
-
-ssize_t Server::recvNonBlocking(int clientIndex, char* buffer, \
-		size_t bufferSize) {
-	ssize_t	recvMsgSize = 0;
-
-	while (1) {
-		recvMsgSize = recv(this->fds_[clientIndex].fd, buffer, \
-				bufferSize, MSG_DONTWAIT);
-
-		if (recvMsgSize >= 0) {
-			break;
-		}
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			errno = 0;
-			recvMsgSize = 0;
-			continue;
-		} else if (errno == ECONNRESET) {
-			recvMsgSize = -1;
-			break;
-		} else {
-			fatalError("recv");
-		}
-	}
-	return (recvMsgSize);
-}
-
-ssize_t	Server::sendNonBlocking(int clientIndex, const char* buffer, \
-		size_t dataSize) {
-	ssize_t sendMsgSize = 0;
-
-	while (1) {
-		sendMsgSize = send(this->fds_[clientIndex].fd, buffer, \
-				dataSize, MSG_DONTWAIT);
-
-		if (sendMsgSize >= 0) {
-			break;
-		}
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			std::cout << "No data sent." << std::endl;
-			errno = 0;
-			sendMsgSize = 0;
-			continue;
-		} else if (errno == ECONNRESET) {
-			sendMsgSize = -1;
-			break;
-		} else {
-			fatalError("send");
-		}
-	}
-	return (sendMsgSize);
-}
-
-void	Server::handleClientDisconnect(int* fd) {
-	std::cout << "Client socket " << *fd \
-		<< " disconnected." << std::endl;
-	close(*fd);
-	*fd = -1;
 }
 
 int	main(int argc, char* argv[]) {
