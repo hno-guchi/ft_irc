@@ -80,9 +80,7 @@ void	Server::run() {
 		}
 		handleServerSocket();
 		handleStandardInput();
-		for (int i = 1; i <= maxClients_; ++i) {
-			handleClientSocket(i);
-		}
+		handleClientSocket();
 	}
 }
 
@@ -101,7 +99,7 @@ void	Server::handleServerSocket() {
 		if (this->fds_[i].fd == -1) {
 			this->fds_[i].fd = newSocket;
 			if (static_cast<const int>(this->users_.size()) >= this->maxClients_) {
-				handleClientDisconnect(i);
+				handleClientDisconnect(&this->fds_[i].fd);
 				std::cerr << "Max clients reached." << std::endl;
 				return;
 			}
@@ -116,19 +114,31 @@ void	Server::handleServerSocket() {
 			// TODO(hnoguchi): Welcome messageはここで送信する。
 			std::cout << "New client connected. Socket: " \
 				<< newSocket << std::endl;
-			// std::string	replyMsg = ":";
-			std::string	replyMsg;
 			Message		message;
+			// std::string	replyMsg;
+			std::string	replyMsg = ":";
 			replyMsg += user.getNickName();
 			replyMsg += " ";
 			replyMsg += message.createMessage(1);
+
+			replyMsg += ":";
+			replyMsg += user.getNickName();
+			replyMsg += " ";
 			replyMsg += message.createMessage(2);
+
+			replyMsg += ":";
+			replyMsg += user.getNickName();
+			replyMsg += " ";
 			replyMsg += message.createMessage(3);
+
+			replyMsg += ":";
+			replyMsg += user.getNickName();
+			replyMsg += " ";
 			replyMsg += message.createMessage(4);
 			// send
 			ssize_t	sendMsgSize = sendNonBlocking(i, replyMsg.c_str(), replyMsg.size());
 			if (sendMsgSize <= 0) {
-				handleClientDisconnect(i);
+				handleClientDisconnect(&this->fds_[i].fd);
 				return;
 			}
 			// TODO(hnoguchi): castは使わない実装にする？？
@@ -152,9 +162,11 @@ void	Server::handleStandardInput() {
 	}
 }
 
-void	Server::handleClientSocket(int clientIndex) {
-	if (this->fds_[clientIndex].fd != -1 && (this->fds_[clientIndex].revents & POLLIN)) {
-		handleReceivedData(clientIndex);
+void	Server::handleClientSocket() {
+	for (int i = 1; i <= this->maxClients_; ++i) {
+		if (this->fds_[i].fd != -1 && (this->fds_[i].revents & POLLIN)) {
+			handleReceivedData(i);
+		}
 	}
 }
 
@@ -182,7 +194,7 @@ void	Server::handleReceivedData(int clientIndex) {
 
 	recvMsgSize = recvNonBlocking(clientIndex, buffer, sizeof(buffer) - 1);
 	if (recvMsgSize <= 0) {
-		handleClientDisconnect(clientIndex);
+		handleClientDisconnect(&this->fds_[clientIndex].fd);
 		return;
 	}
 	// std::cout << "Client socket " << fds_[clientIndex].fd << " message: " << buffer << std::endl;
@@ -209,7 +221,7 @@ void	Server::handleReceivedData(int clientIndex) {
 	// send
 	sendMsgSize = sendNonBlocking(clientIndex, replyMsg.c_str(), replyMsg.size());
 	if (sendMsgSize <= 0) {
-		handleClientDisconnect(clientIndex);
+		handleClientDisconnect(&this->fds_[clientIndex].fd);
 		return;
 	}
 	// TODO(hnoguchi): castは使わない実装にする？？
@@ -223,7 +235,7 @@ ssize_t Server::recvNonBlocking(int clientIndex, char* buffer, \
 	ssize_t	recvMsgSize = 0;
 
 	while (1) {
-		recvMsgSize = recv(fds_[clientIndex].fd, buffer, \
+		recvMsgSize = recv(this->fds_[clientIndex].fd, buffer, \
 				bufferSize, MSG_DONTWAIT);
 
 		if (recvMsgSize >= 0) {
@@ -248,7 +260,7 @@ ssize_t	Server::sendNonBlocking(int clientIndex, const char* buffer, \
 	ssize_t sendMsgSize = 0;
 
 	while (1) {
-		sendMsgSize = send(fds_[clientIndex].fd, buffer, \
+		sendMsgSize = send(this->fds_[clientIndex].fd, buffer, \
 				dataSize, MSG_DONTWAIT);
 
 		if (sendMsgSize >= 0) {
@@ -269,11 +281,11 @@ ssize_t	Server::sendNonBlocking(int clientIndex, const char* buffer, \
 	return (sendMsgSize);
 }
 
-void	Server::handleClientDisconnect(int clientIndex) {
-	std::cout << "Client socket " << fds_[clientIndex].fd \
+void	Server::handleClientDisconnect(int* fd) {
+	std::cout << "Client socket " << *fd \
 		<< " disconnected." << std::endl;
-	close(fds_[clientIndex].fd);
-	fds_[clientIndex].fd = -1;
+	close(*fd);
+	*fd = -1;
 }
 
 int	main(int argc, char* argv[]) {
