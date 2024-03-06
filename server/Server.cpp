@@ -2,7 +2,7 @@
 #include "../color.hpp"
 #include "../parser/Parser.hpp"
 #include "../execute/Execute.hpp"
-#include "../reply/Reply.hpp"
+#include "../message/Message.hpp"
 
 static void fatalError(const std::string& message) {
 	std::perror(message.c_str());
@@ -25,9 +25,6 @@ Server::Server(unsigned short port) : \
 	socketFd_(0), socketAddressLen_(sizeof(socketAddress_)), maxClients_(5) {
 		initializeServerSocket(port);
 		initializeClientSockets();
-		// TODO(hnoguchi): Message class??
-		initializeReplyMessageList();
-		initializeErrReplyMessageList();
 }
 
 void	Server::initializeServerSocket(unsigned short port) {
@@ -63,44 +60,6 @@ void	Server::initializeClientSockets() {
 		fds_[i].events = POLLIN;
 		fds_[i].revents = 0;
 	}
-}
-
-void	Server::initializeReplyMessageList() {
-	Reply	r;
-	r.setNumeric("001");
-	r.setMessage("Welcome to the Internet Relay Network <nick>!<user>@<host>");
-	this->replyMessageList_.insert(std::make_pair(kRPL_WELCOME, r));
-
-	r.setNumeric("002");
-	r.setMessage("Your host is <servername>, running version <ver>");
-	this->replyMessageList_.insert(std::make_pair(kRPL_YOURHOST, r));
-
-	r.setNumeric("003");
-	r.setMessage("This server was created <date>");
-	this->replyMessageList_.insert(std::make_pair(kRPL_CREATED, r));
-
-	r.setNumeric("004");
-	r.setMessage("<servername> <version> <available user modes> <available channel modes>");
-	this->replyMessageList_.insert(std::make_pair(kRPL_MYINFO, r));
-
-	r.setNumeric("332");
-	r.setMessage("<channel> :<topic>");
-	this->replyMessageList_.insert(std::make_pair(kRPL_TOPIC, r));
-
-	return;
-}
-
-void	Server::initializeErrReplyMessageList() {
-	Reply	r;
-	r.setNumeric("421");
-	r.setMessage("<command> :Unknown command");
-	this->errReplyMessageList_.insert(std::make_pair(kERR_UNKNOWNCOMMAND, r));
-
-	r.setNumeric("461");
-	r.setMessage("<command> :Not enough parameters");
-	this->errReplyMessageList_.insert(std::make_pair(kERR_NEEDMOREPARAMS, r));
-
-	return;
 }
 
 Server::~Server() {
@@ -140,9 +99,27 @@ void	Server::handleServerSocket() {
 	for (int i = 1; i <= maxClients_; ++i) {
 		if (fds_[i].fd == -1) {
 			fds_[i].fd = newSocket;
+			// TODO(hnoguchi): ユーザ登録処理はここか？？
 			// TODO(hnoguchi): Welcome messageはここで送信するか？？.
 			std::cout << "New client connected. Socket: " \
 				<< newSocket << std::endl;
+			std::string	replyMsg;
+			Message		message;
+			replyMsg = message.createMessage(1);
+			replyMsg += message.createMessage(2);
+			replyMsg += message.createMessage(3);
+			replyMsg += message.createMessage(4);
+			// send
+			ssize_t	sendMsgSize = sendNonBlocking(i, replyMsg.c_str(), replyMsg.size());
+			if (sendMsgSize <= 0) {
+				handleClientDisconnect(i);
+				return;
+			}
+			// TODO(hnoguchi): castは使わない実装にする？？
+			if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
+				// TODO(hnoguchi): Check error handling.
+				fatalError("send");
+			}
 			break;
 		}
 	}
@@ -165,8 +142,25 @@ void	Server::handleClientSocket(int clientIndex) {
 	}
 }
 
+static std::vector<std::string>	split(const std::string& message, \
+		const std::string delim) {
+	std::vector<std::string>	messages;
+	std::string::size_type		startPos(0);
+
+	while (startPos < message.size()) {
+		std::string::size_type	delimPos = message.find(delim, startPos);
+		if (delimPos == message.npos) {
+			break;
+		}
+		std::string	buf = message.substr(startPos, delimPos - startPos);
+		messages.push_back(buf);
+		startPos = delimPos + delim.size();
+	}
+	return (messages);
+}
+
 void	Server::handleReceivedData(int clientIndex) {
-	char	buffer[1024] = {0};
+	char	buffer[513] = {0};
 	ssize_t	sendMsgSize = 0;
 	ssize_t	recvMsgSize = 0;
 
@@ -176,66 +170,34 @@ void	Server::handleReceivedData(int clientIndex) {
 		return;
 	}
 	// std::cout << "Client socket " << fds_[clientIndex].fd << " message: " << buffer << std::endl;
-	std::cout << GREEN << buffer << END << std::endl;
-	// parse
-	Parser	parser(buffer);
-	parser.tokenize();
-	// parser.printTokens();
-	parser.parse();
-	parser.getCommand().printCommand();
-	// execute
-	// Execute	execute(parser.getCommand());
-	// int		reply = execute.exec();
-	// create replies message
-	// Message		message(reply);
-	// std::string	replyMsg = message.createMessage();
-	std::string	replyMsg;
-	// Command		command = parser.getCommand();
-	// if (parser.getCommand().getCommand() == "CAP") {
-	// 	replyMsg = this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getNumeric();
-	// 	replyMsg += " ";
-	// 	replyMsg += this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getMessage();
-	// 	replyMsg += "\r\n";
-
-	// 	replyMsg += this->errReplyMessageList_.at(kERR_NEEDMOREPARAMS).getNumeric();
-	// 	replyMsg += " ";
-	// 	replyMsg += this->errReplyMessageList_.at(kERR_NEEDMOREPARAMS).getMessage();
-	// 	replyMsg += "\r\n";
-
-	// 	replyMsg += this->replyMessageList_.at(kRPL_WELCOME).getNumeric();
-	// 	replyMsg += " ";
-	// 	replyMsg += this->replyMessageList_.at(kRPL_WELCOME).getMessage();
-	// 	replyMsg += "\r\n";
-
-	// 	replyMsg += this->replyMessageList_.at(kRPL_YOURHOST).getNumeric();
-	// 	replyMsg += " ";
-	// 	replyMsg += this->replyMessageList_.at(kRPL_YOURHOST).getMessage();
-	// 	replyMsg += "\r\n";
-
-	// 	replyMsg += this->replyMessageList_.at(kRPL_CREATED).getNumeric();
-	// 	replyMsg += " ";
-	// 	replyMsg += this->replyMessageList_.at(kRPL_CREATED).getMessage();
-	// 	replyMsg += "\r\n";
-
-	// 	replyMsg += this->replyMessageList_.at(kRPL_MYINFO).getNumeric();
-	// 	replyMsg += " ";
-	// 	replyMsg += this->replyMessageList_.at(kRPL_MYINFO).getMessage();
-	// 	replyMsg += "\r\n";
-
-	// 	recvMsgSize = replyMsg.size();
-	// } else {
-	// 	replyMsg = this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getNumeric();
-	// 	replyMsg += " ";
-	// 	replyMsg += this->errReplyMessageList_.at(kERR_UNKNOWNCOMMAND).getMessage();
-	// 	replyMsg += "\r\n";
-	// }
+	std::cout << GREEN << buffer << END << std::flush;
+	// Split message
+	std::vector<std::string>	messages = split(buffer, "\r\n");
+	std::string					replyMsg;
+	Message						message;
+	for (std::vector<std::string>::iterator it = messages.begin(); \
+			it != messages.end(); ++it) {
+		// parse
+		Parser	parser(*it);
+		parser.tokenize();
+		parser.printTokens();
+		parser.parse();
+		parser.getCommand().printCommand();
+		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
+		// execute
+		Execute	execute(parser.getCommand());
+		int		replyNum = execute.exec();
+		// create replies message
+		replyMsg += message.createMessage(replyNum);
+	}
 	// send
-	sendMsgSize = sendNonBlocking(clientIndex, replyMsg.c_str(), recvMsgSize);
+	sendMsgSize = sendNonBlocking(clientIndex, replyMsg.c_str(), replyMsg.size());
 	if (sendMsgSize <= 0) {
 		handleClientDisconnect(clientIndex);
 		return;
 	}
-	if (recvMsgSize != sendMsgSize) {
+	// TODO(hnoguchi): castは使わない実装にする？？
+	if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
 		fatalError("send");
 	}
 }

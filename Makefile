@@ -11,6 +11,7 @@ SRCS = Server.cpp \
 	   Parser.cpp \
 	   Execute.cpp \
 	   Reply.cpp \
+	   Message.cpp \
 	   error.cpp
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 OBJS_DIR = ./objs
@@ -36,6 +37,8 @@ $(OBJS_DIR)/%.o: ./parser/%.cpp
 $(OBJS_DIR)/%.o: ./execute/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./reply/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./message/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./error/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
