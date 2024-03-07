@@ -31,8 +31,7 @@ class Server {
 		void	handleServerSocket();
 		void	handleStandardInput();
 		void	handleClientSocket();
-
-		// User&	getUserByFd(int fd);
+		void	handleReceivedData(int clientIndex);
 
 	public:
 		explicit Server(unsigned short port);
