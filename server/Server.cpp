@@ -98,49 +98,6 @@ static std::vector<std::string>	split(const std::string& message, \
 	return (messages);
 }
 
-static void	handleReceivedData(int* fd) {
-	char	buffer[513] = {0};
-	ssize_t	sendMsgSize = 0;
-	ssize_t	recvMsgSize = 0;
-
-	recvMsgSize = recvNonBlocking(fd, buffer, sizeof(buffer) - 1);
-	if (recvMsgSize <= 0) {
-		handleClientDisconnect(fd);
-		return;
-	}
-	// std::cout << "Client socket " << *fd << " message: " << buffer << std::endl;
-	std::cout << GREEN << buffer << END << std::flush;
-	// Split message
-	std::vector<std::string>	messages = split(buffer, "\r\n");
-	std::string					replyMsg;
-	Message						message;
-	for (std::vector<std::string>::iterator it = messages.begin(); \
-			it != messages.end(); ++it) {
-		// parse
-		Parser	parser(*it);
-		parser.tokenize();
-		parser.printTokens();
-		parser.parse();
-		parser.getCommand().printCommand();
-		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
-		// execute
-		Execute	execute(parser.getCommand());
-		int		replyNum = execute.exec();
-		// create replies message
-		replyMsg += message.createMessage(replyNum);
-	}
-	// send
-	sendMsgSize = sendNonBlocking(fd, replyMsg.c_str(), replyMsg.size());
-	if (sendMsgSize <= 0) {
-		handleClientDisconnect(fd);
-		return;
-	}
-	// TODO(hnoguchi): castは使わない実装にする？？
-	if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
-		fatalError("send");
-	}
-}
-
 /*
  * Server class
  */
@@ -175,11 +132,11 @@ void	Server::initializeServerSocket(unsigned short port) {
 
 void	Server::initializeClientSockets() {
 	this->fds_[0].fd = this->socketFd_;
-	for (int i = 1; i <= this->maxClients_; ++i) {
+	for (int i = 1; i <= this->maxClients_; i++) {
 		this->fds_[i].fd = -1;
 	}
 	this->fds_[this->maxClients_].fd = STDIN_FILENO;
-	for (int i = 0; i <= this->maxClients_; ++i) {
+	for (int i = 0; i <= this->maxClients_; i++) {
 		this->fds_[i].events = POLLIN;
 		this->fds_[i].revents = 0;
 	}
@@ -238,25 +195,11 @@ void	Server::handleServerSocket() {
 				<< newSocket << std::endl;
 			Message		message;
 			// std::string	replyMsg;
-			std::string	replyMsg = ":";
-			replyMsg += user.getNickName();
-			replyMsg += " ";
-			replyMsg += message.createMessage(1);
-
-			replyMsg += ":";
-			replyMsg += user.getNickName();
-			replyMsg += " ";
-			replyMsg += message.createMessage(2);
-
-			replyMsg += ":";
-			replyMsg += user.getNickName();
-			replyMsg += " ";
-			replyMsg += message.createMessage(3);
-
-			replyMsg += ":";
-			replyMsg += user.getNickName();
-			replyMsg += " ";
-			replyMsg += message.createMessage(4);
+			std::string	replyMsg;
+			replyMsg += message.createMessage(1, user);
+			replyMsg += message.createMessage(2, user);
+			replyMsg += message.createMessage(3, user);
+			replyMsg += message.createMessage(4, user);
 			// send
 			ssize_t	sendMsgSize = sendNonBlocking(&this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
 			if (sendMsgSize <= 0) {
@@ -287,8 +230,52 @@ void	Server::handleStandardInput() {
 void	Server::handleClientSocket() {
 	for (int i = 1; i <= this->maxClients_; ++i) {
 		if (this->fds_[i].fd != -1 && (this->fds_[i].revents & POLLIN)) {
-			handleReceivedData(&this->fds_[i].fd);
+			handleReceivedData(i);
 		}
+	}
+}
+
+void	Server::handleReceivedData(int clientIndex) {
+	char	buffer[513] = {0};
+	ssize_t	sendMsgSize = 0;
+	ssize_t	recvMsgSize = 0;
+
+	recvMsgSize = recvNonBlocking(&this->fds_[clientIndex].fd, buffer, sizeof(buffer) - 1);
+	if (recvMsgSize <= 0) {
+		handleClientDisconnect(&this->fds_[clientIndex].fd);
+		return;
+	}
+	// std::cout << "Client socket " << this->fds_[clientIndex].fd << " message: " << buffer << std::endl;
+	std::cout << GREEN << buffer << END << std::flush;
+	// Split message
+	std::vector<std::string>	messages = split(buffer, "\r\n");
+	std::string					replyMsg;
+	Message						message;
+	for (std::vector<std::string>::iterator it = messages.begin(); \
+			it != messages.end(); ++it) {
+		// parse
+		Parser	parser(*it);
+		parser.tokenize();
+		parser.printTokens();
+		parser.parse();
+		parser.getCommand().printCommand();
+		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
+		// execute
+		Execute	execute(parser.getCommand());
+		int		replyNum = execute.exec();
+		// create replies message
+		// TODO(hnoguchi): Server::getUserByFd();を実装した方が良い？
+		replyMsg += message.createMessage(replyNum, this->users_[clientIndex]);
+	}
+	// send
+	sendMsgSize = sendNonBlocking(&this->fds_[clientIndex].fd, replyMsg.c_str(), replyMsg.size());
+	if (sendMsgSize <= 0) {
+		handleClientDisconnect(&this->fds_[clientIndex].fd);
+		return;
+	}
+	// TODO(hnoguchi): castは使わない実装にする？？
+	if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
+		fatalError("send");
 	}
 }
 

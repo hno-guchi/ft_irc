@@ -1,5 +1,6 @@
 #include "./Message.hpp"
 #include "../reply/Reply.hpp"
+#include "../user/User.hpp"
 
 Message::Message() : delimiter_("\r\n") {
 	this->initializeCmdReplyMessageList();
@@ -47,14 +48,16 @@ void	Message::initializeErrReplyMessageList() {
 	return;
 }
 
-std::string	Message::createMessage(int num) {
+std::string	Message::createMessage(int num, const User& user) {
 	if (num <= 0) {
 		return ("");
 	}
 	// TODO(hnoguchi): Check num.
-	std::string	msg;
+	std::string	msg = ":";
+	msg += user.getNickName();
+	msg += " ";
 	if (num < 100  || (num >= 200 && num < 400)) {
-		msg = this->cmdReplyMsgList_[static_cast<kCmdReplyNum>(num)].getNumeric();
+		msg += this->cmdReplyMsgList_[static_cast<kCmdReplyNum>(num)].getNumeric();
 		msg += " ";
 		msg += this->cmdReplyMsgList_[static_cast<kCmdReplyNum>(num)].getMessage();
 		msg += this->delimiter_;

@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include "../reply/Reply.hpp"
+#include "../user/User.hpp"
 
 class Message {
  private:
@@ -18,7 +19,7 @@ class Message {
 	Message();
 	~Message();
 
-	std::string	createMessage(int num);
+	std::string	createMessage(int num, const User& user);
 };
 
 #endif  // MESSAGE_HPP
