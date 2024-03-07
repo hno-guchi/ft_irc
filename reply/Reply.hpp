@@ -4,7 +4,6 @@
 #include <string>
 
 enum kCmdReplyNum {
-	kNotSet = 0,
 	kRPL_WELCOME = 1,
 	kRPL_YOURHOST = 2,
 	kRPL_CREATED = 3,

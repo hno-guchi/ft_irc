@@ -1,5 +1,8 @@
 #include "./Execute.hpp"
+#include "../error/error.hpp"
+#include "../server/Server.hpp"
 #include "../reply/Reply.hpp"
+#include "../user/User.hpp"
 
 const std::string	Execute::cmdList_[] = {
 	"PASS",
@@ -13,6 +16,8 @@ const std::string	Execute::cmdList_[] = {
 	"MODE",
 	"PRIVMSG",
 	"NOTICE",
+	"PING",
+	"PONG",
 	""
 };
 
@@ -28,13 +33,25 @@ bool Execute::isCommand() {
 	return (false);
 }
 
-int Execute::exec() {
+int Execute::exec(User* user) {
 	if (!this->isCommand()) {
 		return (kERR_UNKNOWNCOMMAND);
 	}
 	// TODO(hnoguchi): Exec Command.
-	return (kERR_UNKNOWNCOMMAND);
-	// return (0);
+	if (this->command_.getCommand() == "PING") {
+		std::string	message = ":" + user->getNickName() + " PONG ft_irc\r\n";
+		std::cout << "Send message: [" << message << "]" << std::endl;
+		ssize_t		sendMsgSize = sendNonBlocking(user->getFd(), message.c_str(), message.size());
+		if (sendMsgSize <= 0) {
+			// handleClientDisconnect(&this->fds_[clientIndex].fd);
+			return (-1);
+		}
+		// TODO(hnoguchi): castは使わない実装にする？？
+		if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
+			fatalError("send");
+		}
+	}
+	return (0);
 }
 
 #ifdef DEBUG
@@ -42,47 +59,6 @@ int Execute::exec() {
 #include "../Parser/Parser.hpp"
 
 int	main() {
-	std::string	testMessageList[] = {
-		"COMMAND\r\n",
-		"COMMAND\r\n",
-		"   COMMAND   param1    param2     param3    \r\n",
-		"",
-		"     ",
-		"COMMAND\r\n",
-		"COMMAND \r\n",
-		"command\r\n",
-		"coMMAnd\r\n",
-		"111\r\n",
-		"11a \r\n",
-		"11\r\n",
-		"COMMAND param1 :param2\r\n",
-		"COMMAND param1 :param2\r\nCOMMAND param1 :param2\r\nCOMMAND param1 :param2\r\n   COMMAND param1 :param2\r\nCOMMAND param1 :param2\r\n"
-	};
-
-	for (size_t i = 0; \
-			i < sizeof(testMessageList) / sizeof(testMessageList[0]); i++) {
-		std::cout << GREEN << "Message: [" << testMessageList[i] << "]" << END << std::endl;
-
-		// TODO(hnoguchi): crlfをデリミタに、メッセージの分割処理を実装する（複数のメッセージが一度に来る場合がある。）
-		// TODO(hnoguchi): 終端にcrlfがあるかチェックする。
-		// TODO(hnoguchi): メッセージの長さが512文字(crlfを含む)を超えていないかチェックする。
-
-		std::vector<std::string>	messages = split(testMessageList[i], "\r\n");
-		printMessages(messages);
-
-		for (std::vector<std::string>::const_iterator it = messages.begin(); it != messages.end(); it++) {
-			Parser	parser(*it);
-
-			parser.tokenize();
-			parser.printTokens();
-
-			parser.parse();
-			parser.getCommand().printCommand();
-			std::cout << YELLOW << "[Execute]   ____________________" << END << std::endl;
-			std::cout << YELLOW << "[Reply]     ____________________" << END << std::endl;
-			std::cout << std::endl;
-		}
-	}
 #ifdef LEAKS
 	system("leaks -q parser");
 #endif  // LEAKS

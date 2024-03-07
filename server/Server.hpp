@@ -38,5 +38,6 @@ class Server {
 		~Server();
 		void	run(void);
 };
+ssize_t	sendNonBlocking(int fd, const char* buffer, size_t dataSize);
 
 #endif  // SERVER_HPP
