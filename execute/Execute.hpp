@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include "../parser/Parser.hpp"
+#include "../user/User.hpp"
 
 class Execute {
  private:
@@ -15,7 +16,7 @@ class Execute {
 	 ~Execute();
 
 	bool	isCommand();
-	int		exec();
+	int		exec(User* user);
 };
 
 #endif  // EXECUTE_HPP

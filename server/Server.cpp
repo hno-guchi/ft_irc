@@ -1,17 +1,39 @@
 #include "./Server.hpp"
 #include "../color.hpp"
+#include "../error/error.hpp"
 #include "../user/User.hpp"
 #include "../parser/Parser.hpp"
 #include "../execute/Execute.hpp"
 #include "../message/Message.hpp"
 
+ssize_t	sendNonBlocking(int fd, const char* buffer, \
+		size_t dataSize) {
+	ssize_t sendMsgSize = 0;
+
+	while (1) {
+		sendMsgSize = send(fd, buffer, dataSize, MSG_DONTWAIT);
+
+		if (sendMsgSize >= 0) {
+			break;
+		}
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			std::cout << "No data sent." << std::endl;
+			errno = 0;
+			sendMsgSize = 0;
+			continue;
+		} else if (errno == ECONNRESET) {
+			sendMsgSize = -1;
+			break;
+		} else {
+			fatalError("send");
+		}
+	}
+	return (sendMsgSize);
+}
+
 /*
  * Helper functions
  */
-static void fatalError(const std::string& message) {
-	std::perror(message.c_str());
-    exit(EXIT_FAILURE);
-}
 
 static void	setFdFlags(const int fd, const int setFlags) {
 	int	flags = 0;
@@ -30,31 +52,6 @@ static void	handleClientDisconnect(int* fd) {
 		<< " disconnected." << std::endl;
 	close(*fd);
 	*fd = -1;
-}
-
-static ssize_t	sendNonBlocking(int* fd, const char* buffer, \
-		size_t dataSize) {
-	ssize_t sendMsgSize = 0;
-
-	while (1) {
-		sendMsgSize = send(*fd, buffer, dataSize, MSG_DONTWAIT);
-
-		if (sendMsgSize >= 0) {
-			break;
-		}
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			std::cout << "No data sent." << std::endl;
-			errno = 0;
-			sendMsgSize = 0;
-			continue;
-		} else if (errno == ECONNRESET) {
-			sendMsgSize = -1;
-			break;
-		} else {
-			fatalError("send");
-		}
-	}
-	return (sendMsgSize);
 }
 
 static ssize_t	recvNonBlocking(int* fd, char* buffer, \
@@ -201,7 +198,7 @@ void	Server::handleServerSocket() {
 			replyMsg += message.createMessage(3, user);
 			replyMsg += message.createMessage(4, user);
 			// send
-			ssize_t	sendMsgSize = sendNonBlocking(&this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
+			ssize_t	sendMsgSize = sendNonBlocking(this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
 			if (sendMsgSize <= 0) {
 				handleClientDisconnect(&this->fds_[i].fd);
 				return;
@@ -249,8 +246,8 @@ void	Server::handleReceivedData(int clientIndex) {
 	std::cout << GREEN << buffer << END << std::flush;
 	// Split message
 	std::vector<std::string>	messages = split(buffer, "\r\n");
-	std::string					replyMsg;
 	Message						message;
+	std::string					replyMsg("");
 	for (std::vector<std::string>::iterator it = messages.begin(); \
 			it != messages.end(); ++it) {
 		// parse
@@ -261,14 +258,22 @@ void	Server::handleReceivedData(int clientIndex) {
 		parser.getCommand().printCommand();
 		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
 		// execute
-		Execute	execute(parser.getCommand());
-		int		replyNum = execute.exec();
+		Execute		execute(parser.getCommand());
+		// std::cout << clientIndex << std::endl;
+		// this->users_[clientIndex - 1].printData();
+		int			replyNum = execute.exec(&this->users_[clientIndex - 1]);
+		if (replyNum == 0) {
+			continue;
+		}
 		// create replies message
 		// TODO(hnoguchi): Server::getUserByFd();を実装した方が良い？
 		replyMsg += message.createMessage(replyNum, this->users_[clientIndex]);
 	}
+	if (replyMsg.empty()) {
+		return;
+	}
 	// send
-	sendMsgSize = sendNonBlocking(&this->fds_[clientIndex].fd, replyMsg.c_str(), replyMsg.size());
+	sendMsgSize = sendNonBlocking(this->fds_[clientIndex].fd, replyMsg.c_str(), replyMsg.size());
 	if (sendMsgSize <= 0) {
 		handleClientDisconnect(&this->fds_[clientIndex].fd);
 		return;

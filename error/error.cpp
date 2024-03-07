@@ -8,7 +8,6 @@ void	printErrorMessage(const std::string &message) {
 
 void fatalError(const std::string& message) {
 	std::perror(message.c_str());
-	return;
-	// exit(EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 }
 
