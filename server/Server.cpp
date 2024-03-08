@@ -267,7 +267,7 @@ void	Server::handleReceivedData(int clientIndex) {
 		}
 		// create replies message
 		// TODO(hnoguchi): Server::getUserByFd();を実装した方が良い？
-		replyMsg += message.createMessage(replyNum, this->users_[clientIndex]);
+		replyMsg += message.createMessage(replyNum, this->users_[clientIndex - 1]);
 	}
 	if (replyMsg.empty()) {
 		return;

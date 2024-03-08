@@ -69,6 +69,14 @@ static void	insertReplyList(std::map<kCmdReplyNum, Reply>* list) {
 	r.setNumeric("004");
 	r.setMessage("<servername> <version> <available user modes> <available channel modes>");
 	list->insert(std::make_pair(kRPL_MYINFO, r));
+
+	r.setNumeric("301");
+	r.setMessage("<nick> :<away message>");
+	list->insert(std::make_pair(kRPL_MYINFO, r));
+
+	r.setNumeric("332");
+	r.setMessage();
+	list->insert(std::make_pair(kRPL_MYINFO, r));
 }
 
 int	main() {
