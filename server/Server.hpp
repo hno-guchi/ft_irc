@@ -24,6 +24,9 @@ class Server {
 		// TODO(hnoguchi): 定数で配列のサイズを指定する。
 		std::vector<User>			users_;
 		struct pollfd				fds_[7];
+		// TODO(hngouchi): あとで実装する。
+		// Config	config_;
+		// std::vector<Channel>	channels_
 
 		void	initializeServerSocket(unsigned short port);
 		void	initializeClientSockets();

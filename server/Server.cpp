@@ -251,6 +251,7 @@ void	Server::handleReceivedData(int clientIndex) {
 	for (std::vector<std::string>::iterator it = messages.begin(); \
 			it != messages.end(); ++it) {
 		// parse
+		// TODO(hnoguchi): commandは、すべてアルファベットであれば、すべて大文字に変換すること。
 		Parser	parser(*it);
 		parser.tokenize();
 		parser.printTokens();
@@ -261,7 +262,7 @@ void	Server::handleReceivedData(int clientIndex) {
 		Execute		execute(parser.getCommand());
 		// std::cout << clientIndex << std::endl;
 		// this->users_[clientIndex - 1].printData();
-		int			replyNum = execute.exec(&this->users_[clientIndex - 1]);
+		int			replyNum = execute.exec(&this->users_[clientIndex - 1], &this->users_);
 		if (replyNum == 0) {
 			continue;
 		}
