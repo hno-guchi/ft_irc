@@ -33,7 +33,9 @@ bool Execute::isCommand() {
 	return (false);
 }
 
-int Execute::exec(User* user) {
+// TODO(hnoguchi): 引数に、サーバのコンフィグやチャンネルの情報を渡す。
+// TODO(hnoguchi): message paramのパースは、Parserクラスで行う。
+int Execute::exec(User* user, std::vector<User>* users) {
 	if (!this->isCommand()) {
 		return (kERR_UNKNOWNCOMMAND);
 	}
@@ -49,6 +51,32 @@ int Execute::exec(User* user) {
 		// TODO(hnoguchi): castは使わない実装にする？？
 		if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
 			fatalError("send");
+		}
+	} else if (this->command_.getCommand() == "NOTICE") {
+		// 送り主のニックネームを取得
+		std::string	message = ":" + user->getNickName() + " NOTICE ";
+		// 送り先のニックネームを取得
+		std::vector<Param>	params = this->command_.getParams();
+		// メッセージを付ける
+		// TODO(hnoguchi): parser classで、prefixを外すかどうか考える必要がある。
+		message += params[0].getValue() + " " + params[1].getValue() + "\r\n";
+		for (std::vector<User>::const_iterator it = users->begin(); \
+				it != users->end(); it++) {
+			if (params[0].getValue() == it->getNickName()) {
+				int fd = it->getFd();
+				// 送信
+				std::cout << "Send message: [" << message << "]" << std::endl;
+				ssize_t		sendMsgSize = sendNonBlocking(fd, message.c_str(), message.size());
+				if (sendMsgSize <= 0) {
+					// handleClientDisconnect(&this->fds_[clientIndex].fd);
+					return (-1);
+				}
+				// TODO(hnoguchi): castは使わない実装にする？？
+				if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
+					fatalError("send");
+				}
+				break;
+			}
 		}
 	}
 	return (0);

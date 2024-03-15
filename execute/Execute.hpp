@@ -8,6 +8,7 @@
 
 class Execute {
  private:
+	 // TODO(hnoguchi): 参照渡しは、よくない気がする。
 	 const Command&				command_;
 	 static const std::string	cmdList_[];
 
@@ -16,7 +17,7 @@ class Execute {
 	 ~Execute();
 
 	bool	isCommand();
-	int		exec(User* user);
+	int		exec(User* user, std::vector<User>* users);
 };
 
 #endif  // EXECUTE_HPP
