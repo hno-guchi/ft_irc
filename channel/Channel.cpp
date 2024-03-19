@@ -105,3 +105,7 @@ const std::vector<User*>	Channel::getMembers() const {
 const std::vector<User*>	Channel::getOperators() const {
 	return (this->operators_);
 }
+
+void	Channel::addMember(User* user) {
+	this->members_.push_back(user);
+}

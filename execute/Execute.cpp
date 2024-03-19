@@ -1,8 +1,9 @@
 #include "./Execute.hpp"
 #include "../error/error.hpp"
 #include "../server/Server.hpp"
-#include "../reply/Reply.hpp"
 #include "../user/User.hpp"
+#include "../channel/Channel.hpp"
+#include "../reply/Reply.hpp"
 
 const std::string	Execute::cmdList_[] = {
 	"PASS",
@@ -35,7 +36,7 @@ bool Execute::isCommand() {
 
 // TODO(hnoguchi): 引数に、サーバのコンフィグやチャンネルの情報を渡す。
 // TODO(hnoguchi): message paramのパースは、Parserクラスで行う。
-int Execute::exec(User* user, std::vector<User>* users) {
+int Execute::exec(User* user, std::vector<User>* users, std::vector<Channel>* channels) {
 	if (!this->isCommand()) {
 		return (kERR_UNKNOWNCOMMAND);
 	}
@@ -78,6 +79,59 @@ int Execute::exec(User* user, std::vector<User>* users) {
 				break;
 			}
 		}
+	} else if (this->command_.getCommand() == "PRIVMSG") {
+		// channelがなければ、エラーリプライナンバーを返す
+		// channelを探す
+		for (std::vector<Channel>::const_iterator it = channels->begin(); \
+				it != channels->end(); it++) {
+			// channelがあれば、メンバーにメッセージを送信する
+			if (this->command_.getParams()[0].getValue() == it->getName()) {
+				// TODO(hnoguchi): このやり方は、良くないと思うので、改善が必要。
+				const std::vector<User*>& members = it->getMembers();
+				for (std::vector<User*>::const_iterator member = members.begin(); \
+						member != members.end(); member++) {
+					if (user->getNickName() == (*member)->getNickName()) {
+						continue;
+					}
+					// 送り主のニックネームを取得
+					std::string	message = ":" + user->getNickName() + " PRIVMSG ";
+					// 送り先のニックネームを取得
+					// message += (*member)->getNickName() + " " + this->command_.getParams()[1].getValue() + "\r\n";
+					message += this->command_.getParams()[0].getValue() + " " + this->command_.getParams()[1].getValue() + "\r\n";
+					std::cout << "Send message: [" << message << "]" << std::endl;
+					ssize_t		sendMsgSize = sendNonBlocking((*member)->getFd(), message.c_str(), message.size());
+					if (sendMsgSize <= 0) {
+						// handleClientDisconnect(&this->fds_[clientIndex].fd);
+						return (-1);
+					}
+					// TODO(hnoguchi): castは使わない実装にする？？
+					if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
+						fatalError("send PRIVMSG");
+					}
+				}
+			}
+		}
+	} else if (this->command_.getCommand() == "JOIN") {
+		// channelを探す
+		for (std::vector<Channel>::iterator it = channels->begin(); \
+				it != channels->end(); it++) {
+			// あれば、追加して、リプライナンバーを返す
+			if (this->command_.getParams()[0].getValue() == it->getName()) {
+				it->addMember(user);
+				return (kRPL_TOPIC);
+			}
+		}
+		// なければchannelを作成して、ユーザを追加して、リプライナンバーを返す
+		channels->push_back(Channel(this->command_.getParams()[0].getValue()));
+		for (std::vector<Channel>::iterator it = channels->begin(); \
+				it != channels->end(); it++) {
+			// あれば、追加して、リプライナンバーを返す
+			if (this->command_.getParams()[0].getValue() == it->getName()) {
+				it->addMember(user);
+				return (kRPL_TOPIC);
+			}
+		}
+	// } else if (this->command_.getCommand() == "PART") {
 	}
 	return (0);
 }

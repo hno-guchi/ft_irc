@@ -262,13 +262,14 @@ void	Server::handleReceivedData(int clientIndex) {
 		Execute		execute(parser.getCommand());
 		// std::cout << clientIndex << std::endl;
 		// this->users_[clientIndex - 1].printData();
-		int			replyNum = execute.exec(&this->users_[clientIndex - 1], &this->users_);
+		int			replyNum = execute.exec(&this->users_[clientIndex - 1], &this->users_, &this->channels_);
 		if (replyNum == 0) {
 			continue;
 		}
 		// create replies message
 		// TODO(hnoguchi): Server::getUserByFd();を実装した方が良い？
 		replyMsg += message.createMessage(replyNum, this->users_[clientIndex - 1]);
+		std::cout << "replyMsg: [" << replyMsg << "]" << std::endl;
 	}
 	if (replyMsg.empty()) {
 		return;
