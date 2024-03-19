@@ -3,8 +3,10 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include "../parser/Parser.hpp"
 #include "../user/User.hpp"
+#include "../channel/Channel.hpp"
 
 class Execute {
  private:
@@ -17,7 +19,8 @@ class Execute {
 	 ~Execute();
 
 	bool	isCommand();
-	int		exec(User* user, std::vector<User>* users);
+	int		exec(User* user, std::vector<User>* users, \
+			std::vector<Channel>* channels);
 };
 
 #endif  // EXECUTE_HPP

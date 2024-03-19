@@ -43,6 +43,9 @@ class Channel {
 	unsigned int				getModes() const;
 	const std::vector<User*>	getMembers() const;
 	const std::vector<User*>	getOperators() const;
+
+	// ChannelManage class
+	void						addMember(User* user);
 };
 
 #endif  // CHANNEL_HPP

@@ -76,7 +76,7 @@ static void	insertReplyList(std::map<kCmdReplyNum, Reply>* list) {
 
 	r.setNumeric("332");
 	r.setMessage();
-	list->insert(std::make_pair(kRPL_MYINFO, r));
+	list->insert(std::make_pair(kRPL_TOPIC, r));
 }
 
 int	main() {
