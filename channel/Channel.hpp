@@ -20,6 +20,7 @@ class Channel {
 	 std::string		key_;
 	 int				limit_;
 	 unsigned int		modes_;
+	 // TODO(hnoguchi): ChannelUsers classにする？
 	 std::vector<User*>	members_;
 	 std::vector<User*>	operators_;
 
@@ -44,7 +45,7 @@ class Channel {
 	const std::vector<User*>	getMembers() const;
 	const std::vector<User*>	getOperators() const;
 
-	// ChannelManage class
+	// TODO(hnoguchi): ChannelUsers classにする？
 	void						addMember(User* user);
 };
 

@@ -34,7 +34,6 @@ ssize_t	sendNonBlocking(int fd, const char* buffer, \
 /*
  * Helper functions
  */
-
 static void	setFdFlags(const int fd, const int setFlags) {
 	int	flags = 0;
 
@@ -286,6 +285,10 @@ void	Server::handleReceivedData(int clientIndex) {
 	}
 }
 
+// TODO(hnoguchi): エラー処理は、try-catch{}で実装する。
+// TODO(hnoguchi): サーバーの終了処理を実装する。
+// TODO(hnoguchi): Server classにpasswordを追加する。
+// TODO(hnoguchi): <port>, <password>のバリデーションを実装する。
 int	main(int argc, char* argv[]) {
 	if (argc != 3) {
 		std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;

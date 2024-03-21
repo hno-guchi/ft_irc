@@ -16,32 +16,32 @@
 #include "../reply/Reply.hpp"
 
 class Server {
-	private:
-		int							socketFd_;
-		// socklen_tはコンパイラによってエラー。intの場合もある。
-		socklen_t					socketAddressLen_;
-		const int					maxClients_;
-		struct sockaddr_in			socketAddress_;
-		// TODO(hnoguchi): 定数で配列のサイズを指定する。
-		std::vector<User>			users_;
-		struct pollfd				fds_[7];
-		// TODO(hnoguchi): std::mapの方が良い？
-		std::vector<Channel>		channels_;
-		// TODO(hngouchi): あとで実装する。
-		// Config	config_;
+ private:
+	 // TODO(hngouchi): あとで実装する。
+	 // Config						config_;
+	 int							socketFd_;
+	 // socklen_tはコンパイラによってエラー。intの場合もある。
+	 socklen_t					socketAddressLen_;
+	 const int					maxClients_;
+	 struct sockaddr_in			socketAddress_;
+	 // TODO(hnoguchi): 定数で配列のサイズを指定する。
+	 std::vector<User>			users_;
+	 struct pollfd				fds_[7];
+	 // TODO(hnoguchi): std::mapの方が良い？
+	 std::vector<Channel>		channels_;
 
-		void	initializeServerSocket(unsigned short port);
-		void	initializeClientSockets();
+	 void	initializeServerSocket(unsigned short port);
+	 void	initializeClientSockets();
 
-		void	handleServerSocket();
-		void	handleStandardInput();
-		void	handleClientSocket();
-		void	handleReceivedData(int clientIndex);
+	 void	handleServerSocket();
+	 void	handleStandardInput();
+	 void	handleClientSocket();
+	 void	handleReceivedData(int clientIndex);
 
-	public:
-		explicit Server(unsigned short port);
-		~Server();
-		void	run(void);
+ public:
+	 explicit Server(unsigned short port);
+	 ~Server();
+	 void	run(void);
 };
 
 ssize_t	sendNonBlocking(int fd, const char* buffer, size_t dataSize);
