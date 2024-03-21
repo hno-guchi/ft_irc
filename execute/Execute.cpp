@@ -95,8 +95,7 @@ int Execute::exec(User* user, std::vector<User>* users, std::vector<Channel>* ch
 					}
 					// 送り主のニックネームを取得
 					std::string	message = ":" + user->getNickName() + " PRIVMSG ";
-					// 送り先のニックネームを取得
-					// message += (*member)->getNickName() + " " + this->command_.getParams()[1].getValue() + "\r\n";
+					// 送り先のchannelを取得
 					message += this->command_.getParams()[0].getValue() + " " + this->command_.getParams()[1].getValue() + "\r\n";
 					std::cout << "Send message: [" << message << "]" << std::endl;
 					ssize_t		sendMsgSize = sendNonBlocking((*member)->getFd(), message.c_str(), message.size());

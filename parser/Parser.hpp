@@ -82,6 +82,7 @@ class Command {
 class Parser {
  private:
 	std::string			message_;
+	// TODO(hnoguchi): Token classは、一時的なものだから、parser();で生成する。よっていらない。
 	std::vector<Token>	tokens_;
 	Command				command_;
 
@@ -90,12 +91,15 @@ class Parser {
 	~Parser();
 
 	// SETTER
+	// TODO(hnoguchi): parser();で生成する。よっていらない。
 	void	tokenize();
 	void	parse();
 	// GETTER
+	// TODO(hnoguchi): parser();で生成する。よっていらない。
 	const std::vector<Token>&	getTokens() const;
 	const Command&				getCommand() const;
 	// debug
+	// TODO(hnoguchi): parser();で生成する。よっていらない。
 	void	printTokens() const;
 };
 
