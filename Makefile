@@ -8,6 +8,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
 DEBUGFLAGS = -g -fsanitize=undefined -fsanitize=integer -fsanitize=address -DDEBUG
 RM = rm -r -f
 SRCS = Server.cpp \
+	   ServerSocket.cpp \
 	   User.cpp \
 	   Channel.cpp \
 	   Parser.cpp \
