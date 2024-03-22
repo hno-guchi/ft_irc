@@ -1,5 +1,6 @@
 #include "./Server.hpp"
 #include "./ServerSocket.hpp"
+#include "./Config.hpp"
 #include "../color.hpp"
 #include "../error/error.hpp"
 #include "../user/User.hpp"
@@ -87,14 +88,14 @@ static std::vector<std::string>	split(const std::string& message, \
  * Server class
  */
 Server::Server(unsigned short port) : \
-	socket_(port), maxClients_(5) {
+	socket_(port), config_() {
 	// TODO(hnoguchi): Add try-catch
 	this->fds_[0].fd = this->socket_.getFd();
-	for (int i = 1; i <= this->maxClients_; i++) {
+	for (int i = 1; i <= this->config_.getMaxClients(); i++) {
 		this->fds_[i].fd = -1;
 	}
-	this->fds_[this->maxClients_].fd = STDIN_FILENO;
-	for (int i = 0; i <= this->maxClients_; i++) {
+	this->fds_[this->config_.getMaxClients()].fd = STDIN_FILENO;
+	for (int i = 0; i <= this->config_.getMaxClients(); i++) {
 		this->fds_[i].events = POLLIN;
 		this->fds_[i].revents = 0;
 	}
@@ -104,7 +105,7 @@ Server::~Server() {}
 
 void	Server::run() {
 	while (1) {
-		int result = poll(fds_, maxClients_ + 1, 3 * 1000);
+		int result = poll(fds_, this->config_.getMaxClients() + 1, 3 * 1000);
 
 		if (result == -1) {
 			fatalError("poll");
@@ -125,10 +126,10 @@ void	Server::handleServerSocket() {
 	}
 	// TODO(hnoguchi): Add try-catch
 	int newSocket = this->socket_.createClientSocket();
-	for (int i = 1; i <= this->maxClients_; ++i) {
+	for (int i = 1; i <= this->config_.getMaxClients(); ++i) {
 		if (this->fds_[i].fd == -1) {
 			this->fds_[i].fd = newSocket;
-			if (static_cast<const int>(this->users_.size()) >= this->maxClients_) {
+			if (static_cast<const int>(this->users_.size()) >= this->config_.getMaxClients()) {
 				handleClientDisconnect(&this->fds_[i].fd);
 				std::cerr << "Max clients reached." << std::endl;
 				return;
@@ -168,7 +169,7 @@ void	Server::handleServerSocket() {
 }
 
 void	Server::handleStandardInput() {
-	if (this->fds_[this->maxClients_].revents & POLLIN) {
+	if (this->fds_[this->config_.getMaxClients()].revents & POLLIN) {
 		std::string	input;
 		std::getline(std::cin, input);
 		if (input == "exit") {
@@ -179,7 +180,7 @@ void	Server::handleStandardInput() {
 }
 
 void	Server::handleClientSocket() {
-	for (int i = 1; i <= this->maxClients_; ++i) {
+	for (int i = 1; i <= this->config_.getMaxClients(); ++i) {
 		if (this->fds_[i].fd != -1 && (this->fds_[i].revents & POLLIN)) {
 			handleReceivedData(i);
 		}

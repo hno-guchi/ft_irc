@@ -9,6 +9,7 @@ DEBUGFLAGS = -g -fsanitize=undefined -fsanitize=integer -fsanitize=address -DDEB
 RM = rm -r -f
 SRCS = Server.cpp \
 	   ServerSocket.cpp \
+	   Config.cpp \
 	   User.cpp \
 	   Channel.cpp \
 	   Parser.cpp \
