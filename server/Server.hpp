@@ -8,21 +8,20 @@
 #include <vector>
 #include <cstring>
 #include "./ServerSocket.hpp"
+#include "./Config.hpp"
 #include "../user/User.hpp"
 #include "../channel/Channel.hpp"
 #include "../reply/Reply.hpp"
 
 class Server {
  private:
-	 ServerSocket					socket_;
-	 // TODO(hngouchi): あとで実装する。
-	 // Config						config_;
-	 const int					maxClients_;
+	 ServerSocket			socket_;
+	 Config					config_;
 	 // TODO(hnoguchi): 定数で配列のサイズを指定する。
-	 std::vector<User>			users_;
-	 struct pollfd				fds_[7];
+	 std::vector<User>		users_;
 	 // TODO(hnoguchi): std::mapの方が良い？
-	 std::vector<Channel>		channels_;
+	 std::vector<Channel>	channels_;
+	 struct pollfd			fds_[7];
 
 	 void	handleServerSocket();
 	 void	handleStandardInput();
