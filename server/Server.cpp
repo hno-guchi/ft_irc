@@ -1,4 +1,5 @@
 #include "./Server.hpp"
+#include "./ServerSocket.hpp"
 #include "../color.hpp"
 #include "../error/error.hpp"
 #include "../user/User.hpp"
@@ -34,18 +35,6 @@ ssize_t	sendNonBlocking(int fd, const char* buffer, \
 /*
  * Helper functions
  */
-static void	setFdFlags(const int fd, const int setFlags) {
-	int	flags = 0;
-
-	if ((flags = fcntl(fd, F_GETFL, 0)) < 0) {
-		fatalError("fcntl");
-	}
-	flags |= setFlags;
-	if (fcntl(fd, F_SETFL, flags) < 0) {
-		fatalError("fcntl");
-	}
-}
-
 static void	handleClientDisconnect(int* fd) {
 	std::cout << "Client socket " << *fd \
 		<< " disconnected." << std::endl;
@@ -98,36 +87,9 @@ static std::vector<std::string>	split(const std::string& message, \
  * Server class
  */
 Server::Server(unsigned short port) : \
-	socketFd_(0), socketAddressLen_(sizeof(socketAddress_)), maxClients_(5) {
-		initializeServerSocket(port);
-		initializeClientSockets();
-}
-
-void	Server::initializeServerSocket(unsigned short port) {
-	this->socketFd_ = socket(AF_INET, SOCK_STREAM, 0);
-	if (this->socketFd_ < 0) {
-		fatalError("socket");
-	}
-
-	setFdFlags(this->socketFd_, O_NONBLOCK);
-
-	memset(&this->socketAddress_, 0, sizeof(this->socketAddress_));
-	this->socketAddress_.sin_family = AF_INET;
-	this->socketAddress_.sin_addr.s_addr = INADDR_ANY;
-	this->socketAddress_.sin_port = htons(port);
-
-	if (bind(this->socketFd_, reinterpret_cast<struct sockaddr*>(&this->socketAddress_), \
-				sizeof(this->socketAddress_)) < 0) {
-		fatalError("bind");
-	}
-	if (listen(this->socketFd_, 3) < 0) {
-		fatalError("listen");
-	}
-	std::cout << "Server is listening on port " << port << "..." << std::endl;
-}
-
-void	Server::initializeClientSockets() {
-	this->fds_[0].fd = this->socketFd_;
+	socket_(port), maxClients_(5) {
+	// TODO(hnoguchi): Add try-catch
+	this->fds_[0].fd = this->socket_.getFd();
 	for (int i = 1; i <= this->maxClients_; i++) {
 		this->fds_[i].fd = -1;
 	}
@@ -138,9 +100,7 @@ void	Server::initializeClientSockets() {
 	}
 }
 
-Server::~Server() {
-	close(socketFd_);
-}
+Server::~Server() {}
 
 void	Server::run() {
 	while (1) {
@@ -163,13 +123,8 @@ void	Server::handleServerSocket() {
 	if (!(this->fds_[0].revents & POLLIN)) {
 		return;
 	}
-	int newSocket = accept(this->socketFd_, \
-			reinterpret_cast<struct sockaddr*>(&this->socketAddress_), &this->socketAddressLen_);
-	if (newSocket < 0) {
-		close(newSocket);
-		fatalError("accept");
-	}
-	setFdFlags(newSocket, O_NONBLOCK);
+	// TODO(hnoguchi): Add try-catch
+	int newSocket = this->socket_.createClientSocket();
 	for (int i = 1; i <= this->maxClients_; ++i) {
 		if (this->fds_[i].fd == -1) {
 			this->fds_[i].fd = newSocket;
