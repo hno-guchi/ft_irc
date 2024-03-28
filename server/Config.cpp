@@ -4,6 +4,7 @@ const std::string	Config::commandList_[] = {
 	"PASS",
 	"NICK",
 	"USER",
+	"OPER",
 	"QUIT",
 	"JOIN",
 	"KICK",
@@ -14,6 +15,7 @@ const std::string	Config::commandList_[] = {
 	"NOTICE",
 	"PING",
 	"PONG",
+	"ERROR",
 	""
 };
 

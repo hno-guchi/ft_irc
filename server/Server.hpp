@@ -15,8 +15,8 @@
 
 class Server {
  private:
-	 ServerSocket			socket_;
-	 Config					config_;
+	 const ServerSocket		socket_;
+	 const Config			config_;
 	 // TODO(hnoguchi): 定数で配列のサイズを指定する。
 	 std::vector<User>		users_;
 	 // TODO(hnoguchi): std::mapの方が良い？

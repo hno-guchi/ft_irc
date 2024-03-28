@@ -18,7 +18,7 @@ class ServerSocket {
 	 ~ServerSocket();
 	 // GETTERS
 	 int	getFd() const;
-	 int	createClientSocket();
+	 int	createClientSocket() const;
 };
 
 void	setFdFlags(const int fd, const int setFlags);
