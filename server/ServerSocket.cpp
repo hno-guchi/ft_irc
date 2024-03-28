@@ -48,9 +48,11 @@ int	ServerSocket::getFd() const {
 	return (this->fd_);
 }
 
-int	ServerSocket::createClientSocket() {
+int	ServerSocket::createClientSocket() const {
 	int socket = accept(this->fd_, \
-			reinterpret_cast<struct sockaddr*>(&this->address_), &this->addressLen_);
+			reinterpret_cast<struct sockaddr*>(\
+				const_cast<struct sockaddr_in*>(&this->address_)), \
+			const_cast<socklen_t*>(&this->addressLen_));
 	if (socket < 0) {
 		close(socket);
 		fatalError("accept");

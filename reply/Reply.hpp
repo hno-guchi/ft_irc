@@ -3,6 +3,8 @@
 
 #include <string>
 
+// 381 RPL_YOUREOPER ":You are now an IRC operator"
+
 // TODO(hnoguchi): welcome messageで使用するものは分ける？
 enum kCmdReplyNum {
 	kRPL_WELCOME = 1,
