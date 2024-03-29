@@ -8,9 +8,10 @@
 
 enum kChannelMode {
 	kInviteOnly = (1 << 0),
-	kTopicSetOnlyOperator = (1 << 1),
-	kKey = (1 << 2),
-	kLimit = (1 << 3)
+	kKey = (1 << 1),
+	kLimit = (1 << 2)
+	kChannelOperator = (1 << 3)
+	kTopicSetOnlyOperator = (1 << 4),
 };
 
 class Channel {

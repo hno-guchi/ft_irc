@@ -2,7 +2,7 @@
 
 // CONSTRUCTORS and DESTRUCTORS
 User::User() :
-	fd_(-1) {}
+	fd_(-1), modes_(0) {}
 
 User::~User() {}
 
@@ -27,6 +27,10 @@ void	User::setFd(int fd) {
 	this->fd_ = fd;
 }
 
+void	User::setMode(kUserMode mode) {
+	this->modes_ |= mode;
+}
+
 // GETTERS
 const std::string&	User::getNickName() const {
 	return (this->nickName_);
@@ -48,10 +52,15 @@ int	User::getFd() const {
 	return (this->fd_);
 }
 
+unsigned int	User::getModes() const {
+	return (this->modes_);
+}
+
 // DEBUG
 void	User::printData() const {
 	std::cout << MAGENTA << "[USER INFO] --------------------" << END << std::endl;
 	std::cout << "[fd]         : [" << this->fd_ << "]" << std::endl;
+	std::cout << "[modes]      : [" << this->modes_ << "]" << std::endl;
 	std::cout << "[nickName]   : [" << this->nickName_ << "]" << std::endl;
 	std::cout << "[hostName]   : [" << this->hostName_ << "]" << std::endl;
 	std::cout << "[userName]   : [" << this->userName_ << "]" << std::endl;

@@ -20,8 +20,8 @@ const std::string	Config::commandList_[] = {
 };
 
 Config::Config() : \
-	maxClients_(5), version_(1), serverName_("ft_irc"), \
-	userModes_("[umode]"), channelModes_("[cmode]") {
+	maxClients_(5), version_(1), serverName_("ft_irc.42tokyo.net"), \
+	userModes_("aor"), channelModes_("iklot") {
 }
 
 Config::~Config() {}
