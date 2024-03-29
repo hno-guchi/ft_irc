@@ -5,6 +5,12 @@
 #include <string>
 #include "../color.hpp"
 
+enum kUserMode {
+	kAway = (1 << 0),
+	kOperator = (1 << 1),
+	kRestrict = (1 << 2),
+};
+
 class User {
  private:
 	 std::string	nickName_;
@@ -12,6 +18,7 @@ class User {
 	 std::string	userName_;
 	 std::string	serverName_;
 	 int			fd_;
+	 unsigned int	modes_;
 
  public:
 	 User();
@@ -23,12 +30,14 @@ class User {
 	 void	setUserName(const std::string &userName);
 	 void	setServerName(const std::string &serverName);
 	 void	setFd(int fd);
+	 void	setMode(kUserMode mode);
 	 // GETTERS
 	 const std::string&	getNickName() const;
 	 const std::string&	getHostName() const;
 	 const std::string&	getUserName() const;
 	 const std::string&	getServerName() const;
 	 int				getFd() const;
+	 unsigned int		getModes() const;
 	 // DEBUG
 	 void	printData() const;
 };
