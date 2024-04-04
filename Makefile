@@ -10,12 +10,12 @@ RM = rm -r -f
 SRCS = Server.cpp \
 	   ServerSocket.cpp \
 	   Config.cpp \
+	   Info.cpp \
 	   User.cpp \
 	   Channel.cpp \
 	   Parser.cpp \
 	   Execute.cpp \
 	   Reply.cpp \
-	   Message.cpp \
 	   error.cpp
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 OBJS_DIR = ./objs
@@ -46,8 +46,6 @@ $(OBJS_DIR)/%.o: ./execute/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./reply/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-$(OBJS_DIR)/%.o: ./message/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./error/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -70,3 +68,7 @@ parser:
 .PHONY: reply
 reply:
 	make -C ./reply
+
+.PHONY: user
+user: $(OBJS_DIR)
+	$(CXX) $(CXXFLAGS) -o $(OBJS_DIR)/user ./user/User.cpp

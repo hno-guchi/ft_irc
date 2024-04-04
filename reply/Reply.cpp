@@ -1,6 +1,9 @@
 #include "./Reply.hpp"
 #include "../error/error.hpp"
 
+// メッセージ作成に必要な情報源
+// <nick>, <user>, <host>: メッセージ本文
+// <servername>, <ver>, <date>, <available user modes>, <available channel modes>: Config class
 // 001	RPL_WELCOME				"Welcome to the Internet Relay Network <nick>!<user>@<host>"
 // 002	RPL_YOURHOST			"Your host is <servername>, running version <ver>"
 // 003	RPL_CREATED				"This server was created <date>"
@@ -117,44 +120,46 @@
 // 461	ERR_NEEDMOREPARAMS   "<command> :Not enough parameters"
 // 462	ERR_ALREADYREGISTRED ":Unauthorized command (already registered)"
 
+// 451	ERR_NOTREGISTERED	`":You have not registered"`
+
 // CONSTRUCTOR
 // DESTRUCTOR
-Reply::Reply() {}
+Reply::Reply() : delimiter_("\r\n") {}
 Reply::~Reply() {}
 
 // SETTER
-void Reply::setMessage(const std::string& message) {
-	if (message.empty()) {
-		printErrorMessage("Reply::setMessage is empty argument.");
-		return;
-	}
-	this->message_ = message;
-	return;
-}
+// void Reply::setMessage(const std::string& message) {
+// 	if (message.empty()) {
+// 		printErrorMessage("Reply::setMessage is empty argument.");
+// 		return;
+// 	}
+// 	this->message_ = message;
+// 	return;
+// }
 
-void Reply::setNumeric(const std::string& num) {
-	if (num.empty()) {
-		printErrorMessage("Reply::setNumeric is empty argument.");
-		return;
-	}
-	this->numeric_ = num;
-	return;
-}
+// void Reply::setNumeric(const std::string& num) {
+// 	if (num.empty()) {
+// 		printErrorMessage("Reply::setNumeric is empty argument.");
+// 		return;
+// 	}
+// 	this->numeric_ = num;
+// 	return;
+// }
 
 // GETTER
-const std::string&	Reply::getMessage() const {
-	return (this->message_);
-}
+// const std::string&	Reply::getMessage() const {
+// 	return (this->message_);
+// }
 
-const std::string&	Reply::getNumeric() const {
-	return (this->numeric_);
-}
+// const std::string&	Reply::getNumeric() const {
+// 	return (this->numeric_);
+// }
 
 // debug
-void	Reply::printReply() const {
-	std::cout << "[" << this->numeric_ << "]: [" \
-		<< this->message_ << "]" << std::endl;
-}
+// void	Reply::printReply() const {
+// 	std::cout << "[" << this->numeric_ << "]: [" \
+// 		<< this->message_ << "]" << std::endl;
+// }
 
 #ifdef DEBUG
 #include <map>

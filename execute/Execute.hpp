@@ -4,26 +4,20 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "../server/Info.hpp"
 #include "../parser/Parser.hpp"
 #include "../user/User.hpp"
 #include "../channel/Channel.hpp"
 
 class Execute {
- private:
-	 // TODO(hnoguchi): 参照渡しは、よくない気がする。
-	 const Command&				command_;
-	 // TODO(hnoguchi): Config classで定義する。
-	 static const std::string	cmdList_[];
-
  public:
-	 explicit Execute(const Command &command);
+	 Execute();
 	 ~Execute();
 
 	// TODO(hnoguchi): コマンドのバリデーションは、Parser classで行うので必要ない？
-	bool	isCommand();
+	bool	isCommand(const std::string& command, const std::string* cmdList);
 	// TODO(hnoguchi): 引数にConfig configを追加で渡す。
-	int		exec(User* user, std::vector<User>* users, \
-			std::vector<Channel>* channels);
+	int		exec(User* user, const Command& command, Info* info);
 };
 
 #endif  // EXECUTE_HPP
