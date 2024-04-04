@@ -10,3 +10,28 @@
  *    PONG csd.bu.edu tolsun.oulu.fi  ; PONG message from csd.bu.edu to tolsun.oulu.fi
  *
  */
+
+#include <iostream>
+#include "../../user/User.hpp"
+#include "../../server/Info.hpp"
+#include "../../server/Server.hpp"
+#include "../../reply/Reply.hpp"
+#include "../../parser/Parser.hpp"
+#include "../../error/error.hpp"
+
+int	pong(User* user, const Command& command, Info* info) {
+	(void)command;
+	std::string	message = ":" + user->getNickName() + " PONG " + info->getConfig().getServerName() + "\r\n";
+	// std::cout << "Send message: [" << message << "]" << std::endl;
+	ssize_t		sendMsgSize = sendNonBlocking(user->getFd(), message.c_str(), message.size());
+	if (sendMsgSize <= 0) {
+		// handleClientDisconnect(&user->getFd());
+		return (-1);
+	}
+	// TODO(hnoguchi): castは使わない実装にする？？
+	if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
+		fatalError("send");
+	}
+	// TODO(hnoguchi): 成功用のenumを作成するかも。。。
+	return (0);
+}
