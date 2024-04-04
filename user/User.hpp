@@ -8,7 +8,7 @@
 enum kUserMode {
 	kAway = (1 << 0),
 	kOperator = (1 << 1),
-	kRestrict = (1 << 2),
+	kRestrict = (1 << 2)
 };
 
 class User {
@@ -17,6 +17,7 @@ class User {
 	 std::string	hostName_;
 	 std::string	userName_;
 	 std::string	serverName_;
+	 bool			isRegistered_;
 	 int			fd_;
 	 unsigned int	modes_;
 
@@ -29,6 +30,7 @@ class User {
 	 void	setHostName(const std::string &hostName);
 	 void	setUserName(const std::string &userName);
 	 void	setServerName(const std::string &serverName);
+	 void	setIsRegistered(bool flag);
 	 void	setFd(int fd);
 	 void	setMode(kUserMode mode);
 	 // GETTERS
@@ -36,6 +38,7 @@ class User {
 	 const std::string&	getHostName() const;
 	 const std::string&	getUserName() const;
 	 const std::string&	getServerName() const;
+	 bool				getIsRegistered() const;
 	 int				getFd() const;
 	 unsigned int		getModes() const;
 	 // DEBUG

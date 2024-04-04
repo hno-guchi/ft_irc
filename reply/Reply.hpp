@@ -46,6 +46,7 @@ enum kErrReplyNum {
 	kERR_USERNOTINCHANNEL	= 441,
 	kERR_NOTONCHANNEL		= 442,
 	kERR_USERONCHANNEL		= 443,
+	kERR_NOTREGISTERED		= 451,
 	kERR_NEEDMOREPARAMS		= 461,
 	kERR_ALREADYREGISTRED	= 462,
 	kERR_PASSWDMISMATCH		= 464,
@@ -66,19 +67,22 @@ enum kErrReplyNum {
 
 class Reply {
  private:
-	 std::string	message_;
-	 std::string	numeric_;
+	 const std::string	delimiter_;
+	 // std::string	message_;
+	 // std::string	numeric_;
  public:
 	 Reply();
 	 ~Reply();
+
+	 // std::string	createWelcomeMessage(const Config& config);
 	 // SETTER
-	 void	setMessage(const std::string& message);
-	 void	setNumeric(const std::string& num);
+	 // void	setMessage(const std::string& message);
+	 // void	setNumeric(const std::string& num);
 	 // GETTER
-	 const std::string&	getMessage() const;
-	 const std::string&	getNumeric() const;
+	 // const std::string&	getMessage() const;
+	 // const std::string&	getNumeric() const;
 	 // debug
-	 void	printReply() const;
+	 // void	printReply() const;
 };
 
 #endif  // REPLY_HPP

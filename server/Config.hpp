@@ -5,7 +5,8 @@
 
 class Config {
  private:
-	 const int					maxClients_;
+	 const int					maxClient_;
+	 const int					maxChannel_;
 	 const int					version_;
 	 const std::string			serverName_;
 	 const std::string			userModes_;
@@ -15,13 +16,23 @@ class Config {
  public:
 	 Config();
 	 ~Config();
+	 // TODO(hnoguchi): constを外すなら、コピーアサインメント演算子をオーバーロードする
+	 // Config&	operator=(const Config& rhs);
 	 // GETTERS
-	 int				getMaxClients() const;
+	 int				getMaxClient() const;
+	 int				getMaxChannel() const;
 	 int				getVersion() const;
 	 const std::string&	getServerName() const;
 	 const std::string&	getUserModes() const;
 	 const std::string&	getChannelModes() const;
 	 const std::string*	getCommandList() const;
+	 // SETTER
+	 // void	setMaxClient(int maxClient);
+	 // void	setMaxChannel(int maxChannel);
+	 // void	setVersion(int version);
+	 // void	setServerName(const std::string& serverName);
+	 // void	setUserModes(const std::string& userModes);
+	 // void	setChannelModes(const std::string& channelModes);
 };
 
 #endif  // CONFIG_HPP

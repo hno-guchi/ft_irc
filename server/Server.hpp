@@ -9,24 +9,26 @@
 #include <cstring>
 #include "./ServerSocket.hpp"
 #include "./Config.hpp"
-#include "../user/User.hpp"
-#include "../channel/Channel.hpp"
+#include "./Info.hpp"
+// #include "../user/User.hpp"
+// #include "../channel/Channel.hpp"
 #include "../reply/Reply.hpp"
 
 class Server {
  private:
 	 const ServerSocket		socket_;
-	 const Config			config_;
+	 Info					info_;
+	 // const Config			config_;
 	 // TODO(hnoguchi): 定数で配列のサイズを指定する。
-	 std::vector<User>		users_;
+	 // std::vector<User>		users_;
 	 // TODO(hnoguchi): std::mapの方が良い？
-	 std::vector<Channel>	channels_;
+	 // std::vector<Channel>	channels_;
 	 struct pollfd			fds_[7];
 
 	 void	handleServerSocket();
 	 void	handleStandardInput();
 	 void	handleClientSocket();
-	 void	handleReceivedData(int clientIndex);
+	 void	handleReceivedData(int i);
 
  public:
 	 explicit Server(unsigned short port);
