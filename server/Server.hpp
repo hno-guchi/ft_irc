@@ -10,19 +10,12 @@
 #include "./ServerSocket.hpp"
 #include "./Config.hpp"
 #include "./Info.hpp"
-// #include "../user/User.hpp"
-// #include "../channel/Channel.hpp"
 #include "../reply/Reply.hpp"
 
 class Server {
  private:
 	 const ServerSocket		socket_;
 	 Info					info_;
-	 // const Config			config_;
-	 // TODO(hnoguchi): 定数で配列のサイズを指定する。
-	 // std::vector<User>		users_;
-	 // TODO(hnoguchi): std::mapの方が良い？
-	 // std::vector<Channel>	channels_;
 	 struct pollfd			fds_[7];
 
 	 void	handleServerSocket();

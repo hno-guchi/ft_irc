@@ -120,12 +120,41 @@
 // 461	ERR_NEEDMOREPARAMS   "<command> :Not enough parameters"
 // 462	ERR_ALREADYREGISTRED ":Unauthorized command (already registered)"
 
-// 451	ERR_NOTREGISTERED	`":You have not registered"`
+// 451	ERR_NOTREGISTERED	":You have not registered"
+// 421	ERR_UNKNOWNCOMMAND	"<command> :Unknown command"
 
 // CONSTRUCTOR
 // DESTRUCTOR
 Reply::Reply() : delimiter_("\r\n") {}
 Reply::~Reply() {}
+
+// ":<sender prefix> <the three digit numeric> <the target of the reply>\r\n"
+std::string	Reply::createMessage(int num, const User& user, const Info& info, const Command& command) {
+	// TODO(hnoguchi): userはいらない？
+	(void)user;
+	if (num <= 0) {
+		return ("");
+	}
+	// TODO(hnoguchi): Check num.
+	// std::string	msg = ":" + user.getNickName();
+	std::string	msg = ":" + info.getConfig().getServerName() + " ";
+	if (num < 100  || (num >= 200 && num < 400)) {
+		// msg += this->cmdReplyMsgList_[static_cast<kCmdReplyNum>(num)].getNumeric();
+		msg += " ";
+		// msg += this->cmdReplyMsgList_[static_cast<kCmdReplyNum>(num)].getMessage();
+	} else if (num >= 400 && num < 600) {
+		if (num == kERR_NOSUCHNICK) {
+			msg += "401 :" + command.getParam() + " :No such nick/channel";
+		else if (num == kERR_NOSUCHSERVER) {
+			msg += "402 :" + command.getParam() + " :No such server";
+		} else if (num == kERR_UNKNOWNCOMMAND) {
+			msg += "421 :" + command.getCommand() + " :Unknown command";
+		}
+	}
+	msg += this->delimiter_;
+	return (msg);
+}
+
 
 // SETTER
 // void Reply::setMessage(const std::string& message) {
@@ -160,54 +189,3 @@ Reply::~Reply() {}
 // 	std::cout << "[" << this->numeric_ << "]: [" \
 // 		<< this->message_ << "]" << std::endl;
 // }
-
-#ifdef DEBUG
-#include <map>
-
-static void printReplyList(const std::map<kCmdReplyNum, Reply>& list) {
-	std::cout << std::endl;
-	list.at(kRPL_WELCOME).printReply();
-	list.at(kRPL_YOURHOST).printReply();
-	list.at(kRPL_CREATED).printReply();
-	list.at(kRPL_MYINFO).printReply();
-	std::cout << std::endl;
-}
-
-static void	insertReplyList(std::map<kCmdReplyNum, Reply>* list) {
-	Reply	r;
-	r.setNumeric("001");
-	r.setMessage("Welcome to the Internet Relay Network <nick>!<user>@<host>");
-	list->insert(std::make_pair(kRPL_WELCOME, r));
-
-	r.setNumeric("002");
-	r.setMessage("Your host is <servername>, running version <ver>");
-	list->insert(std::make_pair(kRPL_YOURHOST, r));
-
-	r.setNumeric("003");
-	r.setMessage("This server was created <date>");
-	list->insert(std::make_pair(kRPL_CREATED, r));
-
-	r.setNumeric("004");
-	r.setMessage("<servername> <version> <available user modes> <available channel modes>");
-	list->insert(std::make_pair(kRPL_MYINFO, r));
-
-	r.setNumeric("301");
-	r.setMessage("<nick> :<away message>");
-	list->insert(std::make_pair(kRPL_MYINFO, r));
-
-	r.setNumeric("332");
-	r.setMessage();
-	list->insert(std::make_pair(kRPL_TOPIC, r));
-}
-
-int	main() {
-	std::map<kCmdReplyNum, Reply> list;
-
-	insertReplyList(&list);
-	printReplyList(list);
-#ifdef LEAKS
-	system("leaks -q reply");
-# endif  // LEAKS
-	return (0);
-}
-#endif  // DEBUG
