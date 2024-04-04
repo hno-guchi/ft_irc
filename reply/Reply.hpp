@@ -2,6 +2,9 @@
 # define REPLY_HPP
 
 #include <string>
+#include "../user/User.hpp"
+#include "../server/Info.hpp"
+#include "../parser/Parser.hpp"
 
 // TODO(hnoguchi): welcome messageで使用するものは分ける？
 enum kCmdReplyNum {
@@ -74,6 +77,7 @@ class Reply {
 	 Reply();
 	 ~Reply();
 
+	 std::string	createMessage(int num, const User& user, const Info& info, const Command& command);
 	 // std::string	createWelcomeMessage(const Config& config);
 	 // SETTER
 	 // void	setMessage(const std::string& message);

@@ -105,7 +105,7 @@ Server::~Server() {}
 void	Server::run() {
 	// TODO(hnoguchi): Add try-catch
 	while (1) {
-		int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 1, 3 * 1000);
+		int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 2, 3 * 1000);
 
 		if (result == -1) {
 			fatalError("poll");
@@ -129,7 +129,7 @@ void	Server::handleServerSocket() {
 	// TODO(hnoguchi): Add try-catch
 	int	newSocket = this->socket_.createClientSocket();
 	int	i = 1;
-	for (; i <= this->info_.getConfig().getMaxClient() + 1; ++i) {
+	for (; i <= this->info_.getConfig().getMaxClient(); ++i) {
 		if (this->fds_[i].fd == -1) {
 			break;
 		}
@@ -197,14 +197,13 @@ void	Server::handleReceivedData(int i) {
 	std::cout << GREEN << buffer << END << std::flush;
 	// Split message
 	std::vector<std::string>	messages = split(buffer, "\r\n");
-	// Message						message;
 	std::string					replyMsg("");
 	// TODO(hnoguchi): 認証処理が完了しているか確認する。
-	if (this->info_.getUsers()[i - 1].getIsRegistered() == false) {
+	// if (this->info_.getUsers()[i - 1].getIsRegistered() == false) {
 		//  認証処理
 		// TODO(hnoguchi): Welcome messageはここで送信する。
-		return;
-	}
+	// 	return;
+	// }
 	for (std::vector<std::string>::iterator it = messages.begin(); \
 			it != messages.end(); ++it) {
 		// parse
@@ -227,6 +226,8 @@ void	Server::handleReceivedData(int i) {
 		// create replies message
 		// TODO(hnoguchi): Server::getUserByFd();を実装した方が良い？
 		// replyMsg += message.createMessage(replyNum, this->users_[i - 1], parser.getCommand());
+		Reply	reply;
+		replyMsg += reply.createMessage(replyNum, this->info_.getUsers()[i - 1], this->info_, parser.getCommand());
 		std::cout << "replyMsg: [" << replyMsg << "]" << std::endl;
 	}
 	if (replyMsg.empty()) {

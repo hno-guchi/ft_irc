@@ -36,8 +36,8 @@ int	Execute::exec(User* user, const Command& command, Info* info) {
 	// 	return (oper(user, command, info));
 	// } else if (command.getCommand() == "quit") {
 	// 	return (quit(user, command, info));
-	} else if (command.getCommand() == "JOIN") {
-		return (join(user, command, info));
+	// } else if (command.getCommand() == "JOIN") {
+	// 	return (join(user, command, info));
 	// } else if (command.getCommand() == "KICK") {
 	// 	return (kick(user, command, info));
 	// } else if (command.getCommand() == "INVITE") {
@@ -46,16 +46,17 @@ int	Execute::exec(User* user, const Command& command, Info* info) {
 	// 	return (topic(user, command, info));
 	// } else if (command.getCommand() == "MODE") {
 	// 	return (mode(user, command, info));
-	} else if (command.getCommand() == "PRIVMSG") {
-		return (privmsg(user, command, info));
-	} else if (command.getCommand() == "NOTICE") {
-		return (notice(user, command, info));
+	// } else if (command.getCommand() == "PRIVMSG") {
+	// 	return (privmsg(user, command, info));
+	// } else if (command.getCommand() == "NOTICE") {
+	// 	return (notice(user, command, info));
 	// } else if (command.getCommand() == "PONG") {
 	// 	return (pong(user, command, info));
 	// } else if (command.getCommand() == "ERROR") {
 	// 	return (error(user, command, info));
 	}
-	return (0);
+	return (kERR_UNKNOWNCOMMAND);
+	// return (0);
 }
 
 #ifdef DEBUG
