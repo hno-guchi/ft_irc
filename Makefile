@@ -15,6 +15,9 @@ SRCS = Server.cpp \
 	   Channel.cpp \
 	   Parser.cpp \
 	   Execute.cpp \
+	   pong.cpp \
+	   notice.cpp privmsg.cpp \
+	   join.cpp \
 	   Reply.cpp \
 	   error.cpp
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
@@ -45,6 +48,12 @@ $(OBJS_DIR)/%.o: ./parser/%.cpp
 $(OBJS_DIR)/%.o: ./execute/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./reply/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./command/channel_operations/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./command/miscellaneous/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./command/sending/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./error/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
