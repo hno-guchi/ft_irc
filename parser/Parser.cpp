@@ -83,9 +83,9 @@ void	Param::printParam() const {
 	return;
 }
 
-// Command class
-Command::Command() {}
-Command::~Command() {}
+// ParsedMessage class
+ParsedMessage::ParsedMessage() {}
+ParsedMessage::~ParsedMessage() {}
 
 static bool	isNotAlpha(const char& c) {
 	std::locale	l = std::locale::classic();
@@ -112,7 +112,7 @@ static std::string	toUpperString(const std::string& str) {
 	return (ret);
 }
 
-void	Command::setCommand(const std::string &command) {
+void	ParsedMessage::setCommand(const std::string &command) {
 	if (command.empty()) {
 		printErrorMessage("Command is empty.");
 		return;
@@ -138,7 +138,7 @@ void	Command::setCommand(const std::string &command) {
  * １文字目がnospcrlfclで、残りの全ての文字列がコロンかnospcrlfclならばmiddle。
  * １文字目がnospcrlfclで、残りの文字列にスペースがあれば、trailing。
  */
-void	Command::setParam(const std::string &param) {
+void	ParsedMessage::setParam(const std::string &param) {
 	if (param.empty()) {
 		printErrorMessage("Empty param.");
 		return;
@@ -155,15 +155,15 @@ void	Command::setParam(const std::string &param) {
 	return;
 }
 
-const std::string&	Command::getCommand() const {
+const std::string&	ParsedMessage::getCommand() const {
 	return (this->command_);
 }
 
-const std::vector<Param>&	Command::getParams() const {
+const std::vector<Param>&	ParsedMessage::getParams() const {
 	return (this->params_);
 }
 
-void	Command::printCommand() const {
+void	ParsedMessage::printParsedMessage() const {
 	if (this->command_.empty()) {
 		return;
 	}
@@ -220,9 +220,9 @@ void	Parser::parse() {
 	for (std::vector<Token>::const_iterator it = this->tokens_.begin(); \
 			it != this->tokens_.end(); it++) {
 		if (it->getType() == kParam) {
-			this->command_.setParam(it->getValue());
+			this->parsed_.setParam(it->getValue());
 		} else if (it->getType() == kCommand) {
-			this->command_.setCommand(it->getValue());
+			this->parsed_.setCommand(it->getValue());
 		}
 	}
 }
@@ -232,8 +232,8 @@ const std::vector<Token>&	Parser::getTokens() const {
 	return (this->tokens_);
 }
 
-const Command&	Parser::getCommand() const {
-	return (this->command_);
+const ParsedMessage&	Parser::getParsedMessage() const {
+	return (this->parsed_);
 }
 
 void	Parser::printTokens() const {
@@ -317,7 +317,7 @@ int	main() {
 			parser.printTokens();
 
 			parser.parse();
-			parser.getCommand().printCommand();
+			parser.getParsedMessage().printParsedMessage();
 			std::cout << YELLOW << "[Execute]   ____________________" << END << std::endl;
 			std::cout << YELLOW << "[Reply]     ____________________" << END << std::endl;
 			std::cout << std::endl;

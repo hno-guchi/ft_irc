@@ -15,10 +15,10 @@ SRCS = Server.cpp \
 	   Channel.cpp \
 	   Parser.cpp \
 	   Execute.cpp \
+	   Reply.cpp \
 	   pong.cpp \
 	   notice.cpp privmsg.cpp \
 	   join.cpp \
-	   Reply.cpp \
 	   error.cpp
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 OBJS_DIR = ./objs

@@ -50,7 +50,7 @@ void	Channel::setLimit(int limit) {
 	return;
 }
 
-void	Channel::setModes(kChannelMode mode) {
+void	Channel::setMode(kChannelMode mode) {
 	if (this->modes_ & mode) {
 		return;
 		// throw std::invalid_argument(Channel is already set to this mode.);
@@ -59,7 +59,7 @@ void	Channel::setModes(kChannelMode mode) {
 	return;
 }
 
-void	Channel::setMembers(User* user) {
+void	Channel::setMember(User* user) {
 	if (user == NULL) {
 		return;
 		// throw std::invalid_argument("Invalid argument");
@@ -73,7 +73,7 @@ void	Channel::setMembers(User* user) {
 	return;
 }
 
-void	Channel::setOperators(User* user) {
+void	Channel::setOperator(User* user) {
 	this->operators_.push_back(user);
 	return;
 }
@@ -98,14 +98,16 @@ unsigned int	Channel::getModes() const {
 	return (this->modes_);
 }
 
-const std::vector<User*>	Channel::getMembers() const {
+const std::vector<User*>&	Channel::getMembers() const {
 	return (this->members_);
 }
 
-const std::vector<User*>	Channel::getOperators() const {
+const std::vector<User*>&	Channel::getOperators() const {
 	return (this->operators_);
 }
 
 void	Channel::addMember(User* user) {
 	this->members_.push_back(user);
 }
+
+// void	eraseMember(User* user) {}

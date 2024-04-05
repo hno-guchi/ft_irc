@@ -8,7 +8,8 @@
 enum kUserMode {
 	kAway = (1 << 0),
 	kOperator = (1 << 1),
-	kRestrict = (1 << 2)
+	kRestrict = (1 << 2),
+	kChannelOperator = (1 << 3)
 };
 
 class User {
@@ -33,6 +34,7 @@ class User {
 	 void	setIsRegistered(bool flag);
 	 void	setFd(int fd);
 	 void	setMode(kUserMode mode);
+	 void	unsetMode(kUserMode mode);
 	 // GETTERS
 	 const std::string&	getNickName() const;
 	 const std::string&	getHostName() const;

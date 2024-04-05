@@ -1,4 +1,5 @@
 #include "./Reply.hpp"
+#include "../parser/Parser.hpp"
 #include "../error/error.hpp"
 
 // メッセージ作成に必要な情報源
@@ -129,7 +130,7 @@ Reply::Reply() : delimiter_("\r\n") {}
 Reply::~Reply() {}
 
 // ":<sender prefix> <the three digit numeric> <the target of the reply>\r\n"
-std::string	Reply::createMessage(int num, const User& user, const Info& info, const Command& command) {
+std::string	Reply::createMessage(int num, const User& user, const Info& info, const ParsedMessage& parsedMsg) {
 	// TODO(hnoguchi): userはいらない？
 	(void)user;
 	if (num <= 0) {
@@ -144,11 +145,12 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 		// msg += this->cmdReplyMsgList_[static_cast<kCmdReplyNum>(num)].getMessage();
 	} else if (num >= 400 && num < 600) {
 		if (num == kERR_NOSUCHNICK) {
-			msg += "401 :" + command.getParam() + " :No such nick/channel";
-		else if (num == kERR_NOSUCHSERVER) {
-			msg += "402 :" + command.getParam() + " :No such server";
+			msg += "401 :" + parsedMsg.getParams()[0].getValue() \
+					+ " :No such nick/channel";
+		} else if (num == kERR_NOSUCHSERVER) {
+			msg += "402 :" + parsedMsg.getParams()[0].getValue() + " :No such server";
 		} else if (num == kERR_UNKNOWNCOMMAND) {
-			msg += "421 :" + command.getCommand() + " :Unknown command";
+			msg += "421 :" + parsedMsg.getCommand() + " :Unknown command";
 		}
 	}
 	msg += this->delimiter_;

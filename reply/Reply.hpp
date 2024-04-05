@@ -77,7 +77,7 @@ class Reply {
 	 Reply();
 	 ~Reply();
 
-	 std::string	createMessage(int num, const User& user, const Info& info, const Command& command);
+	 std::string	createMessage(int num, const User& user, const Info& info, const ParsedMessage& parsedMsg);
 	 // std::string	createWelcomeMessage(const Config& config);
 	 // SETTER
 	 // void	setMessage(const std::string& message);

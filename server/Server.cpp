@@ -146,21 +146,6 @@ void	Server::handleServerSocket() {
 	user.setFd(newSocket);
 	this->info_.addUser(user);
 	std::cout << "New client connected. Socket: " << newSocket << std::endl;
-	// Reply	reply;
-	// std::string	message = reply.createErrorMessage(kERR_UNKNOWNCOMMAND);
-	// message += reply.createErrorMessage(kERR_NOTREGISTERED);
-	// send
-	// ssize_t	sendMsgSize = sendNonBlocking(this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
-	// if (sendMsgSize <= 0) {
-	// 	handleClientDisconnect(&this->fds_[i].fd);
-		// TODO(hnoguchi): this->users_も削除する。
-	// 	return;
-	// }
-	// TODO(hnoguchi): castは使わない実装にする？？
-	// if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
-	// 	// TODO(hnoguchi): Check error handling.
-	// 	fatalError("send");
-	// }
 }
 
 void	Server::handleStandardInput() {
@@ -198,12 +183,6 @@ void	Server::handleReceivedData(int i) {
 	// Split message
 	std::vector<std::string>	messages = split(buffer, "\r\n");
 	std::string					replyMsg("");
-	// TODO(hnoguchi): 認証処理が完了しているか確認する。
-	// if (this->info_.getUsers()[i - 1].getIsRegistered() == false) {
-		//  認証処理
-		// TODO(hnoguchi): Welcome messageはここで送信する。
-	// 	return;
-	// }
 	for (std::vector<std::string>::iterator it = messages.begin(); \
 			it != messages.end(); ++it) {
 		// parse
@@ -212,22 +191,24 @@ void	Server::handleReceivedData(int i) {
 		parser.tokenize();
 		parser.printTokens();
 		parser.parse();
-		parser.getCommand().printCommand();
+		parser.getParsedMessage().printParsedMessage();
 		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
-		// execute
+		// TODO(hnoguchi): ユーザ登録処理が完了しているか確認する。
+		// if (isRegistered == false)
+		// if (parser.getParsedMessage().getCommand() != "PASS" && != "NICK" && != "USER") {
+		// senderrorReply
+		// }
+		// コマンド実行処理
 		Execute		execute;
-		// std::cout << i << std::endl;
-		// this->info_.getUsers()[i - 1].printData();
+		// std::cout << i << std::endl; this->info_.getUsers()[i - 1].printData();
 		int			replyNum = execute.exec(const_cast<User *>(&this->info_.getUsers()[i - 1]), \
-				parser.getCommand(), &this->info_);
+				parser.getParsedMessage(), &this->info_);
 		if (replyNum == 0) {
 			continue;
 		}
-		// create replies message
-		// TODO(hnoguchi): Server::getUserByFd();を実装した方が良い？
-		// replyMsg += message.createMessage(replyNum, this->users_[i - 1], parser.getCommand());
+		// リプライメッセージの作成
 		Reply	reply;
-		replyMsg += reply.createMessage(replyNum, this->info_.getUsers()[i - 1], this->info_, parser.getCommand());
+		replyMsg += reply.createMessage(replyNum, this->info_.getUsers()[i - 1], this->info_, parser.getParsedMessage());
 		std::cout << "replyMsg: [" << replyMsg << "]" << std::endl;
 	}
 	if (replyMsg.empty()) {

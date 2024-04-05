@@ -47,13 +47,13 @@
 #include "../../parser/Parser.hpp"
 #include "../../error/error.hpp"
 
-int privmsg(User* user, const Command& command, Info* info) {
+int privmsg(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	// channelがなければ、エラーリプライナンバーを返す
 	// channelを探す
 	for (std::vector<Channel>::const_iterator it = info->getChannels().begin(); \
 			it != info->getChannels().end(); it++) {
 		// channelがあれば、メンバーにメッセージを送信する
-		if (command.getParams()[0].getValue() == it->getName()) {
+		if (parsedMsg.getParams()[0].getValue() == it->getName()) {
 			// TODO(hnoguchi): このやり方は、良くないと思うので、改善が必要。
 			const std::vector<User*>& members = it->getMembers();
 			for (std::vector<User*>::const_iterator member = members.begin(); \
@@ -64,7 +64,7 @@ int privmsg(User* user, const Command& command, Info* info) {
 				// 送り主のニックネームを取得
 				std::string	message = ":" + user->getNickName() + " PRIVMSG ";
 				// 送り先のchannelを取得
-				message += command.getParams()[0].getValue() + " " + command.getParams()[1].getValue() + "\r\n";
+				message += parsedMsg.getParams()[0].getValue() + " " + parsedMsg.getParams()[1].getValue() + "\r\n";
 				std::cout << "Send message: [" << message << "]" << std::endl;
 				ssize_t		sendMsgSize = sendNonBlocking((*member)->getFd(), message.c_str(), message.size());
 				if (sendMsgSize <= 0) {

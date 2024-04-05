@@ -33,22 +33,22 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-int	join(User* user, const Command& command, Info* info) {
+int	join(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	// channelを探す
 	for (std::vector<Channel>::iterator it = const_cast<std::vector<Channel> &>(info->getChannels()).begin(); \
 			it != const_cast<std::vector<Channel> &>(info->getChannels()).end(); it++) {
 		// あれば、追加して、リプライナンバーを返す
-		if (command.getParams()[0].getValue() == it->getName()) {
+		if (parsedMsg.getParams()[0].getValue() == it->getName()) {
 			it->addMember(user);
 			return (kRPL_TOPIC);
 		}
 	}
 	// なければchannelを作成して、ユーザを追加して、リプライナンバーを返す
-	info->addChannel(Channel(command.getParams()[0].getValue()));
+	info->addChannel(Channel(parsedMsg.getParams()[0].getValue()));
 	for (std::vector<Channel>::iterator it = const_cast<std::vector<Channel> &>(info->getChannels()).begin(); \
 			it != const_cast<std::vector<Channel> &>(info->getChannels()).end(); it++) {
 		// あれば、追加して、リプライナンバーを返す
-		if (command.getParams()[0].getValue() == it->getName()) {
+		if (parsedMsg.getParams()[0].getValue() == it->getName()) {
 			it->addMember(user);
 			return (kRPL_TOPIC);
 		}

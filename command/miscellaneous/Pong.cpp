@@ -19,8 +19,8 @@
 #include "../../parser/Parser.hpp"
 #include "../../error/error.hpp"
 
-int	pong(User* user, const Command& command, Info* info) {
-	(void)command;
+int	pong(User* user, const ParsedMessage& parsedMsg, Info* info) {
+	(void)parsedMsg;
 	std::string	message = ":" + user->getNickName() + " PONG " + info->getConfig().getServerName() + "\r\n";
 	// std::cout << "Send message: [" << message << "]" << std::endl;
 	ssize_t		sendMsgSize = sendNonBlocking(user->getFd(), message.c_str(), message.size());

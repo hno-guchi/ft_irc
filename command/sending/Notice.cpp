@@ -46,11 +46,11 @@
 #include "../../parser/Parser.hpp"
 #include "../../error/error.hpp"
 
-int notice(User* user, const Command& command, Info* info) {
+int notice(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	// 送り主のニックネームを取得
 	std::string	message = ":" + user->getNickName() + " NOTICE ";
 	// 送り先のニックネームを取得
-	std::vector<Param>	params = command.getParams();
+	std::vector<Param>	params = parsedMsg.getParams();
 	// メッセージを付ける
 	// TODO(hnoguchi): parser classで、prefixを外すかどうか考える必要がある。
 	message += params[0].getValue() + " " + params[1].getValue() + "\r\n";

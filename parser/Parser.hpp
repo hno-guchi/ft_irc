@@ -59,15 +59,15 @@ class Param {
 	void	printParam() const;
 };
 
-class Command {
+class ParsedMessage {
  private:
 	kCommandType		type_;
 	std::string			command_;
 	// TODO(hnoguchi): Arrayを実装しても良い
 	std::vector<Param>	params_;
  public:
-	Command();
-	~Command();
+	ParsedMessage();
+	~ParsedMessage();
 
 	// SETTER
 	void	setCommand(const std::string &command);
@@ -76,7 +76,7 @@ class Command {
 	const std::string&			getCommand() const;
 	const std::vector<Param>&	getParams() const;
 	// debug
-	void	printCommand() const;
+	void	printParsedMessage() const;
 };
 
 class Parser {
@@ -84,7 +84,7 @@ class Parser {
 	std::string			message_;
 	// TODO(hnoguchi): Token classは、一時的なものだから、parser();で生成する。よっていらない。
 	std::vector<Token>	tokens_;
-	Command				command_;
+	ParsedMessage		parsed_;
 
  public:
 	explicit Parser(const std::string &message);
@@ -97,7 +97,7 @@ class Parser {
 	// GETTER
 	// TODO(hnoguchi): parser();で生成する。よっていらない。
 	const std::vector<Token>&	getTokens() const;
-	const Command&				getCommand() const;
+	const ParsedMessage&		getParsedMessage() const;
 	// debug
 	// TODO(hnoguchi): parser();で生成する。よっていらない。
 	void	printTokens() const;

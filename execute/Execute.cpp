@@ -20,40 +20,40 @@ bool	Execute::isCommand(const std::string& command, const std::string* cmdList) 
 }
 
 // TODO(hnoguchi): exec();関数では、実行結果によるエラーを扱う。（例えば存在しないチャンネル名へのメッセージ送信など）
-int	Execute::exec(User* user, const Command& command, Info* info) {
-	if (!this->isCommand(command.getCommand(), info->getConfig().getCommandList())) {
+int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
+	if (!this->isCommand(parsedMsg.getCommand(), info->getConfig().getCommandList())) {
 		return (kERR_UNKNOWNCOMMAND);
 	}
-	if (command.getCommand() == "PING") {
-		return (pong(user, command, info));
-	// } else if (command.getCommand() == "PASS") {
-	// 	return (pass(user, command, info));
-	// } else if (command.getCommand() == "NICK") {
-	// 	return (nick(user, command, info));
-	// } else if (command.getCommand() == "USER") {
-	// 	return (user(user, command, info));
-	// } else if (command.getCommand() == "OPER") {
-	// 	return (oper(user, command, info));
-	// } else if (command.getCommand() == "quit") {
-	// 	return (quit(user, command, info));
-	// } else if (command.getCommand() == "JOIN") {
-	// 	return (join(user, command, info));
-	// } else if (command.getCommand() == "KICK") {
-	// 	return (kick(user, command, info));
-	// } else if (command.getCommand() == "INVITE") {
-	// 	return (invite(user, command, info));
-	// } else if (command.getCommand() == "TOPIC") {
-	// 	return (topic(user, command, info));
-	// } else if (command.getCommand() == "MODE") {
-	// 	return (mode(user, command, info));
-	// } else if (command.getCommand() == "PRIVMSG") {
-	// 	return (privmsg(user, command, info));
-	// } else if (command.getCommand() == "NOTICE") {
-	// 	return (notice(user, command, info));
-	// } else if (command.getCommand() == "PONG") {
-	// 	return (pong(user, command, info));
-	// } else if (command.getCommand() == "ERROR") {
-	// 	return (error(user, command, info));
+	if (parsedMsg.getCommand() == "PING") {
+		return (pong(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "PASS") {
+	// 	return (pass(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "NICK") {
+	// 	return (nick(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "USER") {
+	// 	return (user(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "OPER") {
+	// 	return (oper(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "quit") {
+	// 	return (quit(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "JOIN") {
+	// 	return (join(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "KICK") {
+	// 	return (kick(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "INVITE") {
+	// 	return (invite(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "TOPIC") {
+	// 	return (topic(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "MODE") {
+	// 	return (mode(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "PRIVMSG") {
+	// 	return (privmsg(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "NOTICE") {
+	// 	return (notice(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "PONG") {
+	// 	return (pong(user, parsedMsg, info));
+	// } else if (parsedMsg.getCommand() == "ERROR") {
+	// 	return (error(user, parsedMsg, info));
 	}
 	return (kERR_UNKNOWNCOMMAND);
 	// return (0);
