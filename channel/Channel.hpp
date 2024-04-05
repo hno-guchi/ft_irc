@@ -48,7 +48,8 @@ class Channel {
 
 	// TODO(hnoguchi): ChannelUsers classにする？
 	void						addMember(User* user);
-	// void						eraseMember(User* user);
+	void						eraseMember(User* user);
+	void						eraseOperator(User* oper);
 };
 
 #endif  // CHANNEL_HPP
