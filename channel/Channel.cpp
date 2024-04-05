@@ -110,4 +110,20 @@ void	Channel::addMember(User* user) {
 	this->members_.push_back(user);
 }
 
-// void	eraseMember(User* user) {}
+void	Channel::eraseMember(User* user) {
+	for (std::vector<User *>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
+		if (*it == user) {
+			this->members_.erase(it);
+			return;
+		}
+	}
+}
+
+void	Channel::eraseOperator(User* oper) {
+	for (std::vector<User *>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
+		if (*it == oper) {
+			this->members_.erase(it);
+			return;
+		}
+	}
+}
