@@ -5,7 +5,6 @@
 #include "../channel/Channel.hpp"
 #include "../reply/Reply.hpp"
 #include "../error/error.hpp"
-#include "../command/command.hpp"
 
 Execute::Execute() {}
 Execute::~Execute() {}

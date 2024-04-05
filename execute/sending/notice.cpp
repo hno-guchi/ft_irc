@@ -39,6 +39,7 @@
  */
 
 #include <iostream>
+#include "../Execute.hpp"
 #include "../../user/User.hpp"
 #include "../../server/Info.hpp"
 #include "../../server/Server.hpp"
@@ -46,7 +47,7 @@
 #include "../../parser/Parser.hpp"
 #include "../../error/error.hpp"
 
-int notice(User* user, const ParsedMessage& parsedMsg, Info* info) {
+int Execute::notice(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	// 送り主のニックネームを取得
 	std::string	message = ":" + user->getNickName() + " NOTICE ";
 	// 送り先のニックネームを取得

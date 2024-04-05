@@ -9,13 +9,12 @@
 #include "../user/User.hpp"
 #include "../channel/Channel.hpp"
 
-// TODO(hnoguchi): Execute classのメンバ関数に、各コマンドの処理を実装する。
 class Execute {
-// private:
-// 	int	pong(User* user, const Command& command, Info* info);
-// 	int	notice(User* user, const Command& command, Info* info);
-// 	int	privmsg(User* user, const Command& command, Info* info);
-// 	int	join(User* user, const Command& command, Info* info);
+ private:
+	 int	pong(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	notice(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	privmsg(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	join(User* user, const ParsedMessage& parsedMsg, Info* info);
  public:
 	 Execute();
 	 ~Execute();

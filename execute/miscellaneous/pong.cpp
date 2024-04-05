@@ -12,6 +12,7 @@
  */
 
 #include <iostream>
+#include "../Execute.hpp"
 #include "../../user/User.hpp"
 #include "../../server/Info.hpp"
 #include "../../server/Server.hpp"
@@ -19,7 +20,7 @@
 #include "../../parser/Parser.hpp"
 #include "../../error/error.hpp"
 
-int	pong(User* user, const ParsedMessage& parsedMsg, Info* info) {
+int	Execute::pong(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	(void)parsedMsg;
 	std::string	message = ":" + user->getNickName() + " PONG " + info->getConfig().getServerName() + "\r\n";
 	// std::cout << "Send message: [" << message << "]" << std::endl;

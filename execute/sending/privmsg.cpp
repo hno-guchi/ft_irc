@@ -40,6 +40,7 @@
 
 #include <iostream>
 #include <vector>
+#include "../Execute.hpp"
 #include "../../user/User.hpp"
 #include "../../server/Info.hpp"
 #include "../../server/Server.hpp"
@@ -47,7 +48,7 @@
 #include "../../parser/Parser.hpp"
 #include "../../error/error.hpp"
 
-int privmsg(User* user, const ParsedMessage& parsedMsg, Info* info) {
+int Execute::privmsg(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	// channelがなければ、エラーリプライナンバーを返す
 	// channelを探す
 	for (std::vector<Channel>::const_iterator it = info->getChannels().begin(); \
