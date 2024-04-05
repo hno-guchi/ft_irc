@@ -47,13 +47,13 @@ $(OBJS_DIR)/%.o: ./parser/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./execute/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./execute/channel_operations/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./execute/miscellaneous/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: ./execute/sending/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./reply/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-$(OBJS_DIR)/%.o: ./command/channel_operations/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-$(OBJS_DIR)/%.o: ./command/miscellaneous/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-$(OBJS_DIR)/%.o: ./command/sending/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./error/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
