@@ -10,8 +10,8 @@ enum kChannelMode {
 	kInviteOnly = (1 << 0),
 	kKey = (1 << 1),
 	kLimit = (1 << 2),
-	kChannelOperator = (1 << 3),
-	kTopicSetOnlyOperator = (1 << 4)
+	// kChannelOperator = (1 << 3), // User classのkUserModeで扱う。
+	kTopicSetOnlyOperator = (1 << 3)
 };
 
 class Channel {
@@ -34,20 +34,21 @@ class Channel {
 	 void						setTopic(const std::string& topic);
 	 void						setkey(const std::string& key);
 	 void						setLimit(int limit);
-	 void						setModes(kChannelMode mode);
-	 void						setMembers(User* user);
-	 void						setOperators(User* user);
+	 void						setMode(kChannelMode mode);
+	 void						setMember(User* user);
+	 void						setOperator(User* user);
 	 // GETTER
 	const std::string&			getName() const;
 	const std::string&			getTopic() const;
 	const std::string&			getkey() const;
 	int							getLimit() const;
 	unsigned int				getModes() const;
-	const std::vector<User*>	getMembers() const;
-	const std::vector<User*>	getOperators() const;
+	const std::vector<User*>&	getMembers() const;
+	const std::vector<User*>&	getOperators() const;
 
 	// TODO(hnoguchi): ChannelUsers classにする？
 	void						addMember(User* user);
+	// void						eraseMember(User* user);
 };
 
 #endif  // CHANNEL_HPP

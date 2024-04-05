@@ -35,6 +35,10 @@ void	User::setMode(kUserMode mode) {
 	this->modes_ |= mode;
 }
 
+void	User::unsetMode(kUserMode mode) {
+	this->modes_ ^= (this->modes_ & mode);
+}
+
 // GETTERS
 const std::string&	User::getNickName() const {
 	return (this->nickName_);
