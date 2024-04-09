@@ -2,14 +2,6 @@
 #include "../parser/Parser.hpp"
 #include "../error/error.hpp"
 
-// メッセージ作成に必要な情報源
-// <nick>, <user>, <host>: メッセージ本文
-// <servername>, <ver>, <date>, <available user modes>, <available channel modes>: Config class
-// 001	RPL_WELCOME				"Welcome to the Internet Relay Network <nick>!<user>@<host>"
-// 002	RPL_YOURHOST			"Your host is <servername>, running version <ver>"
-// 003	RPL_CREATED				"This server was created <date>"
-// 004	RPL_MYINFO				"<servername> <version> <available user modes> <available channel modes>"
-
 // ERROR
 // None.
 
@@ -139,14 +131,26 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 	// TODO(hnoguchi): Check num.
 	// std::string	msg = ":" + user.getNickName();
 	std::string	msg = ":" + info.getConfig().getServerName() + " ";
-	if (num < 100  || (num >= 200 && num < 400)) {
-		// msg += this->cmdReplyMsgList_[static_cast<kCmdReplyNum>(num)].getNumeric();
-		msg += " ";
-		// msg += this->cmdReplyMsgList_[static_cast<kCmdReplyNum>(num)].getMessage();
+	if (num == kRPL_WELCOME) {
+		msg += "001 usernick :Welcome to the Internet Relay Network usernick!<user>@<host>";
+		msg += this->delimiter_;
+		msg += ":" + info.getConfig().getServerName() + " ";
+		std::ostringstream	oss;
+		oss << info.getConfig().getVersion();
+		msg += "002 usernick :Your host is " + info.getConfig().getServerName() + ", running version " + oss.str();
+		msg += this->delimiter_;
+		msg += ":" + info.getConfig().getServerName() + " ";
+		const char*	date = std::asctime(std::localtime(&(info.getConfig().getCreatedData())));
+		std::string	dateStr(date);
+		msg += "003 usernick :This server was created " + dateStr;
+		msg += this->delimiter_;
+		msg += ":" + info.getConfig().getServerName() + " ";
+		msg += "004 usernick :" + info.getConfig().getServerName() + " " + oss.str() + " " + info.getConfig().getUserModes() + " " +  info.getConfig().getChannelModes();
+	} else if (num < 100  || (num >= 200 && num < 400)) {
+		msg += "421 :" + parsedMsg.getCommand() + " :Unknown command";
 	} else if (num >= 400 && num < 600) {
 		if (num == kERR_NOSUCHNICK) {
-			msg += "401 :" + parsedMsg.getParams()[0].getValue() \
-					+ " :No such nick/channel";
+			msg += "401 :" + parsedMsg.getParams()[0].getValue() + " :No such nick/channel";
 		} else if (num == kERR_NOSUCHSERVER) {
 			msg += "402 :" + parsedMsg.getParams()[0].getValue() + " :No such server";
 		} else if (num == kERR_UNKNOWNCOMMAND) {

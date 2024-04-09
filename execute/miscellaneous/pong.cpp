@@ -23,7 +23,7 @@
 int	Execute::pong(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	(void)parsedMsg;
 	std::string	message = ":" + user->getNickName() + " PONG " + info->getConfig().getServerName() + "\r\n";
-	// std::cout << "Send message: [" << message << "]" << std::endl;
+	std::cout << "Send message: [" << message << "]" << std::endl;
 	ssize_t		sendMsgSize = sendNonBlocking(user->getFd(), message.c_str(), message.size());
 	if (sendMsgSize <= 0) {
 		// handleClientDisconnect(&user->getFd());

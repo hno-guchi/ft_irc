@@ -27,9 +27,10 @@ int	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, Info* info
 			// if (replyNum > 400) {
 			// 	return (replyNum);
 			// }
-			user->setRegistered(kPassCommand);
-			return (0);
+			;
 		}
+		user->setRegistered(kPassCommand);
+		return (0);
 	} else if (!(user->getRegistered() & kNickCommand)) {
 		if (parsedMsg.getCommand() == "NICK") {
 			// NICK処理
