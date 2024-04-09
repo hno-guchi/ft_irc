@@ -19,7 +19,9 @@ class Info {
 	 // GETTER
 	 const Config&					getConfig() const;
 	 const std::vector<User>&		getUsers() const;
+	 const User&					getUser(int i) const;
 	 const std::vector<Channel>&	getChannels() const;
+	 // const Channel&	getChannel(const std::string& name) const;
 	 // SETTER
 	 // void	setConfig(const Config& config);
 	 void	addUser(const User& user);

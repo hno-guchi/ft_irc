@@ -183,32 +183,34 @@ void	Server::handleReceivedData(int i) {
 	// Split message
 	std::vector<std::string>	messages = split(buffer, "\r\n");
 	std::string					replyMsg("");
-	for (std::vector<std::string>::iterator it = messages.begin(); \
-			it != messages.end(); ++it) {
+	Execute						execute;
+	Reply						reply;
+	for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
 		// parse
 		// TODO(hnoguchi): commandは、すべてアルファベットであれば、すべて大文字に変換すること。
+		// TODO(hnoguchi): parser.tokenize();は、parser.parse();の中で実行する。
 		Parser	parser(*it);
 		parser.tokenize();
 		parser.printTokens();
 		parser.parse();
 		parser.getParsedMessage().printParsedMessage();
 		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
-		// TODO(hnoguchi): ユーザ登録処理が完了しているか確認する。
-		// if (isRegistered == false)
-		// if (parser.getParsedMessage().getCommand() != "PASS" && != "NICK" && != "USER") {
-		// senderrorReply
-		// }
-		// コマンド実行処理
-		Execute		execute;
-		// std::cout << i << std::endl; this->info_.getUsers()[i - 1].printData();
-		int			replyNum = execute.exec(const_cast<User *>(&this->info_.getUsers()[i - 1]), \
-				parser.getParsedMessage(), &this->info_);
+		int	replyNum = 0;
+		// std::cout << i << std::endl; this->info_.getUser(i - 1).printData();
+		// 登録ユーザか確認
+		if ((this->info_.getUser(i - 1).getRegistered() & kExecAllCmd) != kExecAllCmd) {
+			// ユーザ登録処理
+			replyNum = execute.registerUser(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
+		} else {
+			// コマンド実行処理
+			replyNum = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), \
+					parser.getParsedMessage(), &this->info_);
+		}
 		if (replyNum == 0) {
-			continue;
+				continue;
 		}
 		// リプライメッセージの作成
-		Reply	reply;
-		replyMsg += reply.createMessage(replyNum, this->info_.getUsers()[i - 1], this->info_, parser.getParsedMessage());
+		replyMsg += reply.createMessage(replyNum, this->info_.getUser(i - 1), this->info_, parser.getParsedMessage());
 		std::cout << "replyMsg: [" << replyMsg << "]" << std::endl;
 	}
 	if (replyMsg.empty()) {

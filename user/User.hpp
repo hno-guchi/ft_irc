@@ -12,14 +12,21 @@ enum kUserMode {
 	kChannelOperator = (1 << 3)
 };
 
+enum kExecCommand {
+	kPassCommand = (1 << 0),
+	kNickCommand = (1 << 1),
+	kUserCommand = (1 << 2),
+	kExecAllCmd = (kPassCommand | kNickCommand | kUserCommand)
+};
+
 class User {
  private:
 	 std::string	nickName_;
 	 std::string	hostName_;
 	 std::string	userName_;
 	 std::string	serverName_;
-	 bool			isRegistered_;
 	 int			fd_;
+	 unsigned int	registered_;
 	 unsigned int	modes_;
 
  public:
@@ -31,8 +38,8 @@ class User {
 	 void	setHostName(const std::string &hostName);
 	 void	setUserName(const std::string &userName);
 	 void	setServerName(const std::string &serverName);
-	 void	setIsRegistered(bool flag);
 	 void	setFd(int fd);
+	 void	setRegistered(kExecCommand flag);
 	 void	setMode(kUserMode mode);
 	 void	unsetMode(kUserMode mode);
 	 // GETTERS
@@ -40,8 +47,8 @@ class User {
 	 const std::string&	getHostName() const;
 	 const std::string&	getUserName() const;
 	 const std::string&	getServerName() const;
-	 bool				getIsRegistered() const;
 	 int				getFd() const;
+	 unsigned int		getRegistered() const;
 	 unsigned int		getModes() const;
 	 // DEBUG
 	 void	printData() const;

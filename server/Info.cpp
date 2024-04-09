@@ -15,6 +15,10 @@ const std::vector<User>&	Info::getUsers() const {
 	return (this->users_);
 }
 
+const User&	Info::getUser(int i) const {
+	return (this->users_[i]);
+}
+
 const std::vector<Channel>&	Info::getChannels() const {
 	return (this->channels_);
 }

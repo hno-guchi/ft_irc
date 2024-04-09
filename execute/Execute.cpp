@@ -18,6 +18,42 @@ bool	Execute::isCommand(const std::string& command, const std::string* cmdList) 
 	return (false);
 }
 
+int	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, Info* info) {
+	(void)info;
+	if (!(user->getRegistered() & kPassCommand)) {
+		if (parsedMsg.getCommand() == "PASS") {
+			// PASS処理
+			// int replyNum = pass(user, parser.getParsedMessage(), &this->info_);
+			// if (replyNum > 400) {
+			// 	return (replyNum);
+			// }
+			user->setRegistered(kPassCommand);
+			return (0);
+		}
+	} else if (!(user->getRegistered() & kNickCommand)) {
+		if (parsedMsg.getCommand() == "NICK") {
+			// NICK処理
+			// int replyNum = nick(user, parser.getParsedMessage(), &this->info_);
+			// if (replyNum > 400) {
+			// 	return (replyNum);
+			// }
+			user->setRegistered(kNickCommand);
+			return (0);
+		}
+	} else if (!(user->getRegistered() & kUserCommand)) {
+		if (parsedMsg.getCommand() == "USER") {
+			// USER処理
+			// int replyNum = user(user, parser.getParsedMessage(), &this->info_);
+			// if (replyNum > 400) {
+			// 	return (replyNum);
+			// }
+			user->setRegistered(kUserCommand);
+			return (kRPL_WELCOME);
+		}
+	}
+	return (kERR_NOTREGISTERED);
+}
+
 // TODO(hnoguchi): exec();関数では、実行結果によるエラーを扱う。（例えば存在しないチャンネル名へのメッセージ送信など）
 int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	if (!this->isCommand(parsedMsg.getCommand(), info->getConfig().getCommandList())) {
