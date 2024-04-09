@@ -151,6 +151,8 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 			msg += "402 :" + parsedMsg.getParams()[0].getValue() + " :No such server";
 		} else if (num == kERR_UNKNOWNCOMMAND) {
 			msg += "421 :" + parsedMsg.getCommand() + " :Unknown command";
+		} else if (num == kERR_NOTREGISTERED) {
+			msg += "451 :You have not registered";
 		}
 	}
 	msg += this->delimiter_;
