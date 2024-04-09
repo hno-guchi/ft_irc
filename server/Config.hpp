@@ -2,12 +2,15 @@
 # define CONFIG_HPP
 
 # include <string>
+# include <sstream>
+# include <ctime>
 
 class Config {
  private:
 	 const int					maxClient_;
 	 const int					maxChannel_;
 	 const int					version_;
+	 const time_t				createdData_;
 	 const std::string			serverName_;
 	 const std::string			userModes_;
 	 const std::string			channelModes_;
@@ -22,6 +25,7 @@ class Config {
 	 int				getMaxClient() const;
 	 int				getMaxChannel() const;
 	 int				getVersion() const;
+	 const time_t&		getCreatedData() const;
 	 const std::string&	getServerName() const;
 	 const std::string&	getUserModes() const;
 	 const std::string&	getChannelModes() const;

@@ -20,8 +20,7 @@ const std::string	Config::commandList_[] = {
 };
 
 Config::Config() : \
-	maxClient_(5), maxChannel_(5), version_(1), serverName_("ft_irc.42tokyo.net"), \
-	userModes_("aor"), channelModes_("iklot") {
+	maxClient_(5), maxChannel_(5), version_(1), createdData_(std::time(NULL)), serverName_("ft_irc.42tokyo.net"), userModes_("aor"), channelModes_("iklot") {
 }
 
 // Config&	operator=(const Config& rhs) {
@@ -49,6 +48,10 @@ int	Config::getMaxChannel() const {
 
 int	Config::getVersion() const {
 	return (this->version_);
+}
+
+const time_t&	Config::getCreatedData() const {
+	return (this->createdData_);
 }
 
 const std::string&	Config::getServerName() const {

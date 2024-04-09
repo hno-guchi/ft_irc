@@ -2,6 +2,7 @@
 # define REPLY_HPP
 
 #include <string>
+#include <ctime>
 #include "../user/User.hpp"
 #include "../server/Info.hpp"
 #include "../parser/Parser.hpp"
