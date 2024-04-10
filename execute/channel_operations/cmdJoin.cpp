@@ -34,7 +34,7 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-int	Execute::join(User* user, const ParsedMessage& parsedMsg, Info* info) {
+int	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	// channelを探す
 	for (std::vector<Channel>::iterator it = const_cast<std::vector<Channel> &>(info->getChannels()).begin(); \
 			it != const_cast<std::vector<Channel> &>(info->getChannels()).end(); it++) {
