@@ -35,12 +35,29 @@ int	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	if (parsedMsg.getParams()[0].getValue().size() > 9) {
 		return (kERR_ERRONEUSNICKNAME);
 	}
-	for (std::vector<User>::const_iterator it = info->getUsers().begin(); it != info->getUsers().end(); it++) {
-		if (it->getNickName() == parsedMsg.getParams()[0].getValue()) {
-			return (kERR_NICKNAMEINUSE);
+	// TODO(hnoguchi): ユーザ登録時の処理で、既に使用されている場合、sufixに数字を付与し、再度重複チェックを行う。
+	if (!(user->getRegistered() & kNickCommand)) {
+		std::string							nick = parsedMsg.getParams()[0].getValue();
+		char								sufix = '1';
+		std::vector<User>::const_iterator	it = info->getUsers().begin();
+		while (it != info->getUsers().end()) {
+			if (it->getNickName() == nick) {
+				sufix += 1;
+				nick = nick + sufix;
+				it = info->getUsers().begin();
+			} else {
+				it += 1;
+			}
 		}
+		user->setNickName(nick);
+	} else {
+		for (std::vector<User>::const_iterator it = info->getUsers().begin(); it != info->getUsers().end(); it++) {
+			if (it->getNickName() == parsedMsg.getParams()[0].getValue()) {
+				return (kERR_NICKNAMEINUSE);
+			}
+		}
+		user->setNickName(parsedMsg.getParams()[0].getValue());
 	}
 	// TODO(hnoguchi): Server間通信機能を追加するときは、channelに所属するユーザのnickもチェックする。
-	user->setNickName(parsedMsg.getParams()[0].getValue());
 	return (0);
 }

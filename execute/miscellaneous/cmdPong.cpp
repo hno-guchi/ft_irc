@@ -20,7 +20,7 @@
 #include "../../parser/Parser.hpp"
 #include "../../error/error.hpp"
 
-int	Execute::pong(User* user, const ParsedMessage& parsedMsg, Info* info) {
+int	Execute::cmdPong(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	(void)parsedMsg;
 	std::string	message = ":" + user->getNickName() + " PONG " + info->getConfig().getServerName() + "\r\n";
 	std::cout << "Send message: [" << message << "]" << std::endl;

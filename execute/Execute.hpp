@@ -13,10 +13,10 @@ class Execute {
  private:
 	 int	cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdUser(User* user, const ParsedMessage& parsedMsg, Info* info);
-	 int	pong(User* user, const ParsedMessage& parsedMsg, Info* info);
-	 int	notice(User* user, const ParsedMessage& parsedMsg, Info* info);
-	 int	privmsg(User* user, const ParsedMessage& parsedMsg, Info* info);
-	 int	join(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	cmdPong(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	cmdNotice(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	cmdPrivmsg(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info);
  public:
 	 Execute();
 	 ~Execute();
