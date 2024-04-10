@@ -20,35 +20,32 @@ bool	Execute::isCommand(const std::string& command, const std::string* cmdList) 
 
 int	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	(void)info;
-	if (!(user->getRegistered() & kPassCommand)) {
-		if (parsedMsg.getCommand() == "PASS") {
-			// PASS処理
-			// int replyNum = pass(user, parser.getParsedMessage(), &this->info_);
-			// if (replyNum > 400) {
-			// 	return (replyNum);
-			// }
-			;
-		}
+	if (!(user->getRegistered() & kNickCommand) && !(user->getRegistered() & kUserCommand) && parsedMsg.getCommand() == "PASS") {
+		// PASS処理
+		// int replyNum = pass(user, parsedMsg, info);
+		// if (replyNum > 400) {
+		// 	return (replyNum);
+		// }
 		user->setRegistered(kPassCommand);
 		return (0);
 	} else if (!(user->getRegistered() & kNickCommand)) {
 		if (parsedMsg.getCommand() == "NICK") {
-			// NICK処理
-			// int replyNum = nick(user, parser.getParsedMessage(), &this->info_);
-			// if (replyNum > 400) {
-			// 	return (replyNum);
-			// }
+			int replyNum = this->cmdNick(user, parsedMsg, info);
+			if (replyNum > 400) {
+				return (replyNum);
+			}
 			user->setRegistered(kNickCommand);
+			user->printData();
 			return (0);
 		}
 	} else if (!(user->getRegistered() & kUserCommand)) {
 		if (parsedMsg.getCommand() == "USER") {
-			// USER処理
-			// int replyNum = user(user, parser.getParsedMessage(), &this->info_);
-			// if (replyNum > 400) {
-			// 	return (replyNum);
-			// }
+			int replyNum = this->cmdUser(user, parsedMsg, info);
+			if (replyNum > 400) {
+				return (replyNum);
+			}
 			user->setRegistered(kUserCommand);
+			user->printData();
 			return (kRPL_WELCOME);
 		}
 	}

@@ -11,6 +11,8 @@
 
 class Execute {
  private:
+	 int	cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	cmdUser(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	pong(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	notice(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	privmsg(User* user, const ParsedMessage& parsedMsg, Info* info);

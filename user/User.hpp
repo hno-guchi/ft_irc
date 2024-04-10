@@ -16,15 +16,18 @@ enum kExecCommand {
 	kPassCommand = (1 << 0),
 	kNickCommand = (1 << 1),
 	kUserCommand = (1 << 2),
-	kExecAllCmd = (kPassCommand | kNickCommand | kUserCommand)
+	kExecAllCmd = (kNickCommand | kUserCommand)
+	// kExecAllCmd = (kPassCommand | kNickCommand | kUserCommand)
+	// kExecAllCmdExceptPass = (kNickCommand | kUserCommand)
 };
 
 class User {
  private:
 	 std::string	nickName_;
-	 std::string	hostName_;
 	 std::string	userName_;
+	 std::string	hostName_;
 	 std::string	serverName_;
+	 std::string	realName_;
 	 int			fd_;
 	 unsigned int	registered_;
 	 unsigned int	modes_;
@@ -35,18 +38,20 @@ class User {
 
 	 // SETTERS
 	 void	setNickName(const std::string &nickName);
-	 void	setHostName(const std::string &hostName);
 	 void	setUserName(const std::string &userName);
+	 void	setHostName(const std::string &hostName);
 	 void	setServerName(const std::string &serverName);
+	 void	setRealName(const std::string &realName);
 	 void	setFd(int fd);
 	 void	setRegistered(kExecCommand flag);
 	 void	setMode(kUserMode mode);
 	 void	unsetMode(kUserMode mode);
 	 // GETTERS
 	 const std::string&	getNickName() const;
-	 const std::string&	getHostName() const;
 	 const std::string&	getUserName() const;
+	 const std::string&	getHostName() const;
 	 const std::string&	getServerName() const;
+	 const std::string&	getRealName() const;
 	 int				getFd() const;
 	 unsigned int		getRegistered() const;
 	 unsigned int		getModes() const;
