@@ -211,12 +211,14 @@ void	Server::handleReceivedData(int i) {
 		}
 		// リプライメッセージの作成
 		replyMsg += reply.createMessage(replyNum, this->info_.getUser(i - 1), this->info_, parser.getParsedMessage());
-		std::cout << "replyMsg: [" << replyMsg << "]" << std::endl;
 	}
 	if (replyMsg.empty()) {
 		return;
 	}
 	// send
+	std::cout << "[replyMsg] ________________________________________" << std::endl;
+	std::cout << RED << replyMsg << END << std::flush;
+	std::cout << "---------------------------------------------------" << std::endl;
 	sendMsgSize = sendNonBlocking(this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
 	if (sendMsgSize <= 0) {
 		handleClientDisconnect(&this->fds_[i].fd);

@@ -132,20 +132,20 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 	// std::string	msg = ":" + user.getNickName();
 	std::string	msg = ":" + info.getConfig().getServerName() + " ";
 	if (num == kRPL_WELCOME) {
-		msg += "001 usernick :Welcome to the Internet Relay Network usernick!<user>@<host>";
+		msg += "001 " + user.getNickName() + " :Welcome to the Internet Relay Network " + user.getNickName() + "!<user>@<host>";
 		msg += this->delimiter_;
 		msg += ":" + info.getConfig().getServerName() + " ";
 		std::ostringstream	oss;
 		oss << info.getConfig().getVersion();
-		msg += "002 usernick :Your host is " + info.getConfig().getServerName() + ", running version " + oss.str();
+		msg += "002 " + user.getNickName() + " :Your host is " + info.getConfig().getServerName() + ", running version " + oss.str();
 		msg += this->delimiter_;
 		msg += ":" + info.getConfig().getServerName() + " ";
 		const char*	date = std::asctime(std::localtime(&(info.getConfig().getCreatedData())));
 		std::string	dateStr(date);
-		msg += "003 usernick :This server was created " + dateStr;
+		msg += "003 " + user.getNickName() + " :This server was created " + dateStr;
 		msg += this->delimiter_;
 		msg += ":" + info.getConfig().getServerName() + " ";
-		msg += "004 usernick :" + info.getConfig().getServerName() + " " + oss.str() + " " + info.getConfig().getUserModes() + " " +  info.getConfig().getChannelModes();
+		msg += "004 " + user.getNickName() + " :" + info.getConfig().getServerName() + " " + oss.str() + " " + info.getConfig().getUserModes() + " " +  info.getConfig().getChannelModes();
 	} else if (num < 100  || (num >= 200 && num < 400)) {
 		msg += "421 :" + parsedMsg.getCommand() + " :Unknown command";
 	} else if (num >= 400 && num < 600) {
@@ -156,7 +156,11 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 		} else if (num == kERR_UNKNOWNCOMMAND) {
 			msg += "421 :" + parsedMsg.getCommand() + " :Unknown command";
 		} else if (num == kERR_NOTREGISTERED) {
-			msg += "451 :You have not registered";
+			msg += "451 * :You have not registered";
+		} else if (num == kERR_NEEDMOREPARAMS) {
+			msg += "461 " + user.getNickName() + " " + parsedMsg.getCommand() + " :Not enough parameters";
+		} else if (num == kERR_ALREADYREGISTRED) {
+			msg += "462 " +  user.getNickName() +  " :Unauthorized command (already registered)";
 		}
 	}
 	msg += this->delimiter_;
