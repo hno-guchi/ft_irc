@@ -186,13 +186,9 @@ void	Server::handleReceivedData(int i) {
 	Execute						execute;
 	Reply						reply;
 	for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
-		// parse
-		// TODO(hnoguchi): commandは、すべてアルファベットであれば、すべて大文字に変換すること。
-		// TODO(hnoguchi): parser.tokenize();は、parser.parse();の中で実行する。
-		Parser	parser(*it);
-		parser.tokenize();
-		parser.printTokens();
-		parser.parse();
+		Parser	parser;
+
+		parser.parse(*it);
 		parser.getParsedMessage().printParsedMessage();
 		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
 		int	replyNum = 0;
