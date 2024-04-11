@@ -64,7 +64,6 @@ class ParsedMessage {
  private:
 	kCommandType		type_;
 	std::string			command_;
-	// TODO(hnoguchi): Arrayを実装しても良い
 	std::vector<Param>	params_;
  public:
 	ParsedMessage();
@@ -72,7 +71,6 @@ class ParsedMessage {
 
 	// SETTER
 	void	setCommand(const std::string& command);
-	// void	setParam(const std::string& param);
 	void	setParam(const Token& token);
 	// GETTER
 	const std::string&			getCommand() const;
