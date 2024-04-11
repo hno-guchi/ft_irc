@@ -105,7 +105,6 @@ static std::string	toUpperString(const std::string& str) {
 	std::string	ret = str;
 	std::locale	l = std::locale::classic();
 
-
 	for (std::string::iterator it = ret.begin(); it != ret.end(); it++) {
 		*it = std::toupper(*it, l);
 	}
@@ -138,19 +137,19 @@ void	ParsedMessage::setCommand(const std::string &command) {
  * １文字目がnospcrlfclで、残りの全ての文字列がコロンかnospcrlfclならばmiddle。
  * １文字目がnospcrlfclで、残りの文字列にスペースがあれば、trailing。
  */
-void	ParsedMessage::setParam(const std::string &param) {
-	if (param.empty()) {
+void	ParsedMessage::setParam(const Token& token) {
+	if (token.getValue().empty()) {
 		printErrorMessage("Empty param.");
 		return;
 	}
 	Param	p;
-	// TODO(hnoguchi): paramのパースは途中
-	if (param[0] == ':' || param[0] == ' ') {
-		p.setType(kTrailing);
+	// TODO(hnoguchi): Commandで条件分岐、各コマンドに対応したチェックを行う。
+	if (token.getType() == kMiddle) {
+		p.setType(kPMiddle);
 	} else {
-		p.setType(kMiddle);
+		p.setType(kPTrailing);
 	}
-	p.setValue(param);
+	p.setValue(token.getValue());
 	this->params_.push_back(p);
 	return;
 }
@@ -181,72 +180,64 @@ void	ParsedMessage::printParsedMessage() const {
 }
 
 // Parser class
-Parser::Parser(const std::string& message) :
-	message_(message) {
-}
-
+Parser::Parser() {}
 Parser::~Parser() {}
 
-void	Parser::tokenize() {
-	std::string	token;
-	std::istringstream	tokenStream(this->message_);
-
-	if (this->message_.empty()) {
+static void	tokenize(std::string *message, std::vector<Token> *tokens) {
+	if (message->empty()) {
 		printErrorMessage("Message is empty.");
 		return;
 	}
-	while (std::getline(tokenStream, token, ' ')) {
-		if (token.empty()) {
+	std::string			word;
+	std::istringstream	msgStream(*message);
+	while (std::getline(msgStream, word, ' ')) {
+		if (word.empty()) {
 			continue;
 		}
-		Token	t;
-		if (!this->tokens_.empty()) {
-			t.setType(kParam);
+		Token	token;
+		if (!tokens->empty()) {
+			if (word[0] == ':') {
+				// Trailing
+				std::string	remaining;
+
+				std::getline(msgStream, remaining);
+				word = word.substr(1);
+				word += " ";
+				word += remaining;
+				token.setType(kTrailing);
+			} else {
+				// middle
+				token.setType(kMiddle);
+			}
 		} else {
-			t.setType(kCommand);
+			token.setType(kCommand);
 		}
-		t.setValue(token);
-		this->tokens_.push_back(t);
+		token.setValue(word);
+		tokens->push_back(token);
 	}
 	// TODO(hnoguchi): Check std::getline() error
 	return;
 }
 
-void	Parser::parse() {
-	if (this->tokens_.empty()) {
-		printErrorMessage("Empty this->tokens_;");
+void	Parser::parse(std::string message) {
+	std::vector<Token>	tokens;
+
+	tokenize(&message, &tokens);
+	if (tokens.empty()) {
+		printErrorMessage("Empty tokens;");
 		return;
 	}
-	for (std::vector<Token>::const_iterator it = this->tokens_.begin(); \
-			it != this->tokens_.end(); it++) {
-		if (it->getType() == kParam) {
-			this->parsed_.setParam(it->getValue());
+	for (std::vector<Token>::const_iterator it = tokens.begin(); it != tokens.end(); it++) {
+		if (it->getType() == kMiddle || it->getType() == kTrailing) {
+			this->parsed_.setParam(*it);
 		} else if (it->getType() == kCommand) {
 			this->parsed_.setCommand(it->getValue());
 		}
 	}
 }
 
-// GETTER
-const std::vector<Token>&	Parser::getTokens() const {
-	return (this->tokens_);
-}
-
 const ParsedMessage&	Parser::getParsedMessage() const {
 	return (this->parsed_);
-}
-
-void	Parser::printTokens() const {
-	if (this->tokens_.empty()) {
-		return;
-	}
-	std::cout << "[Tokenized] ____________________" << std::endl;
-	for (std::vector<Token>::const_iterator it = tokens_.begin(); \
-			it != tokens_.end(); it++) {
-		it->printToken();
-	}
-	std::cout << std::endl;
-	return;
 }
 
 #ifdef DEBUG
@@ -296,12 +287,15 @@ int	main() {
 		"11a \r\n",
 		"11\r\n",
 		"COMMAND param1 :param2\r\n",
-		"COMMAND param1 :param2\r\nCOMMAND param1 :param2\r\nCOMMAND param1 :param2\r\n   COMMAND param1 :param2\r\nCOMMAND param1 :param2\r\n"
+		"COMMAND param1 :param2\r\nCOMMAND param1 :param2\r\nCOMMAND param1 :param2\r\n   COMMAND param1 :param2\r\nCOMMAND param1 :param2\r\n",
+		"COMMAND param1 :param2 param3 param4 param5\r\nCOMMAND param1 :param2    param3\r\nCOMMAND param1 :param2 :param3 :param4\r\n   COMMAND param1 :param2     :param3     param4     :param5\r\nCOMMAND :param1 param2\r\n"
 	};
 
 	for (size_t i = 0; \
 			i < sizeof(testMessageList) / sizeof(testMessageList[0]); i++) {
-		std::cout << GREEN << "Message: [" << testMessageList[i] << "]" << END << std::endl;
+		std::cout << "[Message]    ____________________" << std::endl;
+		std::cout << GREEN << testMessageList[i] << END << std::endl;
+		std::cout << "_________________________________" << std::endl;
 
 		// TODO(hnoguchi): crlfをデリミタに、メッセージの分割処理を実装する（複数のメッセージが一度に来る場合がある。）
 		// TODO(hnoguchi): 終端にcrlfがあるかチェックする。
@@ -311,12 +305,11 @@ int	main() {
 		printMessages(messages);
 
 		for (std::vector<std::string>::const_iterator it = messages.begin(); it != messages.end(); it++) {
-			Parser	parser(*it);
+			Parser	parser;
 
-			parser.tokenize();
-			parser.printTokens();
-
-			parser.parse();
+			// parser.tokenize();
+			// parser.printTokens();
+			parser.parse(*it);
 			parser.getParsedMessage().printParsedMessage();
 			std::cout << YELLOW << "[Execute]   ____________________" << END << std::endl;
 			std::cout << YELLOW << "[Reply]     ____________________" << END << std::endl;

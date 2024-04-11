@@ -29,9 +29,17 @@ const std::vector<Channel>&	Info::getChannels() const {
 // }
 
 void	Info::addUser(const User& user) {
-	this->users_.push_back(user);
+	try {
+		this->users_.push_back(user);
+	} catch (std::exception& e) {
+		throw;
+	}
 }
 
 void	Info::addChannel(const Channel& channel) {
-	this->channels_.push_back(channel);
+	try {
+		this->channels_.push_back(channel);
+	} catch (std::exception& e) {
+		throw;
+	}
 }

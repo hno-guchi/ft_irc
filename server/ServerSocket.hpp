@@ -21,6 +21,4 @@ class ServerSocket {
 	 int	createClientSocket() const;
 };
 
-void	setFdFlags(const int fd, const int setFlags);
-
 #endif  // SERVERSOCKET_HPP

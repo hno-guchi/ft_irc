@@ -67,8 +67,7 @@ static ssize_t	recvNonBlocking(int* fd, char* buffer, \
 	return (recvMsgSize);
 }
 
-static std::vector<std::string>	split(const std::string& message, \
-		const std::string delim) {
+static std::vector<std::string>	split(const std::string& message, const std::string delim) {
 	std::vector<std::string>	messages;
 	std::string::size_type		startPos(0);
 
@@ -87,38 +86,52 @@ static std::vector<std::string>	split(const std::string& message, \
 /*
  * Server class
  */
-Server::Server(unsigned short port) : socket_(port) {
-	// TODO(hnoguchi): Add try-catch
-	this->fds_[0].fd = this->socket_.getFd();
-	for (int i = 1; i <= this->info_.getConfig().getMaxClient(); i++) {
-		this->fds_[i].fd = -1;
-	}
-	this->fds_[this->info_.getConfig().getMaxClient() + 1].fd = STDIN_FILENO;
-	for (int i = 0; i <= this->info_.getConfig().getMaxClient(); i++) {
-		this->fds_[i].events = POLLIN;
-		this->fds_[i].revents = 0;
+// CONSTRUCTOR
+Server::Server(unsigned short port) : socket_(port), info_() {
+	try {
+		this->fds_[0].fd = this->socket_.getFd();
+		for (int i = 1; i <= this->info_.getConfig().getMaxClient(); i++) {
+			this->fds_[i].fd = -1;
+		}
+		this->fds_[this->info_.getConfig().getMaxClient() + 1].fd = STDIN_FILENO;
+		for (int i = 0; i <= this->info_.getConfig().getMaxClient(); i++) {
+			this->fds_[i].events = POLLIN;
+			this->fds_[i].revents = 0;
+		}
+	} catch (std::exception& e) {
+		throw;
 	}
 }
 
-Server::~Server() {}
+Server::~Server() {
+	for (int i = 1; i <= this->info_.getConfig().getMaxClient(); i++) {
+		if (this->fds_[i].fd != -1) {
+			close(this->fds_[i].fd);
+		}
+	}
+}
 
 void	Server::run() {
-	// TODO(hnoguchi): Add try-catch
-	while (1) {
-		int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 2, 3 * 1000);
+	try {
+		while (1) {
+			int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 2, 3 * 1000);
 
-		if (result == -1) {
-			fatalError("poll");
-		}
-		if (result == 0) {
-			// std::cout << "poll: Timeout 3 seconds..." << std::endl;
+			if (result == -1) {
+				// TODO(hnoguchi): fatalerrorにするか？
+				throw std::runtime_error("poll");
+			}
+			if (result == 0) {
+				// std::cout << "poll: Timeout 3 seconds..." << std::endl;
+				// TODO(hnoguchi): PINGするかcheck
+				continue;
+			}
+			this->handleServerSocket();
+			this->handleStandardInput();
+			this->handleClientSocket();
 			// TODO(hnoguchi): PINGするかcheck
-			continue;
 		}
-		this->handleServerSocket();
-		this->handleStandardInput();
-		this->handleClientSocket();
-		// TODO(hnoguchi): PINGするかcheck
+	} catch (std::exception& e) {
+		throw;
 	}
 }
 
@@ -126,26 +139,31 @@ void	Server::handleServerSocket() {
 	if (!(this->fds_[0].revents & POLLIN)) {
 		return;
 	}
-	// TODO(hnoguchi): Add try-catch
-	int	newSocket = this->socket_.createClientSocket();
 	int	i = 1;
-	for (; i <= this->info_.getConfig().getMaxClient(); ++i) {
-		if (this->fds_[i].fd == -1) {
-			break;
+	try {
+		int	newSocket = this->socket_.createClientSocket();
+		for (; i <= this->info_.getConfig().getMaxClient(); ++i) {
+			if (this->fds_[i].fd == -1) {
+				break;
+			}
 		}
+		if (i > this->info_.getConfig().getMaxClient()) {
+			// TODO(hnoguchi): messageを送る。
+			std::cerr << "Max clients reached." << std::endl;
+			close(newSocket);
+			return;
+		}
+		// ユーザ仮登録
+		this->fds_[i].fd = newSocket;
+		User	user;
+		user.setFd(newSocket);
+		this->info_.addUser(user);
+		std::cout << "New client connected. Socket: " << newSocket << std::endl;
+	} catch (std::exception& e) {
+		handleClientDisconnect(&this->fds_[i].fd);
+		// TODO(hnoguchi): this->info_.removeUser(i - 1);
+		throw;
 	}
-	if (i > this->info_.getConfig().getMaxClient()) {
-		// TODO(hnoguchi): messageを送る。
-		handleClientDisconnect(&newSocket);
-		std::cerr << "Max clients reached." << std::endl;
-		return;
-	}
-	// ユーザ仮登録
-	this->fds_[i].fd = newSocket;
-	User	user;
-	user.setFd(newSocket);
-	this->info_.addUser(user);
-	std::cout << "New client connected. Socket: " << newSocket << std::endl;
 }
 
 void	Server::handleStandardInput() {
@@ -186,13 +204,9 @@ void	Server::handleReceivedData(int i) {
 	Execute						execute;
 	Reply						reply;
 	for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
-		// parse
-		// TODO(hnoguchi): commandは、すべてアルファベットであれば、すべて大文字に変換すること。
-		// TODO(hnoguchi): parser.tokenize();は、parser.parse();の中で実行する。
-		Parser	parser(*it);
-		parser.tokenize();
-		parser.printTokens();
-		parser.parse();
+		Parser	parser;
+
+		parser.parse(*it);
 		parser.getParsedMessage().printParsedMessage();
 		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
 		int	replyNum = 0;
@@ -231,7 +245,6 @@ void	Server::handleReceivedData(int i) {
 	}
 }
 
-// TODO(hnoguchi): エラー処理は、try-catch{}で実装する。
 // TODO(hnoguchi): サーバーの終了処理を実装する。
 // TODO(hnoguchi): Server classにpasswordを追加する。
 // TODO(hnoguchi): <port>, <password>のバリデーションを実装する。
@@ -240,9 +253,15 @@ int	main(int argc, char* argv[]) {
 		std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
 	}
 
-	(void)argv;
-	Server	Server(8080);
+	try {
+		(void)argv;
+		Server	Server(8080);
 
-	Server.run();
+		Server.run();
+	} catch (std::exception& e) {
+		std::cerr << RED << e.what() << END << std::endl;
+		// destruct
+		return (1);
+	}
 	return (0);
 }

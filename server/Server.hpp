@@ -4,6 +4,7 @@
 #include <poll.h>
 #include <iostream>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <cstring>
@@ -27,6 +28,13 @@ class Server {
 	 explicit Server(unsigned short port);
 	 ~Server();
 	 void	run(void);
+
+	// class GradeTooHighException : public std::out_of_range {
+	// public:
+	// 	GradeTooHighException(const std::string& msg = "Grade is too high.");
+	// };
+	// .cpp
+	// Bureaucrat::GradeTooHighException::GradeTooHighException(const std::string& msg) : std::out_of_range(msg) {}
 };
 
 ssize_t	sendNonBlocking(int fd, const char* buffer, size_t dataSize);
