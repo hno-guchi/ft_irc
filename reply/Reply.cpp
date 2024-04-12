@@ -39,14 +39,26 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 				msg += "401 :" + parsedMsg.getParams()[0].getValue() + " :No such nick/channel";
 			} else if (num == kERR_NOSUCHSERVER) {
 				msg += "402 :" + parsedMsg.getParams()[0].getValue() + " :No such server";
+			} else if (num == kERR_NORECIPIENT) {
+				msg += "411 :No recipient given (" + parsedMsg.getCommand() + ")";
+			} else if (num == kERR_NOTEXTTOSEND) {
+				msg += "412 :No text to send";
 			} else if (num == kERR_UNKNOWNCOMMAND) {
 				msg += "421 :" + parsedMsg.getCommand() + " :Unknown command";
+			} else if (num == kERR_NONICKNAMEGIVEN) {
+				msg += "431 :No nickname given";
+			} else if (num == kERR_ERRONEUSNICKNAME) {
+				msg += "432 :" + parsedMsg.getParams()[0].getValue() + " :Erroneous nickname";
+			} else if (num == kERR_NICKNAMEINUSE) {
+				msg += "433 :" + parsedMsg.getParams()[0].getValue() + " :Nickname is already in use";
 			} else if (num == kERR_NOTREGISTERED) {
 				msg += "451 * :You have not registered";
 			} else if (num == kERR_NEEDMOREPARAMS) {
 				msg += "461 " + user.getNickName() + " " + parsedMsg.getCommand() + " :Not enough parameters";
 			} else if (num == kERR_ALREADYREGISTRED) {
 				msg += "462 " +  user.getNickName() +  " :Unauthorized command (already registered)";
+			} else if (num == kERR_RESTRICTED) {
+				msg += "484 :Your connection is restricted!";
 			}
 		}
 		msg += this->delimiter_;

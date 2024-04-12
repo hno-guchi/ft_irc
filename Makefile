@@ -73,6 +73,11 @@ fclean: clean
 .PHONY: re
 re: fclean all
 
+.PHONY: leaks
+leaks: CXXFLAGS += -DLEAKS
+leaks: re
+	# valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(NAME)
+
 .PHONY: parser
 parser:
 	make -C ./parser

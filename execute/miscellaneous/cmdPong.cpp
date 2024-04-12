@@ -21,7 +21,10 @@
 #include "../../error/error.hpp"
 
 int	Execute::cmdPong(User* user, const ParsedMessage& parsedMsg, Info* info) {
-	(void)parsedMsg;
+	// TODO(hnoguchi): Parser classでバリデーションを行う。
+	if (parsedMsg.getParams().size() < 1) {
+		return (kERR_NOORIGIN);
+	}
 	ssize_t		sendMsgSize = 0;
 	std::string	message = ":" + user->getNickName() + " PONG " + info->getConfig().getServerName() + "\r\n";
 	std::cout << "Send message: [" << message << "]" << std::endl;
@@ -33,13 +36,14 @@ int	Execute::cmdPong(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		// }
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
+		// handleClientDisconnect(&user->getFd());
 		// TODO(hnoguchi): usetも削除する。
 		// TODO(hnoguchi): 適切なエラーナンバーを返す。
 		return (-1);
 	}
 	// TODO(hnoguchi): castは使わない実装にする？？
 	if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
-		handleClientDisconnect(fd);
+		// handleClientDisconnect(fd);
 		throw std::runtime_error("send");
 	}
 	// TODO(hnoguchi): 成功用のenumを作成するかも。。。

@@ -28,12 +28,13 @@ class User {
 	 std::string	hostName_;
 	 std::string	serverName_;
 	 std::string	realName_;
+	 const int		index_;
 	 int			fd_;
 	 unsigned int	registered_;
 	 unsigned int	modes_;
 
  public:
-	 User();
+	 explicit	User(int i = -1);
 	 ~User();
 
 	 // SETTERS
@@ -52,6 +53,7 @@ class User {
 	 const std::string&	getHostName() const;
 	 const std::string&	getServerName() const;
 	 const std::string&	getRealName() const;
+	 int				getIndex() const;
 	 int				getFd() const;
 	 unsigned int		getRegistered() const;
 	 unsigned int		getModes() const;

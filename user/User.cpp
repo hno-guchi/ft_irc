@@ -1,8 +1,8 @@
 #include "./User.hpp"
 
 // CONSTRUCTORS and DESTRUCTORS
-User::User() :
-	fd_(-1), registered_(0), modes_(0) {}
+User::User(int i) :
+	index_(i), fd_(-1), registered_(0), modes_(0) {}
 
 User::~User() {}
 
@@ -64,6 +64,10 @@ const std::string&	User::getRealName() const {
 	return (this->realName_);
 }
 
+int	User::getIndex() const {
+	return (this->index_);
+}
+
 int	User::getFd() const {
 	return (this->fd_);
 }
@@ -79,6 +83,7 @@ unsigned int	User::getModes() const {
 // DEBUG
 void	User::printData() const {
 	std::cout << MAGENTA << "[USER INFO] --------------------" << END << std::endl;
+	std::cout << "[index]        : [" << this->index_ << "]" << std::endl;
 	std::cout << "[fd]           : [" << this->fd_ << "]" << std::endl;
 	std::cout << "[modes]        : [" << this->modes_ << "]" << std::endl;
 	std::cout << "[registered]   : [" << this->registered_ << "]" << std::endl;

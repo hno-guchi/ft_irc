@@ -90,11 +90,11 @@ ssize_t	sendNonBlocking(int fd, const char* buffer, \
 		} else if (errno == ECONNRESET) {
 			// sendMsgSize = -1;
 			// break;
-			handleClientDisconnect(fd);
+			// handleClientDisconnect(fd);
 			throw std::runtime_error("send");
 		} else {
 			// fatalError("send");
-			handleClientDisconnect(fd);
+			// handleClientDisconnect(fd);
 			throw std::runtime_error("send");
 		}
 	}
@@ -169,7 +169,7 @@ void	Server::handleServerSocket() {
 		}
 		// ユーザ仮登録
 		this->fds_[i].fd = newSocket;
-		User	user;
+		User	user(i);
 		user.setFd(newSocket);
 		this->info_.addUser(user);
 		std::cout << "New client connected. Socket: " << newSocket << std::endl;
@@ -181,10 +181,10 @@ void	Server::handleServerSocket() {
 }
 
 void	Server::handleStandardInput() {
+	if (!(this->fds_[this->info_.getConfig().getMaxClient() + 1].revents & POLLIN)) {
+		return;
+	}
 	try {
-		if (!(this->fds_[this->info_.getConfig().getMaxClient() + 1].revents & POLLIN)) {
-			return;
-		}
 		std::string	input;
 		std::getline(std::cin, input);
 		// TODO(hnoguchi): Check bit.
@@ -209,9 +209,9 @@ void	Server::handleReceivedData(int i) {
 	try {
 		char	buffer[513] = {0};
 		ssize_t	sendMsgSize = 0;
-		ssize_t	recvMsgSize = 0;
 
-		recvMsgSize = recvNonBlocking(&this->fds_[i].fd, buffer, sizeof(buffer) - 1);
+		recvNonBlocking(&this->fds_[i].fd, buffer, sizeof(buffer) - 1);
+		// ssize_t	recvMsgSize = recvMsgSize = recvNonBlocking(&this->fds_[i].fd, buffer, sizeof(buffer) - 1);
 		// if (recvMsgSize <= 0) {
 		// 	handleClientDisconnect(&this->fds_[i].fd);
 		// 	// TODO(hnoguchi): this->users_も削除する。
@@ -239,8 +239,7 @@ void	Server::handleReceivedData(int i) {
 					replyNum = execute.registerUser(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
 				} else {
 					// コマンド実行処理
-					replyNum = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), \
-							parser.getParsedMessage(), &this->info_);
+					replyNum = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
 				}
 			}
 			if (replyNum == 0) {
@@ -253,9 +252,7 @@ void	Server::handleReceivedData(int i) {
 			return;
 		}
 		// send
-		std::cout << "[replyMsg] ________________________________________" << std::endl;
-		std::cout << RED << replyMsg << END << std::flush;
-		std::cout << "---------------------------------------------------" << std::endl;
+		debugPrintSendMessage("replyMsg", replyMsg);
 		sendMsgSize = sendNonBlocking(this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
 		if (sendMsgSize <= 0) {
 			handleClientDisconnect(&this->fds_[i].fd);
@@ -268,6 +265,7 @@ void	Server::handleReceivedData(int i) {
 		}
 	} catch (std::exception& e) {
 		// TODO(hnoguchi): メッセージ受信に失敗したことをユーザに通知（メッセージを送信）する？
+		handleClientDisconnect(&this->fds_[i].fd);
 		// TODO(hnoguchi): this->users_を削除する。
 		std::cerr << RED << e.what() << END << std::endl;
 	}
@@ -291,5 +289,8 @@ int	main(int argc, char* argv[]) {
 		// destruct
 		return (1);
 	}
+#ifdef LEAKS
+	system("leaks ircserv");
+#endif
 	return (0);
 }
