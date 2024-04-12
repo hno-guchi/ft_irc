@@ -66,7 +66,7 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		return (cmdUser(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "OPER") {
 	// 	return (cmdOper(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "quit") {
+	// } else if (parsedMsg.getCommand() == "QUIT") {
 	// 	return (cmdQuit(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "JOIN") {
 	// 	return (join(user, parsedMsg, info));
@@ -80,8 +80,8 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	// 	return (mode(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "PRIVMSG") {
 	// 	return (cmdPrivmsg(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "NOTICE") {
-	// 	return (cmdNotice(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "NOTICE") {
+		return (cmdNotice(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "PONG") {
 	// 	return (pong(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "ERROR") {

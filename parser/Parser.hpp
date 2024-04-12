@@ -22,7 +22,9 @@ enum kCommandType {
 enum kParamType {
 	kNone = 0,
 	kPMiddle,
-	kPTrailing
+	kPTrailing,
+	kMsgTarget,
+	kText
 };
 
 class Token {
