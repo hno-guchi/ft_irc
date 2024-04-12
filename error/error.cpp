@@ -3,7 +3,6 @@
 
 void	printErrorMessage(const std::string &message) {
 	std::cerr << RED << message << END << std::endl;
-	return;
 }
 
 void fatalError(const std::string& message) {

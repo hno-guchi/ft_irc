@@ -13,11 +13,13 @@
 #include "./Info.hpp"
 #include "../reply/Reply.hpp"
 
+#define MAX_FD 7
+
 class Server {
  private:
 	 const ServerSocket		socket_;
 	 Info					info_;
-	 struct pollfd			fds_[7];
+	 struct pollfd			fds_[MAX_FD];
 
 	 void	handleServerSocket();
 	 void	handleStandardInput();

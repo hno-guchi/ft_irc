@@ -44,20 +44,16 @@ int	ServerSocket::getFd() const {
 }
 
 int	ServerSocket::createClientSocket() const {
-	try {
-		int socket = accept(this->fd_, \
-					reinterpret_cast<struct sockaddr*>(\
-					const_cast<struct sockaddr_in*>(&this->address_)), \
-				const_cast<socklen_t*>(&this->addressLen_));
-		if (socket < 0) {
-			throw std::runtime_error("accept");
-		}
-		if (fcntl(socket, F_SETFL, O_NONBLOCK) < 0) {
-			close(socket);
-			throw std::runtime_error("fcntl");
-		}
-		return (socket);
-	} catch (std::exception& e) {
-		throw;
+	int socket = accept(this->fd_, \
+				reinterpret_cast<struct sockaddr*>(\
+				const_cast<struct sockaddr_in*>(&this->address_)), \
+			const_cast<socklen_t*>(&this->addressLen_));
+	if (socket < 0) {
+		throw std::runtime_error("accept");
 	}
+	if (fcntl(socket, F_SETFL, O_NONBLOCK) < 0) {
+		close(socket);
+		throw std::runtime_error("fcntl");
+	}
+	return (socket);
 }

@@ -8,37 +8,14 @@
 #include "../parser/Parser.hpp"
 #include "../execute/Execute.hpp"
 
-ssize_t	sendNonBlocking(int fd, const char* buffer, \
-		size_t dataSize) {
-	ssize_t sendMsgSize = 0;
-
-	while (1) {
-		sendMsgSize = send(fd, buffer, dataSize, MSG_DONTWAIT);
-
-		if (sendMsgSize >= 0) {
-			break;
-		}
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			std::cout << "No data sent." << std::endl;
-			errno = 0;
-			sendMsgSize = 0;
-			continue;
-		} else if (errno == ECONNRESET) {
-			sendMsgSize = -1;
-			break;
-		} else {
-			fatalError("send");
-		}
-	}
-	return (sendMsgSize);
-}
-
 /*
  * Helper functions
  */
 static void	handleClientDisconnect(int* fd) {
-	std::cout << "Client socket " << *fd \
-		<< " disconnected." << std::endl;
+	std::cout << "Client socket " << *fd << " disconnected." << std::endl;
+	if (*fd < 0) {
+		return ;
+	}
 	close(*fd);
 	*fd = -1;
 }
@@ -58,29 +35,70 @@ static ssize_t	recvNonBlocking(int* fd, char* buffer, \
 			recvMsgSize = 0;
 			continue;
 		} else if (errno == ECONNRESET) {
-			recvMsgSize = -1;
-			break;
+			// recvMsgSize = -1;
+			// break;
+			handleClientDisconnect(fd);
+			throw std::runtime_error("recv");
 		} else {
-			fatalError("recv");
+			// fatalError("recv");
+			handleClientDisconnect(fd);
+			throw std::runtime_error("recv");
 		}
 	}
 	return (recvMsgSize);
 }
 
 static std::vector<std::string>	split(const std::string& message, const std::string delim) {
-	std::vector<std::string>	messages;
-	std::string::size_type		startPos(0);
+	try {
+		std::vector<std::string>	messages;
+		std::string::size_type		startPos(0);
 
-	while (startPos < message.size()) {
-		std::string::size_type	delimPos = message.find(delim, startPos);
-		if (delimPos == message.npos) {
+		while (startPos < message.size()) {
+			std::string::size_type	delimPos = message.find(delim, startPos);
+			if (delimPos == message.npos) {
+				break;
+			}
+			// TODO(hnoguchi): std::string::substr(); throw exception std::out_of_range();
+			std::string	buf = message.substr(startPos, delimPos - startPos);
+			messages.push_back(buf);
+			startPos = delimPos + delim.size();
+		}
+		return (messages);
+	} catch (std::exception& e) {
+		throw;
+	}
+}
+
+/*
+ * Global functions
+ */
+ssize_t	sendNonBlocking(int fd, const char* buffer, \
+		size_t dataSize) {
+	ssize_t sendMsgSize = 0;
+
+	while (1) {
+		sendMsgSize = send(fd, buffer, dataSize, MSG_DONTWAIT);
+
+		if (sendMsgSize >= 0) {
 			break;
 		}
-		std::string	buf = message.substr(startPos, delimPos - startPos);
-		messages.push_back(buf);
-		startPos = delimPos + delim.size();
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			std::cout << "No data sent." << std::endl;
+			errno = 0;
+			sendMsgSize = 0;
+			continue;
+		} else if (errno == ECONNRESET) {
+			// sendMsgSize = -1;
+			// break;
+			handleClientDisconnect(fd);
+			throw std::runtime_error("send");
+		} else {
+			// fatalError("send");
+			handleClientDisconnect(fd);
+			throw std::runtime_error("send");
+		}
 	}
-	return (messages);
+	return (sendMsgSize);
 }
 
 /*
@@ -112,26 +130,22 @@ Server::~Server() {
 }
 
 void	Server::run() {
-	try {
-		while (1) {
-			int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 2, 3 * 1000);
+	while (1) {
+		int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 2, 3 * 1000);
 
-			if (result == -1) {
-				// TODO(hnoguchi): fatalerrorにするか？
-				throw std::runtime_error("poll");
-			}
-			if (result == 0) {
-				// std::cout << "poll: Timeout 3 seconds..." << std::endl;
-				// TODO(hnoguchi): PINGするかcheck
-				continue;
-			}
-			this->handleServerSocket();
-			this->handleStandardInput();
-			this->handleClientSocket();
-			// TODO(hnoguchi): PINGするかcheck
+		if (result == -1) {
+			// TODO(hnoguchi): fatalerrorにするか？
+			throw std::runtime_error("poll");
 		}
-	} catch (std::exception& e) {
-		throw;
+		if (result == 0) {
+			// std::cout << "poll: Timeout 3 seconds..." << std::endl;
+			// TODO(hnoguchi): PINGするかcheck
+			continue;
+		}
+		this->handleServerSocket();
+		this->handleStandardInput();
+		this->handleClientSocket();
+		// TODO(hnoguchi): PINGするかcheck
 	}
 }
 
@@ -160,20 +174,26 @@ void	Server::handleServerSocket() {
 		this->info_.addUser(user);
 		std::cout << "New client connected. Socket: " << newSocket << std::endl;
 	} catch (std::exception& e) {
+		// TODO(hnoguchi): messageを送る。
 		handleClientDisconnect(&this->fds_[i].fd);
 		// TODO(hnoguchi): this->info_.removeUser(i - 1);
-		throw;
 	}
 }
 
 void	Server::handleStandardInput() {
-	if (this->fds_[this->info_.getConfig().getMaxClient() + 1].revents & POLLIN) {
+	try {
+		if (!(this->fds_[this->info_.getConfig().getMaxClient() + 1].revents & POLLIN)) {
+			return;
+		}
 		std::string	input;
 		std::getline(std::cin, input);
+		// TODO(hnoguchi): Check bit.
 		if (input == "exit") {
 			std::cout << "See You..." << std::endl;
 			exit(0);
 		}
+	} catch (std::exception& e) {
+		std::cerr << RED << e.what() << END << std::endl;
 	}
 }
 
@@ -186,62 +206,70 @@ void	Server::handleClientSocket() {
 }
 
 void	Server::handleReceivedData(int i) {
-	char	buffer[513] = {0};
-	ssize_t	sendMsgSize = 0;
-	ssize_t	recvMsgSize = 0;
+	try {
+		char	buffer[513] = {0};
+		ssize_t	sendMsgSize = 0;
+		ssize_t	recvMsgSize = 0;
 
-	recvMsgSize = recvNonBlocking(&this->fds_[i].fd, buffer, sizeof(buffer) - 1);
-	if (recvMsgSize <= 0) {
-		handleClientDisconnect(&this->fds_[i].fd);
-		// TODO(hnoguchi): this->users_も削除する。
-		return;
-	}
-	// std::cout << "Client socket " << this->fds_[i].fd << " message: " << buffer << std::endl;
-	std::cout << GREEN << buffer << END << std::flush;
-	// Split message
-	std::vector<std::string>	messages = split(buffer, "\r\n");
-	std::string					replyMsg("");
-	Execute						execute;
-	Reply						reply;
-	for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
-		Parser	parser;
+		recvMsgSize = recvNonBlocking(&this->fds_[i].fd, buffer, sizeof(buffer) - 1);
+		// if (recvMsgSize <= 0) {
+		// 	handleClientDisconnect(&this->fds_[i].fd);
+		// 	// TODO(hnoguchi): this->users_も削除する。
+		// 	return;
+		// }
+		// std::cout << "Client socket " << this->fds_[i].fd << " message: " << buffer << std::endl;
+		std::cout << GREEN << buffer << END << std::flush;
+		// Split message
+		std::vector<std::string>	messages = split(buffer, "\r\n");
+		std::string					replyMsg("");
+		Execute						execute;
+		Reply						reply;
+		for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
+			Parser	parser;
+			int		replyNum = 0;
 
-		parser.parse(*it);
-		parser.getParsedMessage().printParsedMessage();
-		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
-		int	replyNum = 0;
-		// std::cout << i << std::endl; this->info_.getUser(i - 1).printData();
-		// 登録ユーザか確認
-		if ((this->info_.getUser(i - 1).getRegistered() & kExecAllCmd) != kExecAllCmd) {
-			// ユーザ登録処理
-			replyNum = execute.registerUser(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
-		} else {
-			// コマンド実行処理
-			replyNum = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), \
-					parser.getParsedMessage(), &this->info_);
+			replyNum = parser.parse(*it);
+			parser.getParsedMessage().printParsedMessage();
+			std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
+			// std::cout << i << std::endl; this->info_.getUser(i - 1).printData();
+			if (replyNum == 0) {
+				// 登録ユーザか確認
+				if ((this->info_.getUser(i - 1).getRegistered() & kExecAllCmd) != kExecAllCmd) {
+					// ユーザ登録処理
+					replyNum = execute.registerUser(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
+				} else {
+					// コマンド実行処理
+					replyNum = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), \
+							parser.getParsedMessage(), &this->info_);
+				}
+			}
+			if (replyNum == 0) {
+					continue;
+			}
+			// リプライメッセージの作成
+			replyMsg += reply.createMessage(replyNum, this->info_.getUser(i - 1), this->info_, parser.getParsedMessage());
 		}
-		if (replyNum == 0) {
-				continue;
+		if (replyMsg.empty()) {
+			return;
 		}
-		// リプライメッセージの作成
-		replyMsg += reply.createMessage(replyNum, this->info_.getUser(i - 1), this->info_, parser.getParsedMessage());
-	}
-	if (replyMsg.empty()) {
-		return;
-	}
-	// send
-	std::cout << "[replyMsg] ________________________________________" << std::endl;
-	std::cout << RED << replyMsg << END << std::flush;
-	std::cout << "---------------------------------------------------" << std::endl;
-	sendMsgSize = sendNonBlocking(this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
-	if (sendMsgSize <= 0) {
-		handleClientDisconnect(&this->fds_[i].fd);
-		// TODO(hnoguchi): this->users_も削除する。
-		return;
-	}
-	// TODO(hnoguchi): castは使わない実装にする？？
-	if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
-		fatalError("send");
+		// send
+		std::cout << "[replyMsg] ________________________________________" << std::endl;
+		std::cout << RED << replyMsg << END << std::flush;
+		std::cout << "---------------------------------------------------" << std::endl;
+		sendMsgSize = sendNonBlocking(this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
+		if (sendMsgSize <= 0) {
+			handleClientDisconnect(&this->fds_[i].fd);
+			// TODO(hnoguchi): this->users_も削除する。
+			return;
+		}
+		// TODO(hnoguchi): castは使わない実装にする？？
+		if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
+			fatalError("send");
+		}
+	} catch (std::exception& e) {
+		// TODO(hnoguchi): メッセージ受信に失敗したことをユーザに通知（メッセージを送信）する？
+		// TODO(hnoguchi): this->users_を削除する。
+		std::cerr << RED << e.what() << END << std::endl;
 	}
 }
 

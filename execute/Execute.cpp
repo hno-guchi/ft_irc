@@ -19,7 +19,6 @@ bool	Execute::isCommand(const std::string& command, const std::string* cmdList) 
 }
 
 int	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, Info* info) {
-	(void)info;
 	if (!(user->getRegistered() & kNickCommand) && !(user->getRegistered() & kUserCommand) && parsedMsg.getCommand() == "PASS") {
 		// PASS処理
 		// int replyNum = pass(user, parsedMsg, info);

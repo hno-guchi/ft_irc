@@ -25,15 +25,14 @@
 // Token class
 Token::Token() {}
 Token::~Token() {}
+
 void	Token::setType(const kTokenType type) {
 	this->type_ = type;
-	return;
 }
 
 // SETTER
 void	Token::setValue(const std::string &value) {
 	this->value_ = value;
-	return;
 }
 
 // GETTER
@@ -49,7 +48,6 @@ const std::string&	Token::getValue() const {
 void	Token::printToken() const {
 	std::cout << "Type   : " << this->type_ << " | " << std::flush;
 	std::cout << "Value  : [" << this->value_ << "]" << std::endl;
-	return;
 }
 
 // Param class
@@ -58,13 +56,11 @@ Param::~Param() {}
 
 void	Param::setType(const kParamType type) {
 	this->type_ = type;
-	return;
 }
 
 // SETTER
 void	Param::setValue(const std::string &value) {
 	this->value_ = value;
-	return;
 }
 
 // GETTER
@@ -80,7 +76,6 @@ const std::string&	Param::getValue() const {
 void	Param::printParam() const {
 	std::cout << "Type   : " << this->type_ << " | " << std::flush;
 	std::cout << "Value  : [" << this->value_ << "]" << std::endl;
-	return;
 }
 
 // ParsedMessage class
@@ -98,7 +93,11 @@ static bool	isNotDigit(const char& c) {
 }
 
 static bool	isFuncString(const std::string &str, bool (*func)(const char&)) {
-	return (std::find_if(str.begin(), str.end(), func) == str.end());
+	try {
+		return (std::find_if(str.begin(), str.end(), func) == str.end());
+	} catch (std::exception& e) {
+		throw;
+	}
 }
 
 static std::string	toUpperString(const std::string& str) {
@@ -113,21 +112,23 @@ static std::string	toUpperString(const std::string& str) {
 
 void	ParsedMessage::setCommand(const std::string &command) {
 	if (command.empty()) {
-		printErrorMessage("Command is empty.");
-		return;
+		throw std::invalid_argument("Empty command.");
 	}
-	if (isFuncString(command, isNotAlpha)) {
-		// TODO(hnoguchi): Check exist command ?? (Now Execute command)
-		this->type_ = kString;
-		this->command_ = toUpperString(command);
-	} else if (isFuncString(command, isNotDigit)) {
-		// TODO(hnoguchi): Check exist digit
-		this->type_ = kDigit;
-		this->command_ = command;
-	} else {
-		printErrorMessage("Command is not alphabet or digit.");
+	try {
+		if (isFuncString(command, isNotAlpha)) {
+			// TODO(hnoguchi): Check exist command ?? (Now Execute command)
+			this->type_ = kString;
+			this->command_ = toUpperString(command);
+		} else if (isFuncString(command, isNotDigit)) {
+			// TODO(hnoguchi): Check exist digit
+			this->type_ = kDigit;
+			this->command_ = command;
+		} else {
+			throw std::invalid_argument("Command is not alphabet or digit.");
+		}
+	} catch (std::exception& e) {
+		throw;
 	}
-	return;
 }
 
 /*
@@ -138,20 +139,24 @@ void	ParsedMessage::setCommand(const std::string &command) {
  * １文字目がnospcrlfclで、残りの文字列にスペースがあれば、trailing。
  */
 void	ParsedMessage::setParam(const Token& token) {
-	if (token.getValue().empty()) {
-		printErrorMessage("Empty param.");
-		return;
+	// kTrailing typeでは、空文字列がくる場合がある。
+	// if (token.getValue().empty()) {
+	// 	printErrorMessage("Empty param.");
+	// 	return;
+	// }
+	try {
+		Param	p;
+		// TODO(hnoguchi): Commandで条件分岐、各コマンドに対応したチェックを行う。
+		if (token.getType() == kMiddle) {
+			p.setType(kPMiddle);
+		} else {
+			p.setType(kPTrailing);
+		}
+		p.setValue(token.getValue());
+		this->params_.push_back(p);
+	} catch (std::exception& e) {
+		throw;
 	}
-	Param	p;
-	// TODO(hnoguchi): Commandで条件分岐、各コマンドに対応したチェックを行う。
-	if (token.getType() == kMiddle) {
-		p.setType(kPMiddle);
-	} else {
-		p.setType(kPTrailing);
-	}
-	p.setValue(token.getValue());
-	this->params_.push_back(p);
-	return;
 }
 
 const std::string&	ParsedMessage::getCommand() const {
@@ -184,55 +189,72 @@ Parser::Parser() {}
 Parser::~Parser() {}
 
 static void	tokenize(std::string *message, std::vector<Token> *tokens) {
-	if (message->empty()) {
-		printErrorMessage("Message is empty.");
-		return;
-	}
-	std::string			word;
-	std::istringstream	msgStream(*message);
-	while (std::getline(msgStream, word, ' ')) {
-		if (word.empty()) {
-			continue;
-		}
-		Token	token;
-		if (!tokens->empty()) {
-			if (word[0] == ':') {
-				// Trailing
-				std::string	remaining;
-
-				std::getline(msgStream, remaining);
-				word = word.substr(1);
-				word += " ";
-				word += remaining;
-				token.setType(kTrailing);
-			} else {
-				// middle
-				token.setType(kMiddle);
+	try {
+		std::string			word;
+		std::istringstream	msgStream(*message);
+		while (std::getline(msgStream, word, ' ')) {
+			if (word.empty()) {
+				continue;
 			}
-		} else {
-			token.setType(kCommand);
+			Token	token;
+			if (!tokens->empty()) {
+				if (word[0] == ':') {
+					// Trailing
+					word = word.substr(1);
+					std::string	remaining;
+
+					std::getline(msgStream, remaining);
+					// TODO(hnoguchi): Check std::getline() error
+					if (remaining.size() > 0) {
+						word += " ";
+						word += remaining;
+					}
+					// TODO(hnoguchi): Trailingは、空文字列を許容するかBNF確認すること。
+					token.setType(kTrailing);
+				} else {
+					// Middle
+					token.setType(kMiddle);
+				}
+			} else {
+				token.setType(kCommand);
+			}
+			token.setValue(word);
+			tokens->push_back(token);
 		}
-		token.setValue(word);
-		tokens->push_back(token);
+		// TODO(hnoguchi): Check std::getline() error
+	} catch (std::exception& e) {
+		throw;
 	}
-	// TODO(hnoguchi): Check std::getline() error
-	return;
 }
 
-void	Parser::parse(std::string message) {
-	std::vector<Token>	tokens;
-
-	tokenize(&message, &tokens);
-	if (tokens.empty()) {
-		printErrorMessage("Empty tokens;");
-		return;
+int	Parser::parse(std::string message) {
+	if (message.empty()) {
+		// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
+		return (-1);
 	}
-	for (std::vector<Token>::const_iterator it = tokens.begin(); it != tokens.end(); it++) {
-		if (it->getType() == kMiddle || it->getType() == kTrailing) {
-			this->parsed_.setParam(*it);
-		} else if (it->getType() == kCommand) {
-			this->parsed_.setCommand(it->getValue());
+	try {
+		// TODO(hnoguchi): TokenList classを作成した方が良い？
+		// TokenList	tokenList(&message);
+		std::vector<Token>	tokens;
+
+		tokenize(&message, &tokens);
+		if (tokens.empty()) {
+			// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
+			return (-1);
 		}
+		for (std::vector<Token>::const_iterator it = tokens.begin(); it != tokens.end(); it++) {
+			if (it->getType() == kMiddle || it->getType() == kTrailing) {
+				this->parsed_.setParam(*it);
+			} else if (it->getType() == kCommand) {
+				this->parsed_.setCommand(it->getValue());
+			}
+		}
+		return (0);
+	} catch (std::exception& e) {
+		std::cerr << RED << e.what() << END << std::endl;
+		// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
+		return (-1);
+		// throw;
 	}
 }
 
