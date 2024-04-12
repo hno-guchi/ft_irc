@@ -31,9 +31,15 @@ int	Execute::cmdUser(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	if (user->getRegistered() & kUserCommand) {
 		return (kERR_ALREADYREGISTRED);
 	}
-	user->setUserName(parsedMsg.getParams()[0].getValue());
-	user->setHostName(parsedMsg.getParams()[1].getValue());
-	user->setServerName(parsedMsg.getParams()[2].getValue());
-	user->setRealName(parsedMsg.getParams()[3].getValue());
+	try {
+		user->setUserName(parsedMsg.getParams()[0].getValue());
+		user->setHostName(parsedMsg.getParams()[1].getValue());
+		user->setServerName(parsedMsg.getParams()[2].getValue());
+		user->setRealName(parsedMsg.getParams()[3].getValue());
+	} catch (const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		// TODO(hnoguchi): 適切なエラーナンバーを返す。
+		return (-1);
+	}
 	return (0);
 }

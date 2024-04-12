@@ -7,75 +7,85 @@ Channel::~Channel() {}
 
 // SETTER
 void	Channel::setName(const std::string& name) {
+	// TODO(hnoguchi): バリデーションは別でやる？
 	if (name.size() == 0 || name.size() > 50) {
 		return;
 		// throw std::invalid_argument("Invalid name");
 	}
 	this->name_ = name;
-	return;
 }
 
 void	Channel::setTopic(const std::string& topic) {
+	// TODO(hnoguchi): バリデーションは別でやる？
 	if (topic.size() == 0 || topic.size() > 100) {
 		return;
 		// throw std::invalid_argument("Invalid topin");
 	}
 	this->topic_ = topic;
-	return;
 }
 
 void	Channel::setkey(const std::string& key) {
+	// TODO(hnoguchi): バリデーションは別でやる？
 	if (key.size() == 0 || key.size() > 30) {
 		return;
 		// throw std::invalid_argument("Invalid key");
 	}
+	// TODO(hnoguchi): バリデーションは別でやる？
 	if ((this->modes_ & kKey) == 0) {
 		return;
 		// throw std::invalid_argument("Channel is not mode key protected.");
 	}
 	this->key_ = key;
-	return;
 }
 
 void	Channel::setLimit(int limit) {
+	// TODO(hnoguchi): バリデーションは別でやる？
 	if (limit < 0 || limit > 5) {
 		return;
 		// throw std::invalid_argument("Invalid limit");
 	}
+	// TODO(hnoguchi): バリデーションは別でやる？
 	if ((this->modes_ & kLimit) == 0) {
 		return;
 		// throw std::invalid_argument("Channel is not mode limit protected.");
 	}
 	this->limit_ = limit;
-	return;
 }
 
 void	Channel::setMode(kChannelMode mode) {
+	// TODO(hnoguchi): バリデーションは別でやる？
 	if (this->modes_ & mode) {
 		return;
 		// throw std::invalid_argument(Channel is already set to this mode.);
 	}
 	this->modes_ |= mode;
-	return;
 }
 
 void	Channel::setMember(User* user) {
+	// TODO(hnoguchi): バリデーションは別でやる？
 	if (user == NULL) {
-		return;
 		// throw std::invalid_argument("Invalid argument");
+		return;
 	}
+	// TODO(hnoguchi): バリデーションは別でやる？
 	if ((this->modes_ & kLimit) && \
 			static_cast<int>(this->members_.size()) >= this->limit_) {
-		return;
 		// throw std::invalid_argument("Channel is full");
+		return;
 	}
-	this->members_.push_back(user);
-	return;
+	try {
+		this->members_.push_back(user);
+	} catch (std::exception& e) {
+		throw;
+	}
 }
 
 void	Channel::setOperator(User* user) {
-	this->operators_.push_back(user);
-	return;
+	try {
+		this->operators_.push_back(user);
+	} catch (std::exception& e) {
+		throw;
+	}
 }
 
 // GETTER
@@ -107,7 +117,11 @@ const std::vector<User*>&	Channel::getOperators() const {
 }
 
 void	Channel::addMember(User* user) {
-	this->members_.push_back(user);
+	try {
+		this->members_.push_back(user);
+	} catch (std::exception& e) {
+		throw;
+	}
 }
 
 void	Channel::eraseMember(User* user) {
