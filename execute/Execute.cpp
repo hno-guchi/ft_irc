@@ -63,8 +63,8 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		return (cmdNick(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "USER") {
 		return (cmdUser(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "OPER") {
-	// 	return (cmdOper(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "OPER") {
+		return (cmdOper(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "QUIT") {
 	// 	return (cmdQuit(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "JOIN") {

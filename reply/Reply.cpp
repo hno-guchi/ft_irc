@@ -42,6 +42,8 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 				} else if (user.getModes() & kRestrict) {
 					msg += " +r";
 				}
+			} else if (num == kRPL_YOUREOPER) {
+				msg += "381 " + user.getNickName() + " :You are now an IRC operator";
 			}
 		} else if (num >= 400 && num < 600) {
 			if (num == kERR_NOSUCHNICK) {
@@ -67,6 +69,8 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 				msg += "461 " + user.getNickName() + " :" + parsedMsg.getCommand() + " :Not enough parameters";
 			} else if (num == kERR_ALREADYREGISTRED) {
 				msg += "462 " +  user.getNickName() +  " :Unauthorized command (already registered)";
+			} else if (num == kERR_PASSWDMISMATCH) {
+				msg += "464 " +  user.getNickName() +  " :Password incorrect";
 			} else if (num == kERR_RESTRICTED) {
 				msg += "484 " + user.getNickName() + " :Your connection is restricted!";
 			} else if (num == kERR_UMODEUNKNOWNFLAG) {

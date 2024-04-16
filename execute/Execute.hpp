@@ -14,6 +14,7 @@ class Execute {
 	 int	cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdUser(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdUserMode(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	cmdOper(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdPong(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdNotice(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdPrivmsg(User* user, const ParsedMessage& parsedMsg, Info* info);
