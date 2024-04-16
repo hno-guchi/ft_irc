@@ -64,12 +64,19 @@ int	Execute::cmdUserMode(User* user, const ParsedMessage& parsedMsg, Info* info)
 		}
 		user->unsetMode(kOperator);
 		user->setMode(kRestrict);
-		std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :";
-		msg +=  "+r\r\n";
-		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-		// TODO(hnoguchi): 戻り値の確認
-		return (0);
+		try {
+			std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :";
+			msg +=  "+r\r\n";
+			msg += ":" + user->getNickName() + " MODE " + user->getNickName() + " :";
+			msg +=  "-o\r\n";
+			debugPrintSendMessage("SendMsg", msg);
+			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// TODO(hnoguchi): 戻り値の確認
+			return (0);
+		} catch (std::exception& e) {
+			std::cerr << e.what() << std::endl;
+			return (-1);
+		}
 	}
 	return (kERR_UMODEUNKNOWNFLAG);
 }
