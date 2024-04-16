@@ -5,7 +5,8 @@
 NAME = ircserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
-DEBUGFLAGS = -g -fsanitize=undefined -fsanitize=integer -fsanitize=address -DDEBUG
+DEBUGFLAGS = -g -fsanitize=address -fsanitize=undefined -fsanitize=integer
+LEAKSFLAG = -DSERVER_LEAKS
 RM = rm -r -f
 SRCS = Server.cpp \
 	   ServerSocket.cpp \
@@ -16,7 +17,7 @@ SRCS = Server.cpp \
 	   Parser.cpp \
 	   Execute.cpp \
 	   Reply.cpp \
-	   cmdNick.cpp cmdUser.cpp \
+	   cmdNick.cpp cmdUser.cpp cmdUserMode.cpp \
 	   cmdPong.cpp \
 	   cmdNotice.cpp cmdPrivmsg.cpp \
 	   cmdJoin.cpp \
@@ -73,10 +74,18 @@ fclean: clean
 .PHONY: re
 re: fclean all
 
+.PHONY: debug
+debug: fclean
+debug: CXXFLAGS = $(DEBUGFLAGS)
+debug: $(OBJS_DIR)
+debug: $(OBJS)
+debug:
+	$(CXX) $(DEBUGFLAGS) -o $(NAME) $(OBJS)
+
 .PHONY: leaks
-leaks: CXXFLAGS += -DLEAKS
 leaks: re
-	# valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(NAME)
+leaks:
+	leaks -q --atExit -- ./$(NAME)
 
 .PHONY: parser
 parser:
