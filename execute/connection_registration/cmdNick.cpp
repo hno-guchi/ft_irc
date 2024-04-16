@@ -18,7 +18,9 @@
 #include <vector>
 #include "../Execute.hpp"
 #include "../../user/User.hpp"
+#include "../../error/error.hpp"
 #include "../../parser/Parser.hpp"
+#include "../../server/Server.hpp"
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
@@ -61,7 +63,12 @@ int	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info) {
 			}
 			// user->setNickName(parsedMsg.getParams()[0].getValue());
 		}
+		std::string	msg = ":" + user->getNickName() + " NICK :" + nick + "\r\n";
+		debugPrintSendMessage("SendMsg", msg);
+		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		// TODO(hnoguchi): 戻り値の確認
 		user->setNickName(nick);
+		return (0);
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		return (kERR_ERRONEUSNICKNAME);

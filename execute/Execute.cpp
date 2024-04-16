@@ -5,6 +5,7 @@
 #include "../channel/Channel.hpp"
 #include "../reply/Reply.hpp"
 #include "../error/error.hpp"
+#include "../parser/Parser.hpp"
 
 Execute::Execute() {}
 Execute::~Execute() {}
@@ -34,7 +35,6 @@ int	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, Info* info
 				return (replyNum);
 			}
 			user->setRegistered(kNickCommand);
-			user->printData();
 			return (0);
 		}
 	} else if (!(user->getRegistered() & kUserCommand)) {
@@ -44,7 +44,6 @@ int	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, Info* info
 				return (replyNum);
 			}
 			user->setRegistered(kUserCommand);
-			user->printData();
 			return (kRPL_WELCOME);
 		}
 	}
@@ -76,8 +75,9 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	// 	return (cmdInvite(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "TOPIC") {
 	// 	return (cmdTopic(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "MODE") {
-	// 	return (mode(user, parsedMsg, info));
+	// 	TODO(hnoguchi): userMode();かchannelMode();なのか判定する処理が必要
+	} else if (parsedMsg.getCommand() == "MODE") {
+		return (cmdUserMode(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "PRIVMSG") {
 	// 	return (cmdPrivmsg(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "NOTICE") {
@@ -92,7 +92,7 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 
 #ifdef DEBUG
 
-#include "../Parser/Parser.hpp"
+#include "../parser/Parser.hpp"
 
 int	main() {
 #ifdef LEAKS

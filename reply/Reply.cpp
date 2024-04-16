@@ -33,32 +33,46 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 			msg += ":" + info.getConfig().getServerName() + " ";
 			msg += "004 " + user.getNickName() + " :" + info.getConfig().getServerName() + " " + oss.str() + " " + info.getConfig().getUserModes() + " " +  info.getConfig().getChannelModes();
 		} else if (num < 100  || (num >= 200 && num < 400)) {
-			msg += "421 :" + parsedMsg.getCommand() + " :Unknown command";
+			if (num == kRPL_UMODEIS) {
+				msg += "221 " + user.getNickName();
+				if (user.getModes() & kAway) {
+					msg += " +a";
+				} else if (user.getModes() & kOperator) {
+					msg += " +o";
+				} else if (user.getModes() & kRestrict) {
+					msg += " +r";
+				}
+			}
 		} else if (num >= 400 && num < 600) {
 			if (num == kERR_NOSUCHNICK) {
-				msg += "401 :" + parsedMsg.getParams()[0].getValue() + " :No such nick/channel";
+				msg += "401 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :No such nick/channel";
 			} else if (num == kERR_NOSUCHSERVER) {
-				msg += "402 :" + parsedMsg.getParams()[0].getValue() + " :No such server";
+				msg += "402 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :No such server";
 			} else if (num == kERR_NORECIPIENT) {
-				msg += "411 :No recipient given (" + parsedMsg.getCommand() + ")";
+				msg += "411 " + user.getNickName() + " :No recipient given (" + parsedMsg.getCommand() + ")";
 			} else if (num == kERR_NOTEXTTOSEND) {
-				msg += "412 :No text to send";
+				msg += "412 " + user.getNickName() + " :No text to send";
 			} else if (num == kERR_UNKNOWNCOMMAND) {
-				msg += "421 :" + parsedMsg.getCommand() + " :Unknown command";
+				msg += "421 " + user.getNickName() + " :" + parsedMsg.getCommand() + " :Unknown command";
 			} else if (num == kERR_NONICKNAMEGIVEN) {
-				msg += "431 :No nickname given";
+				msg += "431 " + user.getNickName() + " :No nickname given";
 			} else if (num == kERR_ERRONEUSNICKNAME) {
-				msg += "432 :" + parsedMsg.getParams()[0].getValue() + " :Erroneous nickname";
+				msg += "432 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :Erroneous nickname";
 			} else if (num == kERR_NICKNAMEINUSE) {
-				msg += "433 :" + parsedMsg.getParams()[0].getValue() + " :Nickname is already in use";
+				// msg += "433 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :Nickname is already in use";
+				msg += "433 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue();
 			} else if (num == kERR_NOTREGISTERED) {
 				msg += "451 * :You have not registered";
 			} else if (num == kERR_NEEDMOREPARAMS) {
-				msg += "461 " + user.getNickName() + " " + parsedMsg.getCommand() + " :Not enough parameters";
+				msg += "461 " + user.getNickName() + " :" + parsedMsg.getCommand() + " :Not enough parameters";
 			} else if (num == kERR_ALREADYREGISTRED) {
 				msg += "462 " +  user.getNickName() +  " :Unauthorized command (already registered)";
 			} else if (num == kERR_RESTRICTED) {
-				msg += "484 :Your connection is restricted!";
+				msg += "484 " + user.getNickName() + " :Your connection is restricted!";
+			} else if (num == kERR_UMODEUNKNOWNFLAG) {
+				msg += "501 " + user.getNickName() + " :Unknown MODE flag";
+			} else if (num == kERR_USERSDONTMATCH) {
+				msg += "502 " + user.getNickName() + " :Cannot change mode for other users";
 			}
 		}
 		msg += this->delimiter_;

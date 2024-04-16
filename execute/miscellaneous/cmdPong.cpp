@@ -26,8 +26,8 @@ int	Execute::cmdPong(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		return (kERR_NOORIGIN);
 	}
 	ssize_t		sendMsgSize = 0;
-	std::string	message = ":" + user->getNickName() + " PONG " + info->getConfig().getServerName() + "\r\n";
-	std::cout << "Send message: [" << message << "]" << std::endl;
+	std::string	message = ":" + info->getConfig().getServerName() + " PONG " + info->getConfig().getServerName() + "\r\n";
+	debugPrintSendMessage("SendMessage", message);
 	try {
 		sendMsgSize = sendNonBlocking(user->getFd(), message.c_str(), message.size());
 		// if (sendMsgSize <= 0) {

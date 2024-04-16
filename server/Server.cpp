@@ -72,8 +72,7 @@ static std::vector<std::string>	split(const std::string& message, const std::str
 /*
  * Global functions
  */
-ssize_t	sendNonBlocking(int fd, const char* buffer, \
-		size_t dataSize) {
+ssize_t	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
 	ssize_t sendMsgSize = 0;
 
 	while (1) {
@@ -131,6 +130,7 @@ Server::~Server() {
 
 void	Server::run() {
 	while (1) {
+
 		int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 2, 3 * 1000);
 
 		if (result == -1) {
@@ -143,7 +143,11 @@ void	Server::run() {
 			continue;
 		}
 		this->handleServerSocket();
-		this->handleStandardInput();
+		try {
+			this->handleStandardInput();
+		} catch (std::exception& e) {
+			throw;
+		}
 		this->handleClientSocket();
 		// TODO(hnoguchi): PINGするかcheck
 	}
@@ -188,12 +192,13 @@ void	Server::handleStandardInput() {
 		std::string	input;
 		std::getline(std::cin, input);
 		// TODO(hnoguchi): Check bit.
-		if (input == "exit") {
-			std::cout << "See You..." << std::endl;
-			exit(0);
+		if (input != "exit") {
+			return;
 		}
+		std::cout << "See You..." << std::endl;
+		throw std::runtime_error("exit");
 	} catch (std::exception& e) {
-		std::cerr << RED << e.what() << END << std::endl;
+		throw;
 	}
 }
 
@@ -242,6 +247,7 @@ void	Server::handleReceivedData(int i) {
 					replyNum = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
 				}
 			}
+			this->info_.getUser(i - 1).printData();
 			if (replyNum == 0) {
 					continue;
 			}
@@ -287,10 +293,13 @@ int	main(int argc, char* argv[]) {
 	} catch (std::exception& e) {
 		std::cerr << RED << e.what() << END << std::endl;
 		// destruct
-		return (1);
+		// return (1);
 	}
-#ifdef LEAKS
-	system("leaks ircserv");
-#endif
 	return (0);
 }
+
+// #ifdef SERVER_LEAKS
+// __attribute__((destructor)) static void destructor() {
+//     system("leaks -q ircserv");
+// }
+// #endif  // SERVER_LEAKS
