@@ -27,6 +27,10 @@ void	User::setRealName(const std::string &name) {
 	this->realName_ = name;
 }
 
+void	User::setIndex(int i) {
+	this->index_ = i;
+}
+
 void	User::setFd(int fd) {
 	this->fd_ = fd;
 }

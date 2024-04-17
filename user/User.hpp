@@ -28,7 +28,7 @@ class User {
 	 std::string	hostName_;
 	 std::string	serverName_;
 	 std::string	realName_;
-	 const int		index_;
+	 int			index_;
 	 int			fd_;
 	 unsigned int	registered_;
 	 unsigned int	modes_;
@@ -43,6 +43,7 @@ class User {
 	 void	setHostName(const std::string &hostName);
 	 void	setServerName(const std::string &serverName);
 	 void	setRealName(const std::string &realName);
+	 void	setIndex(int i);
 	 void	setFd(int fd);
 	 void	setRegistered(kExecCommand flag);
 	 void	setMode(kUserMode mode);
