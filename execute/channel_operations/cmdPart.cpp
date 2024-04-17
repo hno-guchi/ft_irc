@@ -13,3 +13,13 @@
  *    :WiZ!jto@tolsun.oulu.fi PART #playzone :I lost
  *                                    ; User WiZ leaving channel "#playzone" with the message "I lost".
  */
+
+#include <vector>
+#include "../Execute.hpp"
+#include "../../user/User.hpp"
+#include "../../parser/Parser.hpp"
+#include "../../server/Info.hpp"
+#include "../../reply/Reply.hpp"
+
+int	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info) {}
+	

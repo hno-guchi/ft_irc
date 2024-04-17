@@ -16,6 +16,7 @@ enum kChannelMode {
 
 class Channel {
  private:
+	 // std::string		prefix_;
 	 std::string		name_;
 	 std::string		topic_;
 	 std::string		key_;
@@ -48,6 +49,7 @@ class Channel {
 
 	// TODO(hnoguchi): ChannelUsers classにする？
 	void						addMember(User* user);
+	void						addOperator(User* user);
 	void						eraseMember(User* user);
 	void						eraseOperator(User* oper);
 };
