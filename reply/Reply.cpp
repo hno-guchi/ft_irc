@@ -32,6 +32,8 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 			msg += this->delimiter_;
 			msg += ":" + info.getConfig().getServerName() + " ";
 			msg += "004 " + user.getNickName() + " :" + info.getConfig().getServerName() + " " + oss.str() + " " + info.getConfig().getUserModes() + " " +  info.getConfig().getChannelModes();
+			msg += this->delimiter_;
+			msg += ":" + user.getNickName() + " NICK :" + user.getNickName();
 		} else if (num < 100  || (num >= 200 && num < 400)) {
 			if (num == kRPL_UMODEIS) {
 				msg += "221 " + user.getNickName();

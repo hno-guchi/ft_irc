@@ -124,6 +124,14 @@ void	Channel::addMember(User* user) {
 	}
 }
 
+void	Channel::addOperator(User* user) {
+	try {
+		this->operators_.push_back(user);
+	} catch (std::exception& e) {
+		throw;
+	}
+}
+
 void	Channel::eraseMember(User* user) {
 	for (std::vector<User *>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
 		if (*it == user) {

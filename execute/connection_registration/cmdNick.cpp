@@ -63,6 +63,7 @@ int	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info) {
 			}
 			// user->setNickName(parsedMsg.getParams()[0].getValue());
 		}
+		// TODO(hnoguchi): 最初のニックネーム登録処理で、NICKコマンドを送信したい。
 		std::string	msg = ":" + user->getNickName() + " NICK :" + nick + "\r\n";
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
