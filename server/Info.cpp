@@ -1,4 +1,5 @@
 #include <vector>
+#include <stdexcept>
 #include "./Info.hpp"
 #include "./Config.hpp"
 #include "../user/User.hpp"
@@ -15,7 +16,10 @@ const std::vector<User>&	Info::getUsers() const {
 	return (this->users_);
 }
 
-const User&	Info::getUser(int i) const {
+const User&	Info::getUser(unsigned long i) const {
+	if (this->users_.size() <= i) {
+		throw std::out_of_range("Info::getUser()");
+	}
 	return (this->users_[i]);
 }
 
@@ -41,5 +45,14 @@ void	Info::addChannel(const Channel& channel) {
 		this->channels_.push_back(channel);
 	} catch (std::exception& e) {
 		throw;
+	}
+}
+
+void	Info::eraseUser(User* user) {
+	for (std::vector<User>::iterator it = this->users_.begin(); it != this->users_.end(); it++) {
+		if (it->getNickName() == user->getNickName()) {
+			this->users_.erase(it);
+			return;
+		}
 	}
 }

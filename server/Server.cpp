@@ -247,6 +247,9 @@ void	Server::handleReceivedData(int i) {
 					replyNum = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
 				}
 			}
+			// if (replyNum < 0) {
+			// 	return;
+			// }
 			this->info_.getUser(i - 1).printData();
 			if (replyNum == 0) {
 					continue;
@@ -269,6 +272,9 @@ void	Server::handleReceivedData(int i) {
 		if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
 			fatalError("send");
 		}
+	} catch (std::out_of_range& e) {
+		std::cerr << RED << e.what() << END << std::endl;
+		return;
 	} catch (std::exception& e) {
 		// TODO(hnoguchi): メッセージ受信に失敗したことをユーザに通知（メッセージを送信）する？
 		handleClientDisconnect(&this->fds_[i].fd);

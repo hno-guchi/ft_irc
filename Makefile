@@ -17,7 +17,7 @@ SRCS = Server.cpp \
 	   Parser.cpp \
 	   Execute.cpp \
 	   Reply.cpp \
-	   cmdNick.cpp cmdUser.cpp cmdUserMode.cpp cmdOper.cpp \
+	   cmdNick.cpp cmdUser.cpp cmdUserMode.cpp cmdOper.cpp cmdQuit.cpp \
 	   cmdPong.cpp \
 	   cmdNotice.cpp cmdPrivmsg.cpp \
 	   cmdJoin.cpp \
