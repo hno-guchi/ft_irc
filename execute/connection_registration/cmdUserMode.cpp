@@ -39,7 +39,7 @@ int	Execute::cmdUserMode(User* user, const ParsedMessage& parsedMsg, Info* info)
 	if (parsedMsg.getParams().size() == 1) {
 		return (kRPL_UMODEIS);
 	}
-	if (parsedMsg.getParams().size() < 2) {
+	if (parsedMsg.getParams()[1].size() != 2) {
 		return (kERR_UMODEUNKNOWNFLAG);
 	}
 	if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {

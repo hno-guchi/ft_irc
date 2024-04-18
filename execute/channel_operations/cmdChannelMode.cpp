@@ -38,3 +38,67 @@
  *    MODE #meditation I              ; Command to list invitations masks set for the channel "#meditation".
  *    MODE !12345ircd O               ; Command to ask who the channel creator for "!12345ircd" is
  */
+
+#include <vector>
+#include "../Execute.hpp"
+#include "../../error/error.hpp"
+#include "../../user/User.hpp"
+#include "../../parser/Parser.hpp"
+#include "../../server/Server.hpp"
+#include "../../server/Info.hpp"
+#include "../../reply/Reply.hpp"
+
+int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info) {
+	if (parsedMsg.getParams().size() < 1) {
+		return (kERR_NEEDMOREPARAMS);
+	}
+	if (parsedMsg.getParams().size() == 1) {
+		return (kRPL_CHANNELMODEIS);
+	}
+	if (parsedMsg.getParams()[1].size() != 2) {
+		return (kERR_UNKNOWNMODE);
+	}
+	if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
+		return (kERR_UNKNOWNMODE);
+	}
+	int pos = info->getConfig().getChannelModes().find(parsedMsg.getParams()[1].getValue()[1]);
+	if (pos == std::string::npos) {
+		return (kERR_UNKNOWNMODE);
+	}
+	std::vector<Channel>::iterator	it = info->getChannels().begin();
+	for (; it != info->getChannels().end(); it++) {
+		if (parsedMsg.getParams()[0].getValue() == it->getName()) {
+			break;
+		}
+	}
+	if (it == info->getChannels().end()) {
+		return (kERR_NOSUCHCHANNEL);
+	}
+	std::vector<User>::iterator	userIt = it->getUsers().begin();
+	for (; userIt != it->getUsers().end(); userIt++) {
+		if (userIt->getNickName() == user->getNickName()) {
+			break;
+		}
+	}
+	if (userIt == it->getUsers().end()) {
+		return (kERR_USERNOTINCHANNEL);
+	}
+	std::vector<User>::iterator	operIt = it->getOperators().begin();
+	for (; operIt != it->getOperators().end(); operIt++) {
+		if (operIt->getNickName() == user->getNickName()) {
+			break;
+		}
+	}
+	if (operIt == it->getOperators().end()) {
+		return (kERR_CHANOPRIVSNEEDED);
+	}
+	// フラグが既に立っているか確認する。
+	// そのチャンネルで使用できるモードか確認する。
+	// モードを変更。メッセージを作成し送信する。"iklot"
+	// i - 招待専用チャンネルフラグ（the invite-only channel flag）の切り替え
+	// k - チャンネル・キー（the channel key）(パスワード)の設定/解除
+	// l - channelへのユーザ制限の設定/解除
+	// o - 「Channel operator」の権限を付与/剥奪
+	// t - チャネル運営者のみが設定可能なトピックフラグ設定の切り替え
+	return (0);
+}

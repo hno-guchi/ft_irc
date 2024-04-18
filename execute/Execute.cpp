@@ -78,8 +78,19 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	// } else if (parsedMsg.getCommand() == "TOPIC") {
 	// 	return (cmdTopic(user, parsedMsg, info));
 	// 	TODO(hnoguchi): userMode();かchannelMode();なのか判定する処理が必要
+	// 	TODO(hnoguchi): Paramsのtypeにchannelやuser
 	} else if (parsedMsg.getCommand() == "MODE") {
-		return (cmdUserMode(user, parsedMsg, info));
+		for(std::vector<User>::const_iterator it = info->getUsers().begin(); it != info->getUsers().end(); it++) {
+			if (parsedMsg.getParams()[0] == it->getNickName()) {
+				return (cmdUserMode(user, parsedMsg, info));
+			}
+		}
+		for(std::vector<Channel>::const_iterator it = info->getChannels().begin(); it != info->getChannels().end(); it++) {
+			if (parsedMsg.getParams()[0] == it->getName()) {
+				return (cmdChannelMode(user, parsedMsg, info));
+			}
+		}
+		// 	TODO(hnoguchi): Channel Userのどちらにも該当しなかった場合の処理を追加すること
 	// } else if (parsedMsg.getCommand() == "PRIVMSG") {
 	// 	return (cmdPrivmsg(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "NOTICE") {
