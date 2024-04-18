@@ -20,6 +20,7 @@ class Execute {
 	 int	cmdNotice(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdPrivmsg(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info);
  public:
 	 Execute();
 	 ~Execute();

@@ -7,6 +7,7 @@ const std::string	Config::commandList_[] = {
 	"OPER",
 	"QUIT",
 	"JOIN",
+	"PART",
 	"KICK",
 	"INVITE",
 	"TOPIC",
