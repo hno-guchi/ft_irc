@@ -57,7 +57,8 @@ int	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info) {
 				it->addMember(user);
 				it->addOperator(user);
 				std::string	msg = ":" + user->getNickName() + " JOIN " + it->getName() + "\r\n";
-				msg += ":" + user->getNickName() + " MODE " + it->getName() + " :+o\r\n";
+				msg += ":" + info->getConfig().getServerName() + " MODE " + it->getName() + " +o " + user->getNickName() + "\r\n";
+				// msg += ":" + user->getNickName() + " MODE " + it->getName() + " :+o\r\n";
 				debugPrintSendMessage("SendMsg", msg);
 				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 				return (0);
