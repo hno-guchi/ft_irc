@@ -22,6 +22,7 @@ class Execute {
 	 int	cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info);
  public:
 	 Execute();
 	 ~Execute();
