@@ -24,7 +24,7 @@ void	Channel::setTopic(const std::string& topic) {
 	this->topic_ = topic;
 }
 
-void	Channel::setkey(const std::string& key) {
+void	Channel::setKey(const std::string& key) {
 	// TODO(hnoguchi): バリデーションは別でやる？
 	if (key.size() == 0 || key.size() > 30) {
 		return;
@@ -59,6 +59,10 @@ void	Channel::setMode(kChannelMode mode) {
 		// throw std::invalid_argument(Channel is already set to this mode.);
 	}
 	this->modes_ |= mode;
+}
+
+void	Channel::unsetMode(kChannelMode mode) {
+	this->modes_ ^= (this->modes_ & mode);
 }
 
 void	Channel::setMember(User* user) {

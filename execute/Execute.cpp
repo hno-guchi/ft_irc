@@ -81,12 +81,12 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	// 	TODO(hnoguchi): Paramsのtypeにchannelやuser
 	} else if (parsedMsg.getCommand() == "MODE") {
 		for(std::vector<User>::const_iterator it = info->getUsers().begin(); it != info->getUsers().end(); it++) {
-			if (parsedMsg.getParams()[0] == it->getNickName()) {
+			if (parsedMsg.getParams()[0].getValue() == it->getNickName()) {
 				return (cmdUserMode(user, parsedMsg, info));
 			}
 		}
 		for(std::vector<Channel>::const_iterator it = info->getChannels().begin(); it != info->getChannels().end(); it++) {
-			if (parsedMsg.getParams()[0] == it->getName()) {
+			if (parsedMsg.getParams()[0].getValue() == it->getName()) {
 				return (cmdChannelMode(user, parsedMsg, info));
 			}
 		}
