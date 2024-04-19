@@ -56,6 +56,7 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
+// TODO(hnoguchi): MODE(channel)コマンドによる変更は、チャンネルに所属するユーザに通知する必要があるものもある。
 int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	try {
 		if (parsedMsg.getParams().size() < 1) {

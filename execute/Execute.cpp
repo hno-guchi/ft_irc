@@ -73,8 +73,8 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		return (cmdPart(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "KICK") {
 	// 	return (cmdKick(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "INVITE") {
-	// 	return (cmdInvite(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "INVITE") {
+		return (cmdInvite(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "TOPIC") {
 	// 	return (cmdTopic(user, parsedMsg, info));
 	// 	TODO(hnoguchi): userMode();かchannelMode();なのか判定する処理が必要
