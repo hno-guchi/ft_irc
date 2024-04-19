@@ -37,9 +37,17 @@
  *    MODE #meditation e              ; Command to list exception masks set for the channel "#meditation".
  *    MODE #meditation I              ; Command to list invitations masks set for the channel "#meditation".
  *    MODE !12345ircd O               ; Command to ask who the channel creator for "!12345ircd" is
+ *
+ *    モードを変更。メッセージを作成し送信する。"iklot"
+ *    i - 招待専用チャンネルフラグ（the invite-only channel flag）の切り替え
+ *    k - チャンネル・キー（the channel key）(パスワード)の設定/解除
+ *    l - channelへのユーザ制限の設定/解除
+ *    o - 「Channel operator」の権限を付与/剥奪
+ *    t - チャネル運営者のみが設定可能なトピックフラグ設定の切り替え
  */
 
 #include <vector>
+#include <cstdlib>
 #include "../Execute.hpp"
 #include "../../error/error.hpp"
 #include "../../user/User.hpp"
@@ -49,56 +57,141 @@
 #include "../../reply/Reply.hpp"
 
 int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info) {
-	if (parsedMsg.getParams().size() < 1) {
-		return (kERR_NEEDMOREPARAMS);
-	}
-	if (parsedMsg.getParams().size() == 1) {
-		return (kRPL_CHANNELMODEIS);
-	}
-	if (parsedMsg.getParams()[1].size() != 2) {
-		return (kERR_UNKNOWNMODE);
-	}
-	if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
-		return (kERR_UNKNOWNMODE);
-	}
-	int pos = info->getConfig().getChannelModes().find(parsedMsg.getParams()[1].getValue()[1]);
-	if (pos == std::string::npos) {
-		return (kERR_UNKNOWNMODE);
-	}
-	std::vector<Channel>::iterator	it = info->getChannels().begin();
-	for (; it != info->getChannels().end(); it++) {
-		if (parsedMsg.getParams()[0].getValue() == it->getName()) {
-			break;
+	try {
+		if (parsedMsg.getParams().size() < 1) {
+			return (kERR_NEEDMOREPARAMS);
 		}
-	}
-	if (it == info->getChannels().end()) {
-		return (kERR_NOSUCHCHANNEL);
-	}
-	std::vector<User>::iterator	userIt = it->getUsers().begin();
-	for (; userIt != it->getUsers().end(); userIt++) {
-		if (userIt->getNickName() == user->getNickName()) {
-			break;
+		if (parsedMsg.getParams().size() == 1) {
+			return (kRPL_CHANNELMODEIS);
 		}
-	}
-	if (userIt == it->getUsers().end()) {
-		return (kERR_USERNOTINCHANNEL);
-	}
-	std::vector<User>::iterator	operIt = it->getOperators().begin();
-	for (; operIt != it->getOperators().end(); operIt++) {
-		if (operIt->getNickName() == user->getNickName()) {
-			break;
+		if (parsedMsg.getParams()[1].getValue().size() != 2) {
+			return (kERR_UNKNOWNMODE);
 		}
+		if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
+			return (kERR_UNKNOWNMODE);
+		}
+		unsigned long	pos = info->getConfig().getChannelModes().find(parsedMsg.getParams()[1].getValue()[1]);
+		if (pos == std::string::npos) {
+			return (kERR_UNKNOWNMODE);
+		}
+		std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
+		for (; channelIt != info->getChannels().end(); channelIt++) {
+			if (parsedMsg.getParams()[0].getValue() == channelIt->getName()) {
+				break;
+			}
+		}
+		if (channelIt == info->getChannels().end()) {
+			return (kERR_NOSUCHCHANNEL);
+		}
+		std::vector<User*>::iterator	userIt = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin();
+		for (; userIt != channelIt->getMembers().end(); userIt++) {
+			if ((*userIt)->getNickName() == user->getNickName()) {
+				break;
+			}
+		}
+		if (userIt == channelIt->getMembers().end()) {
+			return (kERR_USERNOTINCHANNEL);
+		}
+		std::vector<User*>::iterator	operIt = const_cast<std::vector<User*> &>(channelIt->getOperators()).begin();
+		for (; operIt != channelIt->getOperators().end(); operIt++) {
+			if ((*operIt)->getNickName() == user->getNickName()) {
+				break;
+			}
+		}
+		if (operIt == channelIt->getOperators().end()) {
+			return (kERR_CHANOPRIVSNEEDED);
+		}
+		// そのチャンネルで使用できるモードか確認する。
+		std::string	msg = ":" + user->getNickName() + " MODE " + channelIt->getName() + " " + parsedMsg.getParams()[1].getValue() + " ";
+		if (parsedMsg.getParams()[1].getValue()[0] == '+') {
+			if (parsedMsg.getParams()[1].getValue()[1] == 'i') {
+				// TODO(hnoguchi): Change prefix
+				channelIt->setMode(kInviteOnly);
+				msg += "\r\n";
+			} else if (parsedMsg.getParams()[1].getValue()[1] == 'k') {
+				// keyフラグが既に立っているか確認する。
+				if (channelIt->getModes() & kKey) {
+					return (kERR_KEYSET);
+				}
+				if (parsedMsg.getParams().size() < 3) {
+					return (kERR_NEEDMOREPARAMS);
+				}
+				// TODO(hnoguchi): Validate string key
+				channelIt->setKey(parsedMsg.getParams()[2].getValue());
+				channelIt->setMode(kKey);
+				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
+			} else if (parsedMsg.getParams()[1].getValue()[1] == 'l') {
+				if (parsedMsg.getParams().size() < 3) {
+					return (kERR_NEEDMOREPARAMS);
+				}
+				// TODO(hnoguchi): Validate Value
+				channelIt->setLimit(std::atoi(parsedMsg.getParams()[2].getValue().c_str()));
+				channelIt->setMode(kLimit);
+				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
+			} else if (parsedMsg.getParams()[1].getValue()[1] == 'o') {
+				if (parsedMsg.getParams().size() < 3) {
+					return (kERR_NEEDMOREPARAMS);
+				}
+				std::vector<User*>::iterator	targetUserIt = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin();
+				for (; targetUserIt != channelIt->getMembers().end(); targetUserIt++) {
+					if (parsedMsg.getParams()[2].getValue() == (*targetUserIt)->getNickName()) {
+						break;
+					}
+				}
+				if (targetUserIt == channelIt->getMembers().end()) {
+					return (kERR_USERNOTINCHANNEL);
+				}
+				channelIt->addOperator(*targetUserIt);
+				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
+				debugPrintSendMessage("SendMsg", msg);
+				sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+				// TODO(hnoguchi): Check error
+			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
+				channelIt->setMode(kTopicSetOnlyOperator);
+				msg += "\r\n";
+			}
+		} else {
+			if (parsedMsg.getParams()[1].getValue()[1] == 'i') {
+				// TODO(hnoguchi): Change prefix
+				channelIt->unsetMode(kInviteOnly);
+				msg += "\r\n";
+			} else if (parsedMsg.getParams()[1].getValue()[1] == 'k') {
+				channelIt->setKey("");
+				channelIt->unsetMode(kKey);
+				msg += "\r\n";
+			} else if (parsedMsg.getParams()[1].getValue()[1] == 'l') {
+				channelIt->setLimit(0);
+				channelIt->unsetMode(kLimit);
+				msg += "\r\n";
+			} else if (parsedMsg.getParams()[1].getValue()[1] == 'o') {
+				if (parsedMsg.getParams().size() < 3) {
+					return (kERR_NEEDMOREPARAMS);
+				}
+				std::vector<User*>::iterator	targetUserIt = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin();
+				for (; targetUserIt != channelIt->getMembers().end(); targetUserIt++) {
+					if (parsedMsg.getParams()[2].getValue() == (*targetUserIt)->getNickName()) {
+						break;
+					}
+				}
+				if (targetUserIt == channelIt->getMembers().end()) {
+					return (kERR_USERNOTINCHANNEL);
+				}
+				channelIt->eraseOperator(*targetUserIt);
+				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
+				debugPrintSendMessage("SendMsg", msg);
+				sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+				// TODO(hnoguchi): Check error
+			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
+				channelIt->unsetMode(kTopicSetOnlyOperator);
+				msg += "\r\n";
+			}
+		}
+		debugPrintSendMessage("SendMsg", msg);
+		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		// TODO(hnoguchi): Check error
+	} catch (const std::exception& e) {
+		std::cerr << RED << e.what() << END << std::endl;
+		return (-1);
 	}
-	if (operIt == it->getOperators().end()) {
-		return (kERR_CHANOPRIVSNEEDED);
-	}
-	// フラグが既に立っているか確認する。
-	// そのチャンネルで使用できるモードか確認する。
-	// モードを変更。メッセージを作成し送信する。"iklot"
-	// i - 招待専用チャンネルフラグ（the invite-only channel flag）の切り替え
-	// k - チャンネル・キー（the channel key）(パスワード)の設定/解除
-	// l - channelへのユーザ制限の設定/解除
-	// o - 「Channel operator」の権限を付与/剥奪
-	// t - チャネル運営者のみが設定可能なトピックフラグ設定の切り替え
 	return (0);
 }

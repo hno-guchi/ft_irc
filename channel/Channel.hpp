@@ -33,9 +33,10 @@ class Channel {
 	 // SETTER
 	 void						setName(const std::string& name);
 	 void						setTopic(const std::string& topic);
-	 void						setkey(const std::string& key);
+	 void						setKey(const std::string& key);
 	 void						setLimit(int limit);
 	 void						setMode(kChannelMode mode);
+	 void						unsetMode(kChannelMode mode);
 	 void						setMember(User* user);
 	 void						setOperator(User* user);
 	 // GETTER

@@ -20,7 +20,7 @@ SRCS = Server.cpp \
 	   cmdNick.cpp cmdUser.cpp cmdUserMode.cpp cmdOper.cpp cmdQuit.cpp \
 	   cmdPong.cpp \
 	   cmdNotice.cpp cmdPrivmsg.cpp \
-	   cmdJoin.cpp cmdPart.cpp \
+	   cmdJoin.cpp cmdPart.cpp cmdChannelMode.cpp \
 	   error.cpp
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 OBJS_DIR = ./objs

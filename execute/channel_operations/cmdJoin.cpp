@@ -61,6 +61,7 @@ int	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info) {
 				// msg += ":" + user->getNickName() + " MODE " + it->getName() + " :+o\r\n";
 				debugPrintSendMessage("SendMsg", msg);
 				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+				// TODO(hnoguchi): Check error
 				return (0);
 			}
 		}
