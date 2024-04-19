@@ -17,3 +17,37 @@
  *                                    ; KICK message on channel #Finnish from WiZ to remove John from channel
  *
  */
+
+#include <vector>
+#include "../Execute.hpp"
+#include "../../error/error.hpp"
+#include "../../user/User.hpp"
+#include "../../parser/Parser.hpp"
+#include "../../server/Info.hpp"
+#include "../../server/Server.hpp"
+#include "../../reply/Reply.hpp"
+
+int	Execute::cmdKick(User* user, const ParsedMessage& parsedMsg, Info* info) {
+	if (parsedMsg.getParams().size() < 2) {
+		return (kERR_NEEDMOREPARAMS);
+	}
+	std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
+	for (; channelIt != info->getChannels().end(); channelIt++) {
+		if (channelIt->getName() == parsedMsg.getParams()[0]) {
+			break;
+		}
+	}
+	if (channelIt == info->getChannels().end()) {
+		return (kERR_NOSUCHCHANNEL);
+	}
+	std::vector<User*>::const_iterator	operIt = channelIt->getOerators().begin();
+	for (; operIt != channelIt->getOperators().end(); operIt++) {
+		if ((*operIt)->getNick() == user->getNick()) {
+			break;
+		}
+	}
+	if (operIt == channelIt->getOperators().end()) {
+		return (kERR_CHANOPRIVSNEEDED);
+	}
+
+}
