@@ -71,8 +71,8 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		return (cmdJoin(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "PART") {
 		return (cmdPart(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "KICK") {
-	// 	return (cmdKick(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "KICK") {
+		return (cmdKick(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "INVITE") {
 		return (cmdInvite(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "TOPIC") {
