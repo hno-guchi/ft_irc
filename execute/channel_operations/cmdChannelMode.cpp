@@ -148,7 +148,7 @@ int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* in
 				sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
 				// TODO(hnoguchi): Check error
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
-				channelIt->setMode(kTopicSetOnlyOperator);
+				channelIt->setMode(kRestrictTopicSetting);
 				msg += "\r\n";
 			}
 		} else {
@@ -183,7 +183,7 @@ int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* in
 				sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
 				// TODO(hnoguchi): Check error
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
-				channelIt->unsetMode(kTopicSetOnlyOperator);
+				channelIt->unsetMode(kRestrictTopicSetting);
 				msg += "\r\n";
 			}
 		}

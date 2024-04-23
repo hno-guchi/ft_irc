@@ -24,6 +24,7 @@ class Execute {
 	 int	cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 int	cmdKick(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 int	cmdTopic(User* user, const ParsedMessage& parsedMsg, Info* info);
  public:
 	 Execute();
 	 ~Execute();
