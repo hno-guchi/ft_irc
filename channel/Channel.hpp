@@ -11,7 +11,7 @@ enum kChannelMode {
 	kKey = (1 << 1),
 	kLimit = (1 << 2),
 	// kChannelOperator = (1 << 3), // User classのkUserModeで扱う。
-	kTopicSetOnlyOperator = (1 << 3)
+	kRestrictTopicSetting = (1 << 3)
 };
 
 class Channel {

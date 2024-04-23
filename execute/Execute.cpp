@@ -75,8 +75,8 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		return (cmdKick(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "INVITE") {
 		return (cmdInvite(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "TOPIC") {
-	// 	return (cmdTopic(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "TOPIC") {
+		return (cmdTopic(user, parsedMsg, info));
 	// 	TODO(hnoguchi): userMode();かchannelMode();なのか判定する処理が必要
 	// 	TODO(hnoguchi): Paramsのtypeにchannelやuser
 	} else if (parsedMsg.getCommand() == "MODE") {
