@@ -31,23 +31,57 @@ int	Execute::cmdKick(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	if (parsedMsg.getParams().size() < 2) {
 		return (kERR_NEEDMOREPARAMS);
 	}
+	// <channel>が存在するか確認
 	std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
 	for (; channelIt != info->getChannels().end(); channelIt++) {
-		if (channelIt->getName() == parsedMsg.getParams()[0]) {
+		if (channelIt->getName() == parsedMsg.getParams()[0].getValue()) {
 			break;
 		}
 	}
 	if (channelIt == info->getChannels().end()) {
 		return (kERR_NOSUCHCHANNEL);
 	}
-	std::vector<User*>::const_iterator	operIt = channelIt->getOerators().begin();
+	// userがchannel operatorか確認
+	std::vector<User*>::const_iterator	operIt = channelIt->getOperators().begin();
 	for (; operIt != channelIt->getOperators().end(); operIt++) {
-		if ((*operIt)->getNick() == user->getNick()) {
+		if ((*operIt)->getNickName() == user->getNickName()) {
 			break;
 		}
 	}
 	if (operIt == channelIt->getOperators().end()) {
 		return (kERR_CHANOPRIVSNEEDED);
 	}
-
+	std::vector<User*>::const_iterator	targetUserIt = channelIt->getMembers().begin();
+	for (; targetUserIt != channelIt->getMembers().end(); targetUserIt++) {
+		if ((*targetUserIt)->getNickName() == parsedMsg.getParams()[1].getValue()) {
+			break;
+		}
+	}
+	// <user>が<channel>にいるか確認
+	if (targetUserIt == channelIt->getMembers().end()) {
+		return (kERR_USERNOTINCHANNEL);
+	}
+	// userが<channel>にいるか確認
+	std::vector<User*>::const_iterator	userIt = channelIt->getMembers().begin();
+	for (; userIt != channelIt->getMembers().end(); userIt++) {
+		if ((*userIt)->getNickName() == user->getNickName()) {
+			break;
+		}
+	}
+	if (userIt == channelIt->getMembers().end()) {
+		return (kERR_NOTONCHANNEL);
+	}
+	// 実行処理
+	// <channel>から<user>を削除
+	channelIt->eraseMember(*targetUserIt);
+	channelIt->eraseOperator(*targetUserIt);
+	// <user>にKICKメッセージを送信
+	std::string	msg = ":" + user->getNickName() + " KICK " + channelIt->getName() + " " + parsedMsg.getParams()[1].getValue();
+	if (parsedMsg.getParams().size() > 2) {
+		msg += " :" + parsedMsg.getParams()[2].getValue();
+	}
+	msg += "\r\n";
+	debugPrintSendMessage("SendMsg", msg);
+	sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+	return (0);
 }
