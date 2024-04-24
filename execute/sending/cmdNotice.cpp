@@ -27,7 +27,7 @@ int	Execute::cmdNotice(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	if (parsedMsg.getParams().size() == 0) {
 		return(kERR_NORECIPIENT);
 	}
-	if (parsedMsg.getParams().size() == 1) {
+	if (parsedMsg.getParams().size() < 2) {
 		if (parsedMsg.getParams()[0].getType() == kPTrailing) {
 			return(kERR_NORECIPIENT);
 		} else if (parsedMsg.getParams()[0].getType() == kPMiddle) {

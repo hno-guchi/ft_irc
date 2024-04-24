@@ -92,8 +92,8 @@ int	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
 			}
 		}
 		// 	TODO(hnoguchi): Channel Userのどちらにも該当しなかった場合の処理を追加すること
-	// } else if (parsedMsg.getCommand() == "PRIVMSG") {
-	// 	return (cmdPrivmsg(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "PRIVMSG") {
+		return (cmdPrivmsg(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "NOTICE") {
 		return (cmdNotice(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "PONG") {
