@@ -16,9 +16,7 @@ enum kExecCommand {
 	kPassCommand = (1 << 0),
 	kNickCommand = (1 << 1),
 	kUserCommand = (1 << 2),
-	kExecAllCmd = (kNickCommand | kUserCommand)
-	// kExecAllCmd = (kPassCommand | kNickCommand | kUserCommand)
-	// kExecAllCmdExceptPass = (kNickCommand | kUserCommand)
+	kExecAllCmd = (kPassCommand | kNickCommand | kUserCommand)
 };
 
 class User {
