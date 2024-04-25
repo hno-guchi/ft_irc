@@ -9,8 +9,8 @@ class Config {
  private:
 	 const int					maxClient_;
 	 const int					maxChannel_;
-	 const int					version_;
 	 const time_t				createdData_;
+	 const std::string			version_;
 	 const std::string			serverName_;
 	 const std::string			password_;
 	 const std::string			userModes_;
@@ -25,8 +25,8 @@ class Config {
 	 // GETTERS
 	 int				getMaxClient() const;
 	 int				getMaxChannel() const;
-	 int				getVersion() const;
 	 const time_t&		getCreatedData() const;
+	 const std::string&	getVersion() const;
 	 const std::string&	getServerName() const;
 	 const std::string&	getPassword() const;
 	 const std::string&	getUserModes() const;
