@@ -72,22 +72,32 @@ enum kErrReplyNum {
 class Reply {
  private:
 	 const std::string	delimiter_;
-	 // std::string	message_;
-	 // std::string	numeric_;
+
  public:
 	 Reply();
 	 ~Reply();
+	 std::string		createMessage(int num, const User& user, const Info& info, const ParsedMessage& parsedMsg);
+	 static std::string	createPrefix(const std::string& prefix);
+	 static std::string	rplWelcome(const std::string& toName, const std::string& userName, const std::string& serverName);
+	 static std::string	rplYourHost(const std::string& toName, const std::string& serverName, const std::string& version);
+	 static std::string	rplCreated(const std::string& toName, const time_t& createdDate);
+	 static std::string	rplMyInfo(const std::string& toName, const Config& config);
+	 static std::string	rplUModeIs(const User& user);
+	 static std::string	rplChannelModeIs(const std::string& channel, const std::string& mode, const std::string& param);
+	 static std::string	rplNoTopic(const std::string& channel);
+	 static std::string	rplTopic(const std::string& channel, const std::string& topic);
+	 static std::string	rplInviting(const std::string& channel, const std::string& nickName);
+	 static std::string	rplYourOper(const std::string& nickName);
 
-	 std::string	createMessage(int num, const User& user, const Info& info, const ParsedMessage& parsedMsg);
-	 // std::string	createWelcomeMessage(const Config& config);
-	 // SETTER
-	 // void	setMessage(const std::string& message);
-	 // void	setNumeric(const std::string& num);
-	 // GETTER
-	 // const std::string&	getMessage() const;
-	 // const std::string&	getNumeric() const;
-	 // debug
-	 // void	printReply() const;
+	 static std::string	errPrefix(kErrReplyNum num, const std::string& prefix);
+	 static std::string	errNoSuchNick(const std::string& nickName);
+	 static std::string	errNoSuchServer(const std::string& serverName);
+	 static std::string	errNoSuchChannel(const std::string& channelName);
+	 static std::string	errNoOrigin();
+	 static std::string	errNoRecipient(const std::string& command);
+	 static std::string	errNoTextToSend();
+	 static std::string	errUnKnownCommand(const std::string& command);
+	 static std::string	errNoNickNameGiven();
 };
 
 #endif  // REPLY_HPP
