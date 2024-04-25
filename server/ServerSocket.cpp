@@ -17,9 +17,7 @@ ServerSocket::ServerSocket(unsigned short port) :
 		this->address_.sin_addr.s_addr = INADDR_ANY;
 		this->address_.sin_port = htons(port);
 
-		if (bind(this->fd_, \
-					reinterpret_cast<struct sockaddr*>(&this->address_), \
-					sizeof(this->address_)) < 0) {
+		if (bind(this->fd_, reinterpret_cast<struct sockaddr*>(&this->address_), sizeof(this->address_)) < 0) {
 			throw std::runtime_error("bind");
 		}
 		if (listen(this->fd_, 3) < 0) {
@@ -44,10 +42,7 @@ int	ServerSocket::getFd() const {
 }
 
 int	ServerSocket::createClientSocket() const {
-	int socket = accept(this->fd_, \
-				reinterpret_cast<struct sockaddr*>(\
-				const_cast<struct sockaddr_in*>(&this->address_)), \
-			const_cast<socklen_t*>(&this->addressLen_));
+	int socket = accept(this->fd_, reinterpret_cast<struct sockaddr*>(const_cast<struct sockaddr_in*>(&this->address_)), const_cast<socklen_t*>(&this->addressLen_));
 	if (socket < 0) {
 		throw std::runtime_error("accept");
 	}

@@ -11,8 +11,9 @@ void	printErrorMessage(const std::string &message) {
 	std::cerr << RED << message << END << std::endl;
 }
 
-void fatalError(const std::string& message) {
+void	fatalError(const std::string& message) {
+	std::cerr << errno << " : " << std::flush;
 	std::perror(message.c_str());
-	exit(EXIT_FAILURE);
+	// exit(EXIT_FAILURE);
 }
 

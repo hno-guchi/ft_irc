@@ -297,7 +297,8 @@ int	main(int argc, char* argv[]) {
 
 		Server.run();
 	} catch (std::exception& e) {
-		std::cerr << RED << e.what() << END << std::endl;
+		fatalError(e.what());
+		// std::cerr << RED << e.what() << END << std::endl;
 		// destruct
 		// return (1);
 	}
