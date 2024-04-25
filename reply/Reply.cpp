@@ -44,6 +44,20 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 				} else if (user.getModes() & kRestrict) {
 					msg += " +r";
 				}
+			} else if (num == kRPL_CHANNELMODEIS) {
+				msg += "324 " + parsedMsg.getParams()[0].getValue() + " " + parsedMsg.getParams()[1].getValue();
+				if (parsedMsg.getParams().size() > 2) {
+					msg += " " + parsedMsg.getParams()[2].getValue();
+				}
+			} else if (num == kRPL_NOTOPIC) {
+				// TOPIC
+				msg += "331 " + parsedMsg.getParams()[0].getValue() + " :No topic is set";
+			} else if (num == kRPL_TOPIC) {
+				// TOPIC
+				msg += "332 " + parsedMsg.getParams()[0].getValue() + " :" + parsedMsg.getParams()[1].getValue();
+			} else if (num == kRPL_INVITING) {
+				// INVITE
+				msg += "341 " + parsedMsg.getParams()[1].getValue() + " " + parsedMsg.getParams()[0].getValue();
 			} else if (num == kRPL_YOUREOPER) {
 				msg += "381 " + user.getNickName() + " :You are now an IRC operator";
 			}
@@ -55,9 +69,16 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 			} else if (num == kERR_NOSUCHCHANNEL) {
 				// msg += "403 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :No such channel";
 				msg += "403 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue();
+			} else if (num == kERR_NOORIGIN) {
+				// PONG
+				msg += "409 " + user.getNickName() + " :No origin specified";
 			} else if (num == kERR_NORECIPIENT) {
+				// NOTICE
+				// PRIVMSG
 				msg += "411 " + user.getNickName() + " :No recipient given (" + parsedMsg.getCommand() + ")";
 			} else if (num == kERR_NOTEXTTOSEND) {
+				// NOTICE
+				// PRIVMSG
 				msg += "412 " + user.getNickName() + " :No text to send";
 			} else if (num == kERR_UNKNOWNCOMMAND) {
 				msg += "421 " + user.getNickName() + " :" + parsedMsg.getCommand() + " :Unknown command";
@@ -68,16 +89,32 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 			} else if (num == kERR_NICKNAMEINUSE) {
 				// msg += "433 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :Nickname is already in use";
 				msg += "433 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue();
+			} else if (num == kERR_USERNOTINCHANNEL) {
+				msg += "441 " + user.getNickName() + " " + parsedMsg.getParams()[0].getValue() + " :They aren't on that channel";
 			} else if (num == kERR_NOTONCHANNEL) {
 				msg += "442 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :You're not on that channel";
+				// TODO(hnoguchi): INVITEコマンドの場合、parsedMsg.getParams()[1].getValue()がchannel名
+				// msg += "442 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :You're not on that channel";
+			} else if (num == kERR_USERONCHANNEL) {
+				// INVITE
+				msg += "443 " + user.getNickName() + " " + parsedMsg.getParams()[1].getValue() + " :is already on channel";
 			} else if (num == kERR_NOTREGISTERED) {
 				msg += "451 * :You have not registered";
 			} else if (num == kERR_NEEDMOREPARAMS) {
 				msg += "461 " + user.getNickName() + " :" + parsedMsg.getCommand() + " :Not enough parameters";
 			} else if (num == kERR_ALREADYREGISTRED) {
-				msg += "462 " +  user.getNickName() +  " :Unauthorized command (already registered)";
+				msg += "462 " +  user.getNickName() + " :Unauthorized command (already registered)";
 			} else if (num == kERR_PASSWDMISMATCH) {
-				msg += "464 " +  user.getNickName() +  " :Password incorrect";
+				msg += "464 " +  user.getNickName() + " :Password incorrect";
+			} else if (num == kERR_KEYSET) {
+				msg += "467 " +  user.getNickName() + " " + parsedMsg.getParams()[0].getValue() + " :Channel key already set";
+			} else if (num == kERR_UNKNOWNMODE) {
+				msg += "472 " + user.getNickName() + " " + parsedMsg.getParams()[1].getValue() + " :is unknown mode char to me for " + parsedMsg.getParams()[0].getValue();
+			} else if (num == kERR_NOCHANMODES) {
+				// TOPIC
+				msg += "477 " + user.getNickName() + " " + parsedMsg.getParams()[0].getValue() + " :Channel doesn't support modes";
+			} else if (num == kERR_CHANOPRIVSNEEDED) {
+				msg += "482 " + user.getNickName() + " " + parsedMsg.getParams()[0].getValue() + " :You're not channel operator";
 			} else if (num == kERR_RESTRICTED) {
 				msg += "484 " + user.getNickName() + " :Your connection is restricted!";
 			} else if (num == kERR_UMODEUNKNOWNFLAG) {

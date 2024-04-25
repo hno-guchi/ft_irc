@@ -37,7 +37,6 @@ int	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		}
 	}
 	if (targetUserIt == info->getUsers().end()) {
-		std::cerr << "No such nick" << std::endl;
 		return (kERR_NOSUCHNICK);
 	}
 	std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
@@ -47,7 +46,6 @@ int	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		}
 	}
 	if (channelIt == info->getChannels().end()) {
-		std::cerr << "No such channel" << std::endl;
 		return (kERR_NOSUCHNICK);
 	}
 	// if (channelIt != info->getChannels().end()) {
@@ -58,7 +56,6 @@ int	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info) {
 			}
 		}
 		if (memberIt == channelIt->getMembers().end()) {
-		std::cerr << "Not on channel" << std::endl;
 			return (kERR_NOTONCHANNEL);
 		}
 		if (channelIt->getModes() & kInviteOnly) {
