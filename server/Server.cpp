@@ -216,61 +216,55 @@ void	Server::handleReceivedData(int i) {
 		ssize_t	sendMsgSize = 0;
 
 		recvNonBlocking(&this->fds_[i].fd, buffer, sizeof(buffer) - 1);
-		// ssize_t	recvMsgSize = recvMsgSize = recvNonBlocking(&this->fds_[i].fd, buffer, sizeof(buffer) - 1);
-		// if (recvMsgSize <= 0) {
-		// 	handleClientDisconnect(&this->fds_[i].fd);
-		// 	// TODO(hnoguchi): this->users_も削除する。
-		// 	return;
-		// }
-		// std::cout << "Client socket " << this->fds_[i].fd << " message: " << buffer << std::endl;
+		// debug
 		std::cout << GREEN << buffer << END << std::flush;
 		// Split message
-		std::vector<std::string>	messages = split(buffer, "\r\n");
-		std::string					replyMsg("");
 		Execute						execute;
 		Reply						reply;
+		std::vector<std::string>	messages = split(buffer, reply.getDelimiter());
 		for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
-			Parser	parser;
-			int		replyNum = 0;
+			int			replyNum = 0;
+			std::string	replyMsg("");
+			Parser		parser;
 
 			replyNum = parser.parse(*it);
 			parser.getParsedMessage().printParsedMessage();
 			std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
-			// std::cout << i << std::endl; this->info_.getUser(i - 1).printData();
+			// this->info_.getUser(i - 1).printData();
 			if (replyNum == 0) {
 				// 登録ユーザか確認
 				if ((this->info_.getUser(i - 1).getRegistered() & kExecAllCmd) != kExecAllCmd) {
 					// ユーザ登録処理
 					replyNum = execute.registerUser(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
+					// replyMsg = execute.registerUser(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
 				} else {
 					// コマンド実行処理
 					replyNum = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
+					// replyMsg = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
+				}
+				if (replyNum == 0) {
+					continue;
 				}
 			}
-			// if (replyNum < 0) {
-			// 	return;
-			// }
-			this->info_.getUser(i - 1).printData();
-			if (replyNum == 0) {
-					continue;
-			}
 			// リプライメッセージの作成
-			replyMsg += reply.createMessage(replyNum, this->info_.getUser(i - 1), this->info_, parser.getParsedMessage());
-		}
-		if (replyMsg.empty()) {
-			return;
-		}
-		// send
-		debugPrintSendMessage("replyMsg", replyMsg);
-		sendMsgSize = sendNonBlocking(this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
-		if (sendMsgSize <= 0) {
-			handleClientDisconnect(&this->fds_[i].fd);
-			// TODO(hnoguchi): this->users_も削除する。
-			return;
-		}
-		// TODO(hnoguchi): castは使わない実装にする？？
-		if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
-			fatalError("send");
+			replyMsg = reply.createMessage(replyNum, this->info_.getUser(i - 1), this->info_, parser.getParsedMessage());
+			if (replyMsg.empty()) {
+				continue;
+			}
+			// debug
+			this->info_.getUser(i - 1).printData();
+			debugPrintSendMessage("replyMsg", replyMsg);
+			// send
+			sendMsgSize = sendNonBlocking(this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
+			if (sendMsgSize <= 0) {
+				handleClientDisconnect(&this->fds_[i].fd);
+				// TODO(hnoguchi): this->users_も削除する。
+				return;
+			}
+			// TODO(hnoguchi): castは使わない実装にする？？
+			if (static_cast<ssize_t>(replyMsg.size()) != sendMsgSize) {
+				fatalError("send");
+			}
 		}
 	} catch (std::out_of_range& e) {
 		std::cerr << RED << e.what() << END << std::endl;
