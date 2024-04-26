@@ -14,11 +14,12 @@ SRCS = Server.cpp ServerSocket.cpp Config.cpp Info.cpp \
 	   Parser.cpp \
 	   Execute.cpp \
 	   Reply.cpp \
-	   cmdPass.cpp cmdNick.cpp cmdUser.cpp cmdUserMode.cpp cmdOper.cpp cmdQuit.cpp \
-	   cmdPong.cpp \
-	   cmdNotice.cpp cmdPrivmsg.cpp \
-	   cmdJoin.cpp cmdPart.cpp cmdChannelMode.cpp cmdInvite.cpp cmdKick.cpp cmdTopic.cpp \
+	   cmdChannelMode.cpp cmdInvite.cpp \
 	   error.cpp
+	   # cmdPass.cpp cmdNick.cpp cmdUser.cpp cmdUserMode.cpp cmdOper.cpp cmdQuit.cpp \
+	   # cmdPong.cpp \
+	   # cmdNotice.cpp cmdPrivmsg.cpp
+	   # cmdJoin.cpp cmdPart.cpp cmdChannelMode.cpp cmdInvite.cpp cmdKick.cpp cmdTopic.cpp
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 OBJS_DIR = ./objs
 DEPENDS = $(addprefix $(OBJS_DIR)/, $(OBJS:%.o=%.d))
