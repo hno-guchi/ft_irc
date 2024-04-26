@@ -35,17 +35,6 @@ std::string	Reply::rplCmdToName(int num, const std::string& toName) {
 	}
 }
 
-std::string	Reply::rplWelcome(const std::string& toName, const std::string& userName, const std::string& serverName) {
-	try {
-		std::string	message = "001 " + toName + " :Welcome to the Internet Relay Network " + toName + "!" + userName + "@" + serverName;
-		message += Reply::delimiter_;
-		return (message);
-	} catch (const std::exception& e) {
-		fatalError(e.what());
-		return ("");
-	}
-}
-
 std::string	Reply::rplYourHost(const std::string& toName, const std::string& serverName, const std::string& version) {
 	try {
 		std::string	message = "002 " + toName + " :Your host is " + serverName + ", running version " + version;
@@ -83,7 +72,27 @@ std::string	Reply::rplMyInfo(const std::string& toName, const Config& config) {
 	}
 }
 
-std::string	Reply::rplUModeIs(int num, const std::string toName, const User& user) {
+
+std::string	Reply::rplWelcome(const Info& info, const User& user) {
+	try {
+		std::string	message = "001 " + user.getNickName() + " :Welcome to the Internet Relay Network " + user.getNickName() + "!" + user.getUserName() + "@" + user.getServerName();
+		message += Reply::delimiter_;
+		message += Reply::rplFromName(info.getConfig().getServerName());
+		message += Reply::rplYourHost(user.getNickName(), info.getConfig().getServerName(), info.getConfig().getVersion());
+		message += Reply::rplFromName(info.getConfig().getServerName());
+		message += Reply::rplCreated(user.getNickName(), info.getConfig().getCreatedData());
+		message += Reply::rplFromName(info.getConfig().getServerName());
+		message += Reply::rplMyInfo(user.getNickName(), info.getConfig());
+		message += Reply::rplFromName(user.getNickName());
+		message += "NICK :" + user.getNickName() + Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::rplUModeIs(int num, const std::string& toName, const User& user) {
 	try {
 		// std::string	message = "221 " + user.getNickName();
 		std::string	message = Reply::rplCmdToName(num, toName);
@@ -104,7 +113,7 @@ std::string	Reply::rplUModeIs(int num, const std::string toName, const User& use
 	}
 }
 
-std::string	Reply::rplChannelModeIs(int num, const std::string toName, const std::string& channel, const std::string& mode, const std::string& param) {
+std::string	Reply::rplChannelModeIs(int num, const std::string& toName, const std::string& channel, const std::string& mode, const std::string& param) {
 	try {
 		// std::string	message = "324 " + channel + " " + mode;
 		std::string	message = Reply::rplCmdToName(num, toName);
@@ -121,7 +130,7 @@ std::string	Reply::rplChannelModeIs(int num, const std::string toName, const std
 	}
 }
 
-std::string	Reply::rplNoTopic(int num, const std::string toName, const std::string& channel) {
+std::string	Reply::rplNoTopic(int num, const std::string& toName, const std::string& channel) {
 	try {
 		// std::string	message = "331 " + channel + " :No topic is set";
 		std::string	message = Reply::rplCmdToName(num, toName);
@@ -135,7 +144,7 @@ std::string	Reply::rplNoTopic(int num, const std::string toName, const std::stri
 	}
 }
 
-std::string	Reply::rplTopic(int num, const std::string toName, const std::string& channel, const std::string& topic) {
+std::string	Reply::rplTopic(int num, const std::string& toName, const std::string& channel, const std::string& topic) {
 	try {
 		// std::string	message = "332 " + channel + " :" + topic;
 		std::string	message = Reply::rplCmdToName(num, toName);
@@ -149,7 +158,7 @@ std::string	Reply::rplTopic(int num, const std::string toName, const std::string
 	}
 }
 
-std::string	Reply::rplInviting(int num, const std::string toName, const std::string& channel, const std::string& nickName) {
+std::string	Reply::rplInviting(int num, const std::string& toName, const std::string& channel, const std::string& nickName) {
 	try {
 		// std::string	message = "341 " + channel + " " + nickName;
 		std::string	message = Reply::rplCmdToName(num, toName);
@@ -163,7 +172,7 @@ std::string	Reply::rplInviting(int num, const std::string toName, const std::str
 	}
 }
 
-std::string	Reply::rplYourOper(int num, const std::string toName, const std::string& nickName) {
+std::string	Reply::rplYourOper(int num, const std::string& toName, const std::string& nickName) {
 	try {
 		// std::string	message = "381 " + nickName + " :You are now an IRC operator";
 		std::string	message = Reply::rplCmdToName(num, toName);
@@ -177,7 +186,7 @@ std::string	Reply::rplYourOper(int num, const std::string toName, const std::str
 	}
 }
 
-std::string	Reply::errNoSuchNick(int num, const std::string toName, const std::string& nickName) {
+std::string	Reply::errNoSuchNick(int num, const std::string& toName, const std::string& nickName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -190,7 +199,7 @@ std::string	Reply::errNoSuchNick(int num, const std::string toName, const std::s
 	}
 }
 
-std::string	Reply::errNoSuchServer(int num, const std::string toName, const std::string& serverName) {
+std::string	Reply::errNoSuchServer(int num, const std::string& toName, const std::string& serverName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -203,7 +212,7 @@ std::string	Reply::errNoSuchServer(int num, const std::string toName, const std:
 	}
 }
 
-std::string	Reply::errNoSuchChannel(int num, const std::string toName, const std::string& channelName) {
+std::string	Reply::errNoSuchChannel(int num, const std::string& toName, const std::string& channelName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -216,7 +225,7 @@ std::string	Reply::errNoSuchChannel(int num, const std::string toName, const std
 	}
 }
 
-std::string	Reply::errNoOrigin(int num, const std::string toName) {
+std::string	Reply::errNoOrigin(int num, const std::string& toName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -229,7 +238,7 @@ std::string	Reply::errNoOrigin(int num, const std::string toName) {
 	}
 }
 
-std::string	Reply::errNoRecipient(int num, const std::string toName, const std::string& command) {
+std::string	Reply::errNoRecipient(int num, const std::string& toName, const std::string& command) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -242,7 +251,7 @@ std::string	Reply::errNoRecipient(int num, const std::string toName, const std::
 	}
 }
 
-std::string	Reply::errNoTextToSend(int num, const std::string toName) {
+std::string	Reply::errNoTextToSend(int num, const std::string& toName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -255,7 +264,7 @@ std::string	Reply::errNoTextToSend(int num, const std::string toName) {
 	}
 }
 
-std::string	Reply::errUnKnownCommand(int num, const std::string toName, const std::string& command) {
+std::string	Reply::errUnknownCommand(int num, const std::string& toName, const std::string& command) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -267,7 +276,7 @@ std::string	Reply::errUnKnownCommand(int num, const std::string toName, const st
 		return ("");
 	}
 }
-std::string	Reply::errNoNickNameGiven(int num, const std::string toName) {
+std::string	Reply::errNoNickNameGiven(int num, const std::string& toName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -280,7 +289,7 @@ std::string	Reply::errNoNickNameGiven(int num, const std::string toName) {
 	}
 }
 
-std::string	Reply::errOneUsNickName(int num, const std::string toName, const std::string& nickName) {
+std::string	Reply::errOneUsNickName(int num, const std::string& toName, const std::string& nickName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -293,7 +302,7 @@ std::string	Reply::errOneUsNickName(int num, const std::string toName, const std
 	}
 }
 
-std::string	Reply::errNickNameInUse(int num, const std::string toName, const std::string& nickName) {
+std::string	Reply::errNickNameInUse(int num, const std::string& toName, const std::string& nickName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -306,7 +315,7 @@ std::string	Reply::errNickNameInUse(int num, const std::string toName, const std
 	}
 }
 
-std::string	Reply::errUserNotInChannel(int num, const std::string toName, const std::string& nickName, const std::string& channel) {
+std::string	Reply::errUserNotInChannel(int num, const std::string& toName, const std::string& nickName, const std::string& channel) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -319,7 +328,7 @@ std::string	Reply::errUserNotInChannel(int num, const std::string toName, const 
 	}
 }
 
-std::string	Reply::errNotOnChannel(int num, const std::string toName, const std::string& channel) {
+std::string	Reply::errNotOnChannel(int num, const std::string& toName, const std::string& channel) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -332,7 +341,7 @@ std::string	Reply::errNotOnChannel(int num, const std::string toName, const std:
 	}
 }
 
-std::string	Reply::errUserOnChannel(int num, const std::string toName, const std::string& nickName, const std::string& channel) {
+std::string	Reply::errUserOnChannel(int num, const std::string& toName, const std::string& nickName, const std::string& channel) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -345,7 +354,7 @@ std::string	Reply::errUserOnChannel(int num, const std::string toName, const std
 	}
 }
 
-std::string	Reply::errNotRegistered(int num, const std::string toName) {
+std::string	Reply::errNotRegistered(int num, const std::string& toName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -358,7 +367,7 @@ std::string	Reply::errNotRegistered(int num, const std::string toName) {
 	}
 }
 
-std::string	Reply::errNeedMoreParams(int num, const std::string toName, const std::string& command) {
+std::string	Reply::errNeedMoreParams(int num, const std::string& toName, const std::string& command) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -371,7 +380,7 @@ std::string	Reply::errNeedMoreParams(int num, const std::string toName, const st
 	}
 }
 
-std::string	Reply::errAlreadyRegistered(int num, const std::string toName) {
+std::string	Reply::errAlreadyRegistered(int num, const std::string& toName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -384,7 +393,7 @@ std::string	Reply::errAlreadyRegistered(int num, const std::string toName) {
 	}
 }
 
-std::string	Reply::errPasswordMisMatch(int num, const std::string toName) {
+std::string	Reply::errPasswordMisMatch(int num, const std::string& toName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -397,7 +406,7 @@ std::string	Reply::errPasswordMisMatch(int num, const std::string toName) {
 	}
 }
 
-std::string	Reply::errKeySet(int num, const std::string toName, const std::string& nickName, const std::string& channel) {
+std::string	Reply::errKeySet(int num, const std::string& toName, const std::string& nickName, const std::string& channel) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -410,11 +419,11 @@ std::string	Reply::errKeySet(int num, const std::string toName, const std::strin
 	}
 }
 
-std::string	Reply::errUnknownMode(int num, const std::string toName, const std::string& nickName, const std::string& mode, const std::string& channel) {
+std::string	Reply::errUnknownMode(int num, const std::string& toName, const std::string& mode, const std::string& channel) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
-		message += nickName + " " + mode + " :is unknown mode char to me for " + channel;
+		message += mode + " :is unknown mode char to me for " + channel;
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
@@ -423,7 +432,7 @@ std::string	Reply::errUnknownMode(int num, const std::string toName, const std::
 	}
 }
 
-std::string	Reply::errNoChanModes(int num, const std::string toName, const std::string& nickName, const std::string& channel) {
+std::string	Reply::errNoChanModes(int num, const std::string& toName, const std::string& nickName, const std::string& channel) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -436,7 +445,7 @@ std::string	Reply::errNoChanModes(int num, const std::string toName, const std::
 	}
 }
 
-std::string	Reply::errChanOprivsNeeded(int num, const std::string toName, const std::string& nickName, const std::string& channel) {
+std::string	Reply::errChanOprivsNeeded(int num, const std::string& toName, const std::string& nickName, const std::string& channel) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -449,7 +458,7 @@ std::string	Reply::errChanOprivsNeeded(int num, const std::string toName, const 
 	}
 }
 
-std::string	Reply::errRestricted(int num, const std::string toName) {
+std::string	Reply::errRestricted(int num, const std::string& toName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -462,7 +471,7 @@ std::string	Reply::errRestricted(int num, const std::string toName) {
 	}
 }
 
-std::string	Reply::errUModeUnknownFlag(int num, const std::string toName) {
+std::string	Reply::errUModeUnknownFlag(int num, const std::string& toName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -475,7 +484,7 @@ std::string	Reply::errUModeUnknownFlag(int num, const std::string toName) {
 	}
 }
 
-std::string	Reply::errUsersDontMatch(int num, const std::string toName) {
+std::string	Reply::errUsersDontMatch(int num, const std::string& toName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
@@ -496,14 +505,7 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 		std::string	msg;
 		if (num == kRPL_WELCOME) {
 			msg += this->rplFromName(info.getConfig().getServerName());
-			msg += this->rplWelcome(user.getNickName(), user.getUserName(), user.getServerName());
-			msg += this->rplFromName(info.getConfig().getServerName());
-			msg += this->rplYourHost(user.getNickName(), info.getConfig().getServerName(), info.getConfig().getVersion());
-			msg += this->rplFromName(info.getConfig().getServerName());
-			msg += this->rplCreated(user.getNickName(), info.getConfig().getCreatedData());
-			msg += this->rplFromName(info.getConfig().getServerName());
-			msg += this->rplMyInfo(user.getNickName(), info.getConfig());
-			msg += ":" + user.getNickName() + " NICK :" + user.getNickName() + this->delimiter_;
+			msg += this->rplWelcome(info, user);
 		} else if (num < 100  || (num >= 200 && num < 400)) {
 			if (num == kRPL_UMODEIS) {
 				msg += this->rplFromName(info.getConfig().getServerName());
@@ -558,7 +560,7 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 				msg += this->errNoTextToSend(kERR_NOTEXTTOSEND, user.getNickName());
 			} else if (num == kERR_UNKNOWNCOMMAND) {
 				msg += this->rplFromName(info.getConfig().getServerName());
-				msg += this->errUnKnownCommand(kERR_UNKNOWNCOMMAND, user.getNickName(), parsedMsg.getCommand());
+				msg += this->errUnknownCommand(kERR_UNKNOWNCOMMAND, user.getNickName(), parsedMsg.getCommand());
 			} else if (num == kERR_NONICKNAMEGIVEN) {
 				msg += this->rplFromName(info.getConfig().getServerName());
 				msg += this->errNoNickNameGiven(kERR_NONICKNAMEGIVEN, user.getNickName());
@@ -597,7 +599,7 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 				msg += this->errKeySet(kERR_KEYSET, user.getNickName(), user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_UNKNOWNMODE) {
 				msg += this->rplFromName(info.getConfig().getServerName());
-				msg += this->errUnknownMode(kERR_UNKNOWNMODE, user.getNickName(), user.getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue());
+				msg += this->errUnknownMode(kERR_UNKNOWNMODE, user.getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_NOCHANMODES) {
 				// MODE(channel), TOPIC
 				msg += this->rplFromName(info.getConfig().getServerName());
