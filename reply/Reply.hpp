@@ -71,33 +71,51 @@ enum kErrReplyNum {
 
 class Reply {
  private:
-	 const std::string	delimiter_;
+	 static const std::string	delimiter_;
 
  public:
 	 Reply();
 	 ~Reply();
+	 const std::string&	getDelimiter() const;
 	 std::string		createMessage(int num, const User& user, const Info& info, const ParsedMessage& parsedMsg);
-	 static std::string	createPrefix(const std::string& prefix);
+	 static std::string	rplFromName(const std::string& from);
+	 static std::string	rplCmdToName(int num, const std::string& toName);
+
 	 static std::string	rplWelcome(const std::string& toName, const std::string& userName, const std::string& serverName);
 	 static std::string	rplYourHost(const std::string& toName, const std::string& serverName, const std::string& version);
 	 static std::string	rplCreated(const std::string& toName, const time_t& createdDate);
 	 static std::string	rplMyInfo(const std::string& toName, const Config& config);
-	 static std::string	rplUModeIs(const User& user);
-	 static std::string	rplChannelModeIs(const std::string& channel, const std::string& mode, const std::string& param);
-	 static std::string	rplNoTopic(const std::string& channel);
-	 static std::string	rplTopic(const std::string& channel, const std::string& topic);
-	 static std::string	rplInviting(const std::string& channel, const std::string& nickName);
-	 static std::string	rplYourOper(const std::string& nickName);
 
-	 static std::string	errPrefix(kErrReplyNum num, const std::string& prefix);
-	 static std::string	errNoSuchNick(const std::string& nickName);
-	 static std::string	errNoSuchServer(const std::string& serverName);
-	 static std::string	errNoSuchChannel(const std::string& channelName);
-	 static std::string	errNoOrigin();
-	 static std::string	errNoRecipient(const std::string& command);
-	 static std::string	errNoTextToSend();
-	 static std::string	errUnKnownCommand(const std::string& command);
-	 static std::string	errNoNickNameGiven();
+	 static std::string	rplUModeIs(int num, const std::string toName, const User& user);
+	 static std::string	rplChannelModeIs(int num, const std::string toName, const std::string& channel, const std::string& mode, const std::string& param);
+	 static std::string	rplNoTopic(int num, const std::string toName, const std::string& channel);
+	 static std::string	rplTopic(int num, const std::string toName, const std::string& channel, const std::string& topic);
+	 static std::string	rplInviting(int num, const std::string toName, const std::string& channel, const std::string& nickName);
+	 static std::string	rplYourOper(int num, const std::string toName, const std::string& nickName);
+	 static std::string	errNoSuchNick(int num, const std::string toName, const std::string& nickName);
+	 static std::string	errNoSuchServer(int num, const std::string toName, const std::string& serverName);
+	 static std::string	errNoSuchChannel(int num, const std::string toName, const std::string& channelName);
+	 static std::string	errNoOrigin(int num, const std::string toName);
+	 static std::string	errNoRecipient(int num, const std::string toName, const std::string& command);
+	 static std::string	errNoTextToSend(int num, const std::string toName);
+	 static std::string	errUnKnownCommand(int num, const std::string toName, const std::string& command);
+	 static std::string	errNoNickNameGiven(int num, const std::string toName);
+	 static std::string	errOneUsNickName(int num, const std::string toName, const std::string& nickName);
+	 static std::string	errNickNameInUse(int num, const std::string toName, const std::string& nickName);
+	 static std::string	errUserNotInChannel(int num, const std::string toName, const std::string& nickName, const std::string& channel);
+	 static std::string	errNotOnChannel(int num, const std::string toName, const std::string& channel);
+	 static std::string	errUserOnChannel(int num, const std::string toName, const std::string& nickName, const std::string& channel);
+	 static std::string	errNotRegistered(int num, const std::string toName);
+	 static std::string	errNeedMoreParams(int num, const std::string toName, const std::string& command);
+	 static std::string	errAlreadyRegistered(int num, const std::string toName);
+	 static std::string	errPasswordMisMatch(int num, const std::string toName);
+	 static std::string	errKeySet(int num, const std::string toName, const std::string& nickName, const std::string& channel);
+	 static std::string	errUnknownMode(int num, const std::string toName, const std::string& nickName, const std::string& mode, const std::string& channel);
+	 static std::string	errNoChanModes(int num, const std::string toName, const std::string& nickName, const std::string& channel);
+	 static std::string	errChanOprivsNeeded(int num, const std::string toName, const std::string& nickName, const std::string& channel);
+	 static std::string	errRestricted(int num, const std::string toName);
+	 static std::string	errUModeUnknownFlag(int num, const std::string toName);
+	 static std::string	errUsersDontMatch(int num, const std::string toName);
 };
 
 #endif  // REPLY_HPP
