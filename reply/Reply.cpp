@@ -2,14 +2,32 @@
 #include "../parser/Parser.hpp"
 #include "../error/error.hpp"
 
+const std::string	Reply::delimiter_ = "\r\n";
+
 // CONSTRUCTOR
 // DESTRUCTOR
-Reply::Reply() : delimiter_("\r\n") {}
+Reply::Reply() {}
 Reply::~Reply() {}
 
-std::string	Reply::createPrefix(const std::string& prefix) {
+const std::string&	Reply::getDelimiter() const {
+	return (this->delimiter_);
+}
+
+std::string	Reply::rplFromName(const std::string& from) {
 	try {
-		std::string	message = ":" + prefix + " ";
+		std::string	message = ":" + from + " ";
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::rplCmdToName(int num, const std::string& toName) {
+	try {
+		std::stringstream	ss;
+		ss << num;
+		std::string	message = ss.str() + " " + toName + " :";
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -19,7 +37,8 @@ std::string	Reply::createPrefix(const std::string& prefix) {
 
 std::string	Reply::rplWelcome(const std::string& toName, const std::string& userName, const std::string& serverName) {
 	try {
-		std::string	message = "001 " + toName + " :Welcome to the Internet Relay Network " + toName + "!" + userName + "@" + serverName + "\r\n";
+		std::string	message = "001 " + toName + " :Welcome to the Internet Relay Network " + toName + "!" + userName + "@" + serverName;
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -29,7 +48,8 @@ std::string	Reply::rplWelcome(const std::string& toName, const std::string& user
 
 std::string	Reply::rplYourHost(const std::string& toName, const std::string& serverName, const std::string& version) {
 	try {
-		std::string	message = "002 " + toName + " :Your host is " + serverName + ", running version " + version + "\r\n";
+		std::string	message = "002 " + toName + " :Your host is " + serverName + ", running version " + version;
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -43,7 +63,8 @@ std::string	Reply::rplCreated(const std::string& toName, const time_t& createdDa
 		if (!date.empty() && date[date.size() - 1] == '\n') {
 			date.erase(date.size() - 1);
 		}
-		std::string	message = "003 " + toName + " :This server was created " + date + "\r\n";
+		std::string	message = "003 " + toName + " :This server was created " + date;
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -53,7 +74,8 @@ std::string	Reply::rplCreated(const std::string& toName, const time_t& createdDa
 
 std::string	Reply::rplMyInfo(const std::string& toName, const Config& config) {
 	try {
-		std::string	message = "004 " + toName + " :" + config.getServerName() + " " + config.getVersion() + " " + config.getUserModes() + " " +  config.getChannelModes() + "\r\n";
+		std::string	message = "004 " + toName + " :" + config.getServerName() + " " + config.getVersion() + " " + config.getUserModes() + " " +  config.getChannelModes();
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -61,16 +83,20 @@ std::string	Reply::rplMyInfo(const std::string& toName, const Config& config) {
 	}
 }
 
-std::string	Reply::rplUModeIs(const User& user) {
+std::string	Reply::rplUModeIs(int num, const std::string toName, const User& user) {
 	try {
-		std::string	message = "221 " + user.getNickName();
+		// std::string	message = "221 " + user.getNickName();
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		// message += user.getNickName();
 		if (user.getModes() & kAway) {
-			message += " +a";
+			message += "+a";
 		} else if (user.getModes() & kOperator) {
-			message += " +o";
+			message += "+o";
 		} else if (user.getModes() & kRestrict) {
-			message += " +r";
+			message += "+r";
 		}
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -78,12 +104,16 @@ std::string	Reply::rplUModeIs(const User& user) {
 	}
 }
 
-std::string	Reply::rplChannelModeIs(const std::string& channel, const std::string& mode, const std::string& param) {
+std::string	Reply::rplChannelModeIs(int num, const std::string toName, const std::string& channel, const std::string& mode, const std::string& param) {
 	try {
-		std::string	message = "324 " + channel + " " + mode;
+		// std::string	message = "324 " + channel + " " + mode;
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += channel + " " + mode;
 		if (!param.empty()) {
 			message += " " + param;
 		}
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -91,9 +121,13 @@ std::string	Reply::rplChannelModeIs(const std::string& channel, const std::strin
 	}
 }
 
-std::string	Reply::rplNoTopic(const std::string& channel) {
+std::string	Reply::rplNoTopic(int num, const std::string toName, const std::string& channel) {
 	try {
-		std::string	message = "331 " + channel + " :No topic is set";
+		// std::string	message = "331 " + channel + " :No topic is set";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += channel + " :No topic is set";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -101,9 +135,13 @@ std::string	Reply::rplNoTopic(const std::string& channel) {
 	}
 }
 
-std::string	Reply::rplTopic(const std::string& channel, const std::string& topic) {
+std::string	Reply::rplTopic(int num, const std::string toName, const std::string& channel, const std::string& topic) {
 	try {
-		std::string	message = "332 " + channel + " :" + topic;
+		// std::string	message = "332 " + channel + " :" + topic;
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += channel + " :" + topic;
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -111,9 +149,13 @@ std::string	Reply::rplTopic(const std::string& channel, const std::string& topic
 	}
 }
 
-std::string	Reply::rplInviting(const std::string& channel, const std::string& nickName) {
+std::string	Reply::rplInviting(int num, const std::string toName, const std::string& channel, const std::string& nickName) {
 	try {
-		std::string	message = "341 " + channel + " " + nickName;
+		// std::string	message = "341 " + channel + " " + nickName;
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += channel + " " + nickName;
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -121,9 +163,13 @@ std::string	Reply::rplInviting(const std::string& channel, const std::string& ni
 	}
 }
 
-std::string	Reply::rplYourOper(const std::string& nickName) {
+std::string	Reply::rplYourOper(int num, const std::string toName, const std::string& nickName) {
 	try {
-		std::string	message = "381 " + nickName + " :You are now an IRC operator";
+		// std::string	message = "381 " + nickName + " :You are now an IRC operator";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += nickName + " :You are now an IRC operator";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -131,11 +177,12 @@ std::string	Reply::rplYourOper(const std::string& nickName) {
 	}
 }
 
-std::string	Reply::errPrefix(kErrReplyNum num, const std::string& prefix) {
+std::string	Reply::errNoSuchNick(int num, const std::string toName, const std::string& nickName) {
 	try {
-		std::stringstream	ss;
-		ss << static_cast<int>(num);
-		std::string	message = ss.str() + " " + prefix + " :";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += nickName + " :No such nick/channel";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -143,9 +190,12 @@ std::string	Reply::errPrefix(kErrReplyNum num, const std::string& prefix) {
 	}
 }
 
-std::string	Reply::errNoSuchNick(const std::string& nickName) {
+std::string	Reply::errNoSuchServer(int num, const std::string toName, const std::string& serverName) {
 	try {
-		std::string	message = nickName + " :No such nick/channel\r\n";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += serverName + " :No such server";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -153,9 +203,12 @@ std::string	Reply::errNoSuchNick(const std::string& nickName) {
 	}
 }
 
-std::string	Reply::errNoSuchServer(const std::string& serverName) {
+std::string	Reply::errNoSuchChannel(int num, const std::string toName, const std::string& channelName) {
 	try {
-		std::string	message = serverName + " :No such server";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += channelName + " :No such channel";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -163,9 +216,12 @@ std::string	Reply::errNoSuchServer(const std::string& serverName) {
 	}
 }
 
-std::string	Reply::errNoSuchChannel(const std::string& channelName) {
+std::string	Reply::errNoOrigin(int num, const std::string toName) {
 	try {
-		std::string	message = channelName + " :No such channel";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += "No origin specified";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -173,9 +229,12 @@ std::string	Reply::errNoSuchChannel(const std::string& channelName) {
 	}
 }
 
-std::string	Reply::errNoOrigin() {
+std::string	Reply::errNoRecipient(int num, const std::string toName, const std::string& command) {
 	try {
-		std::string	message = "No origin specified";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += "No recipient given (" + command + ")";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -183,9 +242,12 @@ std::string	Reply::errNoOrigin() {
 	}
 }
 
-std::string	Reply::errNoRecipient(const std::string& command) {
+std::string	Reply::errNoTextToSend(int num, const std::string toName) {
 	try {
-		std::string	message = "No recipient given (" + command + ")";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += "No text to send";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -193,9 +255,24 @@ std::string	Reply::errNoRecipient(const std::string& command) {
 	}
 }
 
-std::string	Reply::errNoTextToSend() {
+std::string	Reply::errUnKnownCommand(int num, const std::string toName, const std::string& command) {
 	try {
-		std::string	message = "No text to send";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += command + " :Unknown command";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+std::string	Reply::errNoNickNameGiven(int num, const std::string toName) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += "No nickname given";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -203,18 +280,207 @@ std::string	Reply::errNoTextToSend() {
 	}
 }
 
-std::string	Reply::errUnKnownCommand(const std::string& command) {
+std::string	Reply::errOneUsNickName(int num, const std::string toName, const std::string& nickName) {
 	try {
-		std::string	message = command + " :Unknown command";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += nickName + " :Erroneous nickname";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
 		return ("");
 	}
 }
-std::string	Reply::errNoNickNameGiven() {
+
+std::string	Reply::errNickNameInUse(int num, const std::string toName, const std::string& nickName) {
 	try {
-		std::string	message = "No nickname given";
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += nickName + " :Nickname is already in use";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errUserNotInChannel(int num, const std::string toName, const std::string& nickName, const std::string& channel) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += nickName + " " + channel + " :They aren't on that channel";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errNotOnChannel(int num, const std::string toName, const std::string& channel) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += channel + " :You're not on that channel";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errUserOnChannel(int num, const std::string toName, const std::string& nickName, const std::string& channel) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += nickName + " " + channel + " :is already on channel";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errNotRegistered(int num, const std::string toName) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += "You have not registered";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errNeedMoreParams(int num, const std::string toName, const std::string& command) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += command + " :Not enough parameters";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errAlreadyRegistered(int num, const std::string toName) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += "Unauthorized command (already registered)";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errPasswordMisMatch(int num, const std::string toName) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += "Password incorrect";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errKeySet(int num, const std::string toName, const std::string& nickName, const std::string& channel) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += nickName + " " + channel + " :Channel key already set";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errUnknownMode(int num, const std::string toName, const std::string& nickName, const std::string& mode, const std::string& channel) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += nickName + " " + mode + " :is unknown mode char to me for " + channel;
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errNoChanModes(int num, const std::string toName, const std::string& nickName, const std::string& channel) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += nickName + " " + channel + " :Channel doesn't support modes";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errChanOprivsNeeded(int num, const std::string toName, const std::string& nickName, const std::string& channel) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += nickName + " " + channel + " :You're not channel operator";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errRestricted(int num, const std::string toName) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += "Your connection is restricted!";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errUModeUnknownFlag(int num, const std::string toName) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += "Unknown MODE flag";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+std::string	Reply::errUsersDontMatch(int num, const std::string toName) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += "Cannot change mode for other users";
+		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -227,109 +493,129 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 		return ("");
 	}
 	try {
-		std::string	msg = this->createPrefix(info.getConfig().getServerName());
+		std::string	msg;
 		if (num == kRPL_WELCOME) {
+			msg += this->rplFromName(info.getConfig().getServerName());
 			msg += this->rplWelcome(user.getNickName(), user.getUserName(), user.getServerName());
-			msg += this->createPrefix(info.getConfig().getServerName());
+			msg += this->rplFromName(info.getConfig().getServerName());
 			msg += this->rplYourHost(user.getNickName(), info.getConfig().getServerName(), info.getConfig().getVersion());
-			msg += this->createPrefix(info.getConfig().getServerName());
+			msg += this->rplFromName(info.getConfig().getServerName());
 			msg += this->rplCreated(user.getNickName(), info.getConfig().getCreatedData());
-			msg += this->createPrefix(info.getConfig().getServerName());
+			msg += this->rplFromName(info.getConfig().getServerName());
 			msg += this->rplMyInfo(user.getNickName(), info.getConfig());
-			msg += ":" + user.getNickName() + " NICK :" + user.getNickName();
+			msg += ":" + user.getNickName() + " NICK :" + user.getNickName() + this->delimiter_;
 		} else if (num < 100  || (num >= 200 && num < 400)) {
 			if (num == kRPL_UMODEIS) {
-				msg += this->rplUModeIs(user);
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->rplUModeIs(kRPL_UMODEIS, user.getNickName(), user);
 			} else if (num == kRPL_CHANNELMODEIS) {
+				msg += this->rplFromName(info.getConfig().getServerName());
 				if (parsedMsg.getParams().size() > 2) {
-					msg += this->rplChannelModeIs(parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[2].getValue());
+					msg += this->rplChannelModeIs(kRPL_CHANNELMODEIS, user.getNickName(), parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[2].getValue());
 				} else {
-					msg += this->rplChannelModeIs(parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue(), "");
+					msg += this->rplChannelModeIs(kRPL_CHANNELMODEIS, user.getNickName(), parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue(), "");
 				}
 			} else if (num == kRPL_NOTOPIC) {
 				// TOPIC
-				msg += rplNoTopic(parsedMsg.getParams()[0].getValue());
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->rplNoTopic(kRPL_NOTOPIC, user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kRPL_TOPIC) {
 				// JOIN, TOPIC
-				msg += rplTopic(parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue());
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->rplTopic(kRPL_TOPIC, user.getNickName(), parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue());
 			} else if (num == kRPL_INVITING) {
 				// INVITE
-				msg += rplInviting(parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue());
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->rplInviting(kRPL_INVITING, user.getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kRPL_YOUREOPER) {
 				// OPER
-				msg += rplYourOper(user.getNickName());
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->rplYourOper(kRPL_YOUREOPER, user.getNickName(), user.getNickName());
 			}
 		} else if (num >= 400 && num < 600) {
-			msg += this->errPrefix(static_cast<kErrReplyNum>(num), user.getNickName());
 			if (num == kERR_NOSUCHNICK) {
 				// PRIVMSG, INVITE
-				// msg += this->errPrefix(kERR_NOSUCHNICK, user.getNickName());
-				msg += this->errNoSuchNick(parsedMsg.getParams()[0].getValue());
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNoSuchNick(kERR_NOSUCHNICK, user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_NOSUCHSERVER) {
-				// msg += this->errPrefix(kERR_NOSUCHSERVER, user.getNickName());
-				msg += this->errNoSuchServer(parsedMsg.getParams()[0].getValue());
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNoSuchServer(kERR_NOSUCHSERVER, user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_NOSUCHCHANNEL) {
 				// JOIN, KICK, PART
-				// msg += this->errPrefix(kERR_NOSUCHCHANNEL, user.getNickName());
-				msg += this->errNoSuchChannel(parsedMsg.getParams()[0].getValue());
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNoSuchChannel(kERR_NOSUCHCHANNEL, user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_NOORIGIN) {
 				// PONG
-				// msg += this->errPrefix(kERR_NOORIGIN, user.getNickName());
-				msg += this->errNoOrigin();
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNoOrigin(kERR_NOORIGIN, user.getNickName());
 			} else if (num == kERR_NORECIPIENT) {
 				// NOTICE, PRIVMSG
-				// msg += this->errPrefix(kERR_NORECIPIENT, user.getNickName());
-				msg += this->errNoRecipient(parsedMsg.getCommand());
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNoRecipient(kERR_NORECIPIENT, user.getNickName(), parsedMsg.getCommand());
 			} else if (num == kERR_NOTEXTTOSEND) {
 				// NOTICE, PRIVMSG
-				// msg += this->errPrefix(kERR_NOTEXTTOSEND, user.getNickName());
-				msg += this->errNoTextToSend();
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNoTextToSend(kERR_NOTEXTTOSEND, user.getNickName());
 			} else if (num == kERR_UNKNOWNCOMMAND) {
-				// msg += this->errPrefix(kERR_UNKNOWNCOMMAND, user.getNickName());
-				msg += this->errUnKnownCommand(parsedMsg.getCommand());
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errUnKnownCommand(kERR_UNKNOWNCOMMAND, user.getNickName(), parsedMsg.getCommand());
 			} else if (num == kERR_NONICKNAMEGIVEN) {
-				// msg += this->errPrefix(kERR_NONICKNAMEGIVEN, user.getNickName());
-				msg += errNoNickNameGiven();
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNoNickNameGiven(kERR_NONICKNAMEGIVEN, user.getNickName());
 			} else if (num == kERR_ERRONEUSNICKNAME) {
-				msg += "432 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :Erroneous nickname";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errOneUsNickName(kERR_ERRONEUSNICKNAME, user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_NICKNAMEINUSE) {
-				// msg += "433 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :Nickname is already in use";
-				msg += "433 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue();
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNickNameInUse(kERR_NICKNAMEINUSE, user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_USERNOTINCHANNEL) {
-				msg += "441 " + user.getNickName() + " " + parsedMsg.getParams()[0].getValue() + " :They aren't on that channel";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errUserNotInChannel(kERR_USERNOTINCHANNEL, user.getNickName(), user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_NOTONCHANNEL) {
-				msg += "442 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :You're not on that channel";
+				msg += this->rplFromName(info.getConfig().getServerName());
 				// TODO(hnoguchi): INVITEコマンドの場合、parsedMsg.getParams()[1].getValue()がchannel名
 				// msg += "442 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :You're not on that channel";
+				msg += this->errNotOnChannel(kERR_NOTONCHANNEL, user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_USERONCHANNEL) {
 				// INVITE
-				msg += "443 " + user.getNickName() + " " + parsedMsg.getParams()[1].getValue() + " :is already on channel";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errUserOnChannel(kERR_USERONCHANNEL, user.getNickName(), user.getNickName(), parsedMsg.getParams()[1].getValue());
 			} else if (num == kERR_NOTREGISTERED) {
-				msg += "451 * :You have not registered";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNotRegistered(kERR_NOTREGISTERED, "*");
 			} else if (num == kERR_NEEDMOREPARAMS) {
-				msg += "461 " + user.getNickName() + " :" + parsedMsg.getCommand() + " :Not enough parameters";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getNickName(), parsedMsg.getCommand());
 			} else if (num == kERR_ALREADYREGISTRED) {
-				msg += "462 " +  user.getNickName() + " :Unauthorized command (already registered)";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errAlreadyRegistered(kERR_ALREADYREGISTRED, user.getNickName());
 			} else if (num == kERR_PASSWDMISMATCH) {
-				msg += "464 " +  user.getNickName() + " :Password incorrect";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errPasswordMisMatch(kERR_PASSWDMISMATCH, user.getNickName());
 			} else if (num == kERR_KEYSET) {
-				msg += "467 " +  user.getNickName() + " " + parsedMsg.getParams()[0].getValue() + " :Channel key already set";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errKeySet(kERR_KEYSET, user.getNickName(), user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_UNKNOWNMODE) {
-				msg += "472 " + user.getNickName() + " " + parsedMsg.getParams()[1].getValue() + " :is unknown mode char to me for " + parsedMsg.getParams()[0].getValue();
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errUnknownMode(kERR_UNKNOWNMODE, user.getNickName(), user.getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_NOCHANMODES) {
-				// TOPIC
-				msg += "477 " + user.getNickName() + " " + parsedMsg.getParams()[0].getValue() + " :Channel doesn't support modes";
+				// MODE(channel), TOPIC
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errNoChanModes(kERR_NOCHANMODES, user.getNickName(), user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_CHANOPRIVSNEEDED) {
-				msg += "482 " + user.getNickName() + " " + parsedMsg.getParams()[0].getValue() + " :You're not channel operator";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user.getNickName(), user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_RESTRICTED) {
-				msg += "484 " + user.getNickName() + " :Your connection is restricted!";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errRestricted(kERR_RESTRICTED, user.getNickName());
 			} else if (num == kERR_UMODEUNKNOWNFLAG) {
-				msg += "501 " + user.getNickName() + " :Unknown MODE flag";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user.getNickName());
 			} else if (num == kERR_USERSDONTMATCH) {
-				msg += "502 " + user.getNickName() + " :Cannot change mode for other users";
+				msg += this->rplFromName(info.getConfig().getServerName());
+				msg += this->errUsersDontMatch(kERR_USERSDONTMATCH, user.getNickName());
 			}
 		}
-		msg += this->delimiter_;
 		return (msg);
 	} catch (const std::exception& e) {
 		printErrorMessage(e.what());
