@@ -235,19 +235,15 @@ void	Server::handleReceivedData(int i) {
 				// 登録ユーザか確認
 				if ((this->info_.getUser(i - 1).getRegistered() & kExecAllCmd) != kExecAllCmd) {
 					// ユーザ登録処理
-					replyNum = execute.registerUser(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
-					// replyMsg = execute.registerUser(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
+					replyMsg = execute.registerUser(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
 				} else {
 					// コマンド実行処理
-					replyNum = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
-					// replyMsg = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
+					replyMsg = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
 				}
-				if (replyNum == 0) {
-					continue;
-				}
+			} else {
+				// リプライメッセージの作成
+				replyMsg = reply.createMessage(replyNum, this->info_.getUser(i - 1), this->info_, parser.getParsedMessage());
 			}
-			// リプライメッセージの作成
-			replyMsg = reply.createMessage(replyNum, this->info_.getUser(i - 1), this->info_, parser.getParsedMessage());
 			if (replyMsg.empty()) {
 				continue;
 			}

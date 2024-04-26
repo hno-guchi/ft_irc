@@ -25,30 +25,33 @@
 #include "../../server/Server.hpp"
 #include "../../reply/Reply.hpp"
 
-int	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info) {
-	// validation
-	if (parsedMsg.getParams().size() < 2) {
-		return (kERR_NEEDMOREPARAMS);
-	}
-	std::vector<User>::iterator	targetUserIt = const_cast<std::vector<User> &>(info->getUsers()).begin();
-	for (; targetUserIt != info->getUsers().end(); targetUserIt++) {
-		if (parsedMsg.getParams()[0].getValue() == targetUserIt->getNickName()) {
-			break;
+std::string	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info) {
+	try {
+		// validation
+		if (parsedMsg.getParams().size() < 2) {
+			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 		}
-	}
-	if (targetUserIt == info->getUsers().end()) {
-		return (kERR_NOSUCHNICK);
-	}
-	std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
-	for (; channelIt != info->getChannels().end(); channelIt++) {
-		if (parsedMsg.getParams()[1].getValue() == channelIt->getName()) {
-			break;
+		std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
+		// Channelが存在するか確認
+		for (; channelIt != info->getChannels().end(); channelIt++) {
+			if (parsedMsg.getParams()[1].getValue() == channelIt->getName()) {
+				break;
+			}
 		}
-	}
-	if (channelIt == info->getChannels().end()) {
-		return (kERR_NOSUCHNICK);
-	}
-	// if (channelIt != info->getChannels().end()) {
+		if (channelIt == info->getChannels().end()) {
+			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+		}
+		// UserがChannel Operatorか確認
+		std::vector<User*>::const_iterator	operIt = channelIt->getOperators().begin();
+		for (; operIt != channelIt->getOperators().end(); operIt++) {
+			if ((*operIt)->getNickName() == user->getNickName()) {
+				break;
+			}
+		}
+		if (operIt == channelIt->getOperators().end()) {
+			return (Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getNickName(), user->getNickName(), parsedMsg.getParams()[1].getValue()));
+		}
+		// UserがChannelに居るか確認
 		std::vector<User*>::const_iterator	memberIt = channelIt->getMembers().begin();
 		for (; memberIt != channelIt->getMembers().end(); memberIt++) {
 			if ((*memberIt)->getNickName() == user->getNickName()) {
@@ -56,28 +59,24 @@ int	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info) {
 			}
 		}
 		if (memberIt == channelIt->getMembers().end()) {
-			return (kERR_NOTONCHANNEL);
+			return (Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getNickName(), parsedMsg.getParams()[1].getValue()));
 		}
-		if (channelIt->getModes() & kInviteOnly) {
-			std::vector<User*>::const_iterator	operIt = channelIt->getOperators().begin();
-			for (; operIt != channelIt->getOperators().end(); operIt++) {
-				if ((*operIt)->getNickName() == user->getNickName()) {
-					break;
-				}
-			}
-			if (operIt == channelIt->getOperators().end()) {
-				std::cerr << "Not channel oper" << std::endl;
-				return (kERR_CHANOPRIVSNEEDED);
+		// Target Userが存在するか確認
+		std::vector<User>::iterator	targetUserIt = const_cast<std::vector<User> &>(info->getUsers()).begin();
+		for (; targetUserIt != info->getUsers().end(); targetUserIt++) {
+			if (parsedMsg.getParams()[0].getValue() == targetUserIt->getNickName()) {
+				break;
 			}
 		}
-	// }
-	for (std::vector<User*>::const_iterator	memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
-		if ((*memberIt)->getNickName() == targetUserIt->getNickName()) {
-			std::cerr << "target user on already" << std::endl;
-			return (kERR_USERONCHANNEL);
+		if (targetUserIt == info->getUsers().end()) {
+			return (Reply::errNoSuchNick(kERR_NOSUCHNICK, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
-	}
-	try {
+		// Target Userが既にChannelに居るか確認
+		for (std::vector<User*>::const_iterator	targetMemberIt = channelIt->getMembers().begin(); targetMemberIt != channelIt->getMembers().end(); targetMemberIt++) {
+			if ((*targetMemberIt)->getNickName() == targetUserIt->getNickName()) {
+				return (Reply::errUserOnChannel(kERR_USERONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue()));
+			}
+		}
 		channelIt->addMember(&(const_cast<User &>(info->getUser(targetUserIt->getIndex() - 1))));
 		std::string	msg = ":" + user->getNickName() + " INVITE " + targetUserIt->getNickName() + " " + channelIt->getName() + "\r\n";
 		debugPrintSendMessage("SendMsg", msg);
@@ -86,10 +85,11 @@ int	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		// TODO(hnoguchi): Check error
-		return (kRPL_INVITING);
+		return (Reply::rplInviting(kRPL_INVITING, user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
-		return (-1);
+		throw;
+		// return (-1);
 	}
-	return (0);
+	return ("");
 }

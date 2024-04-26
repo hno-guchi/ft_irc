@@ -57,23 +57,10 @@
 #include "../../reply/Reply.hpp"
 
 // TODO(hnoguchi): MODE(channel)コマンドによる変更は、チャンネルに所属するユーザに通知する必要があるものもある。
-int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	try {
 		if (parsedMsg.getParams().size() < 1) {
-			return (kERR_NEEDMOREPARAMS);
-		}
-		if (parsedMsg.getParams().size() == 1) {
-			return (kRPL_CHANNELMODEIS);
-		}
-		if (parsedMsg.getParams()[1].getValue().size() != 2) {
-			return (kERR_UNKNOWNMODE);
-		}
-		if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
-			return (kERR_UNKNOWNMODE);
-		}
-		unsigned long	pos = info->getConfig().getChannelModes().find(parsedMsg.getParams()[1].getValue()[1]);
-		if (pos == std::string::npos) {
-			return (kERR_UNKNOWNMODE);
+			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 		}
 		std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
 		for (; channelIt != info->getChannels().end(); channelIt++) {
@@ -82,16 +69,7 @@ int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* in
 			}
 		}
 		if (channelIt == info->getChannels().end()) {
-			return (kERR_NOSUCHCHANNEL);
-		}
-		std::vector<User*>::iterator	userIt = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin();
-		for (; userIt != channelIt->getMembers().end(); userIt++) {
-			if ((*userIt)->getNickName() == user->getNickName()) {
-				break;
-			}
-		}
-		if (userIt == channelIt->getMembers().end()) {
-			return (kERR_USERNOTINCHANNEL);
+			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		std::vector<User*>::iterator	operIt = const_cast<std::vector<User*> &>(channelIt->getOperators()).begin();
 		for (; operIt != channelIt->getOperators().end(); operIt++) {
@@ -100,10 +78,41 @@ int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* in
 			}
 		}
 		if (operIt == channelIt->getOperators().end()) {
-			return (kERR_CHANOPRIVSNEEDED);
+			return (Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getNickName(), user->getNickName(), parsedMsg.getParams()[0].getValue()));
+		}
+		if (parsedMsg.getParams().size() == 1) {
+			// TODO(hnoguchi): Info::getChannelByName(std::string name);を実装する。
+			// TODO(hnoguchi): Channel::getModesStr();を実装する。
+			if (parsedMsg.getParams()[0].getValue() == channelIt->getName()) {
+				std::string		modesStr = "";
+				if (channelIt->getModes() & kInviteOnly) {
+					modesStr += "i";
+				}
+				if (channelIt->getModes() & kKey) {
+					modesStr += "k";
+				}
+				if (channelIt->getModes() & kLimit) {
+					modesStr += "l";
+				}
+				if (channelIt->getModes() & kRestrictTopicSetting) {
+					modesStr += "t";
+				}
+				// TODO(hnoguchi): Reply::rplChannelModeIs();の仕様を変更する。
+				return (Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), modesStr, ""));
+			}
+		}
+		if (parsedMsg.getParams()[1].getValue().size() != 2) {
+			return (Reply::errUnknownMode(kERR_UNKNOWNMODE, user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
+		}
+		if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
+			return (Reply::errUnknownMode(kERR_UNKNOWNMODE,user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
+		}
+		unsigned long	pos = info->getConfig().getChannelModes().find(parsedMsg.getParams()[1].getValue()[1]);
+		if (pos == std::string::npos) {
+			return (Reply::errUnknownMode(kERR_UNKNOWNMODE,user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
 		}
 		// そのチャンネルで使用できるモードか確認する。
-		std::string	msg = ":" + user->getNickName() + " MODE " + channelIt->getName() + " " + parsedMsg.getParams()[1].getValue() + " ";
+		std::string	msg = ":" + user->getNickName() + " MODE " + channelIt->getName() + " " + parsedMsg.getParams()[1].getValue();
 		if (parsedMsg.getParams()[1].getValue()[0] == '+') {
 			if (parsedMsg.getParams()[1].getValue()[1] == 'i') {
 				// TODO(hnoguchi): Change prefix
@@ -112,26 +121,26 @@ int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* in
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'k') {
 				// keyフラグが既に立っているか確認する。
 				if (channelIt->getModes() & kKey) {
-					return (kERR_KEYSET);
+					return (Reply::errKeySet(kERR_KEYSET, user->getNickName(), user->getNickName(), channelIt->getName()));
 				}
 				if (parsedMsg.getParams().size() < 3) {
-					return (kERR_NEEDMOREPARAMS);
+					return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 				}
 				// TODO(hnoguchi): Validate string key
 				channelIt->setKey(parsedMsg.getParams()[2].getValue());
 				channelIt->setMode(kKey);
-				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
+				msg += " " + parsedMsg.getParams()[2].getValue() + "\r\n";
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'l') {
 				if (parsedMsg.getParams().size() < 3) {
-					return (kERR_NEEDMOREPARAMS);
+					return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 				}
 				// TODO(hnoguchi): Validate Value
 				channelIt->setLimit(std::atoi(parsedMsg.getParams()[2].getValue().c_str()));
 				channelIt->setMode(kLimit);
-				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
+				msg += " " + parsedMsg.getParams()[2].getValue() + "\r\n";
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'o') {
 				if (parsedMsg.getParams().size() < 3) {
-					return (kERR_NEEDMOREPARAMS);
+					return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 				}
 				std::vector<User*>::iterator	targetUserIt = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin();
 				for (; targetUserIt != channelIt->getMembers().end(); targetUserIt++) {
@@ -140,10 +149,10 @@ int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* in
 					}
 				}
 				if (targetUserIt == channelIt->getMembers().end()) {
-					return (kERR_USERNOTINCHANNEL);
+					return (Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getNickName(), parsedMsg.getParams()[2].getValue(), channelIt->getName()));
 				}
 				channelIt->addOperator(*targetUserIt);
-				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
+				msg += " " + parsedMsg.getParams()[2].getValue() + "\r\n";
 				debugPrintSendMessage("SendMsg", msg);
 				sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
 				// TODO(hnoguchi): Check error
@@ -166,7 +175,7 @@ int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* in
 				msg += "\r\n";
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'o') {
 				if (parsedMsg.getParams().size() < 3) {
-					return (kERR_NEEDMOREPARAMS);
+					return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 				}
 				std::vector<User*>::iterator	targetUserIt = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin();
 				for (; targetUserIt != channelIt->getMembers().end(); targetUserIt++) {
@@ -175,7 +184,7 @@ int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* in
 					}
 				}
 				if (targetUserIt == channelIt->getMembers().end()) {
-					return (kERR_USERNOTINCHANNEL);
+					return (Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getNickName(), parsedMsg.getParams()[2].getValue(), channelIt->getName()));
 				}
 				channelIt->eraseOperator(*targetUserIt);
 				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
@@ -189,10 +198,11 @@ int	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* in
 		}
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		return ("");
 		// TODO(hnoguchi): Check error
 	} catch (const std::exception& e) {
 		std::cerr << RED << e.what() << END << std::endl;
-		return (-1);
+		throw;
+		// return (-1);
 	}
-	return (0);
 }
