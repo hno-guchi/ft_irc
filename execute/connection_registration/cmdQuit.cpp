@@ -22,8 +22,16 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-int	Execute::cmdQuit(User* user, const ParsedMessage& parsedMsg, Info* info) {
-	(void)parsedMsg;
+std::string	Execute::cmdQuit(User* user, const ParsedMessage& parsedMsg, Info* info) {
+	std::string	message = ":" + user->getNickName() + " ERROR :";
+	if (parsedMsg.getParams().size() > 0) {
+		message += parsedMsg.getParams()[0].getValue();
+	} else {
+		message += "Client Quit";
+	}
+	message += "\r\n";
+	sendNonBlocking(user->getFd(), message.c_str(), message.size());
+	// TODO(hnoguchi): Check
 	info->eraseUser(user);
-	return (-1);
+	return ("");
 }
