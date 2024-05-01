@@ -53,21 +53,18 @@ std::string	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, In
 
 // TODO(hnoguchi): exec();関数では、実行結果によるエラーを扱う。（例えば存在しないチャンネル名へのメッセージ送信など）
 std::string	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
-	// if (!this->isCommand(parsedMsg.getCommand(), info->getConfig().getCommandList())) {
-	// 	return (Reply::errNotRegistered(kERR_UNKNOWNCOMMAND, user.getNickName(), parsedMsg.getCommand()));
-	// }
-	// if (parsedMsg.getCommand() == "PING") {
-	// 	return (cmdPong(user, parsedMsg, info));
-	if (parsedMsg.getCommand() == "PASS") {
+	if (parsedMsg.getCommand() == "PING") {
+		return (cmdPong(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "PASS") {
 		return (cmdPass(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "NICK") {
 		return (cmdNick(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "USER") {
 		return (cmdUser(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "OPER") {
-	// 	return (cmdOper(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "QUIT") {
-	// 	return (cmdQuit(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "OPER") {
+		return (cmdOper(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "QUIT") {
+		return (cmdQuit(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "JOIN") {
 		return (cmdJoin(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "PART") {

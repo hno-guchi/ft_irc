@@ -21,28 +21,27 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-int	Execute::cmdOper(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdOper(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	(void)info;
-	if (parsedMsg.getParams().size() < 2) {
-		return (kERR_NEEDMOREPARAMS);
-	}
-	if (user->getNickName() != parsedMsg.getParams()[0].getValue()) {
-		return (0);
-	}
-	if (info->getConfig().getPassword() != parsedMsg.getParams()[1].getValue()) {
-		return (kERR_PASSWDMISMATCH);
-	}
 	try {
+		if (parsedMsg.getParams().size() < 2) {
+			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
+		}
+		if (user->getNickName() != parsedMsg.getParams()[0].getValue()) {
+			return (Reply::errUsersDontMatch(kERR_USERSDONTMATCH, user->getNickName()));
+		}
+		if (info->getConfig().getPassword() != parsedMsg.getParams()[1].getValue()) {
+			return (Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getNickName()));
+		}
 		user->setMode(kOperator);
-		std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :";
-		msg +=  "+o\r\n";
+		std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :+o\r\n";
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		// TODO(hnoguchi): 戻り値の確認
-		return (kRPL_YOUREOPER);
+		return (Reply::rplYourOper(kRPL_YOUREOPER, user->getNickName(), user->getNickName()));
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
-		return (-1);
+		return ("");
 	}
 }
 
