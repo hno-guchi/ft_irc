@@ -71,13 +71,13 @@ std::string	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info
 	// 	return (cmdOper(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "QUIT") {
 	// 	return (cmdQuit(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "JOIN") {
-	// 	return (cmdJoin(user, parsedMsg, info));
+	if (parsedMsg.getCommand() == "JOIN") {
+		return (cmdJoin(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "PART") {
 	// 	return (cmdPart(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "KICK") {
 	// 	return (cmdKick(user, parsedMsg, info));
-	if (parsedMsg.getCommand() == "INVITE") {
+	} else if (parsedMsg.getCommand() == "INVITE") {
 		return (cmdInvite(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "TOPIC") {
 	// 	return (cmdTopic(user, parsedMsg, info));

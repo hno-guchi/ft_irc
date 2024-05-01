@@ -100,7 +100,7 @@ const std::string&	Channel::getName() const {
 const std::string&	Channel::getTopic() const {
 	return (this->topic_);
 }
-const std::string&	Channel::getkey() const {
+const std::string&	Channel::getKey() const {
 	return (this->key_);
 }
 
