@@ -18,16 +18,16 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-int	Execute::cmdPass(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdPass(User* user, const ParsedMessage& parsedMsg, Info* info) {
+	(void)info;
 	if (parsedMsg.getParams().size() < 1) {
-		return (kERR_NEEDMOREPARAMS);
+		return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 	}
 	if (user->getRegistered() & kPassCommand) {
-		return (kERR_ALREADYREGISTRED);
+		return (Reply::errAlreadyRegistered(kERR_ALREADYREGISTRED, user->getNickName()));
 	}
-	// value check
-	if (parsedMsg.getParams()[0].getValue() != info->getConfig().getPassword()) {
-		return (kERR_PASSWDMISMATCH);
-	}
-	return (0);
+	// if (parsedMsg.getParams()[0].getValue() != info->getConfig().getPassword()) {
+	// 	return (Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getNickName()));
+	// }
+	return ("");
 }

@@ -11,7 +11,7 @@
 
 class Execute {
  private:
-	 // std::string	cmdPass(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 std::string	cmdPass(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 // std::string	cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 // std::string	cmdUser(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 // std::string	cmdUserMode(User* user, const ParsedMessage& parsedMsg, Info* info);
