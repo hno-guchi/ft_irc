@@ -14,9 +14,9 @@ SRCS = Server.cpp ServerSocket.cpp Config.cpp Info.cpp \
 	   Parser.cpp \
 	   Execute.cpp \
 	   Reply.cpp \
-	   cmdPass.cpp \
+	   cmdPass.cpp cmdNick.cpp cmdUser.cpp cmdUserMode.cpp \
 	   cmdChannelMode.cpp cmdInvite.cpp cmdJoin.cpp \
-	   error.cpp # cmdNick.cpp cmdUser.cpp cmdUserMode.cpp cmdOper.cpp cmdQuit.cpp
+	   error.cpp # cmdOper.cpp cmdQuit.cpp
 	   # cmdPong.cpp \
 	   # cmdNotice.cpp cmdPrivmsg.cpp
 	   # cmdPart.cpp cmdChannelMode.cpp cmdInvite.cpp cmdKick.cpp cmdTopic.cpp

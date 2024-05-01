@@ -24,56 +24,50 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-int	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info) {
-	// TODO(hnoguchi): Parser classでバリデーションを行う。
-	if (parsedMsg.getParams().size() == 0) {
-		return (kERR_NONICKNAMEGIVEN);
-	}
-	// TODO(hnoguchi): Parser classでバリデーションを行う。
-	if (parsedMsg.getParams().size() > 1) {
-		return (kERR_ERRONEUSNICKNAME);
-	}
-	// TODO(hnoguchi): Parser classでバリデーションを行う。
-	if (parsedMsg.getParams()[0].getValue().size() > 9) {
-		return (kERR_ERRONEUSNICKNAME);
-	}
-	// TODO(hnoguchi): ユーザ登録時の処理で、既に使用されている場合、sufixに数字を付与し、再度重複チェックを行う。
+std::string	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	try {
+		// TODO(hnoguchi): Parser classでバリデーションを行う？
+		if (parsedMsg.getParams().size() == 0) {
+			return (Reply::errNoNickNameGiven(kERR_NONICKNAMEGIVEN, user->getNickName()));
+		}
+		// if (parsedMsg.getParams().size() > 1) {
+		// 	return ("");
+		// }
+		// TODO(hnoguchi): Parser classでバリデーションを行う。
+		if (parsedMsg.getParams()[0].getValue().size() > 9) {
+			return (Reply::errOneUsNickName(kERR_ERRONEUSNICKNAME, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+		}
 		std::string	nick = parsedMsg.getParams()[0].getValue();
 		if (!(user->getRegistered() & kNickCommand)) {
-			// std::string							nick = parsedMsg.getParams()[0].getValue();
 			char								sufix = '1';
 			std::vector<User>::const_iterator	it = info->getUsers().begin();
 			while (it != info->getUsers().end()) {
 				if (it->getNickName() == nick) {
 					sufix += 1;
-					nick = nick + sufix;
+					nick = parsedMsg.getParams()[0].getValue() + sufix;
 					it = info->getUsers().begin();
 				} else {
 					it += 1;
 				}
 			}
-			// user->setNickName(nick);
 		} else {
 			for (std::vector<User>::const_iterator it = info->getUsers().begin(); it != info->getUsers().end(); it++) {
-				// if (it->getNickName() == parsedMsg.getParams()[0].getValue()) {
 				if (it->getNickName() == nick) {
-					return (kERR_NICKNAMEINUSE);
+					return (Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getNickName(), nick));
 				}
 			}
-			// user->setNickName(parsedMsg.getParams()[0].getValue());
 		}
 		// TODO(hnoguchi): 最初のニックネーム登録処理で、NICKコマンドを送信したい。
+		user->setNickName(nick);
 		std::string	msg = ":" + user->getNickName() + " NICK :" + nick + "\r\n";
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		// TODO(hnoguchi): 戻り値の確認
-		user->setNickName(nick);
-		return (0);
+		return ("");
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
-		return (kERR_ERRONEUSNICKNAME);
+		return ("");
 	}
 	// TODO(hnoguchi): Server間通信機能を追加するときは、channelに所属するユーザのnickもチェックする。
-	return (0);
+	return ("");
 }
