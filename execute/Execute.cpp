@@ -61,8 +61,8 @@ std::string	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info
 	// }
 	// if (parsedMsg.getCommand() == "PING") {
 	// 	return (cmdPong(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "PASS") {
-	// 	return (cmdPass(user, parsedMsg, info));
+	if (parsedMsg.getCommand() == "PASS") {
+		return (cmdPass(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "NICK") {
 	// 	return (cmdNick(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "USER") {
@@ -71,7 +71,7 @@ std::string	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info
 	// 	return (cmdOper(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "QUIT") {
 	// 	return (cmdQuit(user, parsedMsg, info));
-	if (parsedMsg.getCommand() == "JOIN") {
+	} else if (parsedMsg.getCommand() == "JOIN") {
 		return (cmdJoin(user, parsedMsg, info));
 	// } else if (parsedMsg.getCommand() == "PART") {
 	// 	return (cmdPart(user, parsedMsg, info));
