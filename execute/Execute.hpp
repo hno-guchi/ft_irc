@@ -21,11 +21,11 @@ class Execute {
 	 // std::string	cmdNotice(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 // std::string	cmdPrivmsg(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info);
-	 // std::string	cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 std::string	cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info);
-	 // std::string	cmdKick(User* user, const ParsedMessage& parsedMsg, Info* info);
-	 // std::string	cmdTopic(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 std::string	cmdKick(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 std::string	cmdTopic(User* user, const ParsedMessage& parsedMsg, Info* info);
  public:
 	 Execute();
 	 ~Execute();

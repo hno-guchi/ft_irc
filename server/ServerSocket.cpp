@@ -15,6 +15,7 @@ ServerSocket::ServerSocket(unsigned short port) :
 		memset(&this->address_, 0, sizeof(this->address_));
 		this->address_.sin_family = AF_INET;
 		this->address_.sin_addr.s_addr = INADDR_ANY;
+		// this->address_.sin_addr.s_addr = inet_addr("224.10.10.2");
 		this->address_.sin_port = htons(port);
 
 		if (bind(this->fd_, reinterpret_cast<struct sockaddr*>(&this->address_), sizeof(this->address_)) < 0) {

@@ -26,28 +26,41 @@ std::string	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, In
 			if (!reply.empty()) {
 				return (reply);
 			}
-			user->setRegistered(kPassCommand);
+			// user->setRegistered(kPassCommand);
 			return ("");
-		}
-	} else if (!(user->getRegistered() & kNickCommand)) {
-		if (parsedMsg.getCommand() == "NICK") {
-			std::string	reply = this->cmdNick(user, parsedMsg, info);
-			if (!reply.empty()) {
-				return (reply);
-			}
-			user->setRegistered(kNickCommand);
-			return ("");
-		}
-	} else if (!(user->getRegistered() & kUserCommand)) {
-		if (parsedMsg.getCommand() == "USER") {
-			std::string	reply = this->cmdUser(user, parsedMsg, info);
-			if (!reply.empty()) {
-				return (reply);
-			}
-			user->setRegistered(kUserCommand);
-			return (Reply::rplWelcome(*info, *user));
 		}
 	}
+	// } else if (!(user->getRegistered() & kNickCommand)) {
+	if (!(user->getRegistered() & kNickCommand)) {
+		if (parsedMsg.getCommand() == "NICK") {
+			if (!(user->getRegistered() & kPassCommand)) {
+				return ("");
+			}
+			std::string	reply = this->cmdNick(user, parsedMsg, info);
+			// if (!reply.empty()) {
+			// 	return (reply);
+			// }
+			// user->setRegistered(kNickCommand);
+			return ("");
+		}
+	}
+	// } else if (!(user->getRegistered() & kUserCommand)) {
+	if (!(user->getRegistered() & kUserCommand)) {
+		if (parsedMsg.getCommand() == "USER") {
+			if (!(user->getRegistered() & kPassCommand) || !(user->getRegistered() & kNickCommand)) {
+				return ("");
+			}
+			std::string	reply = this->cmdUser(user, parsedMsg, info);
+			// if (!reply.empty()) {
+			// 	return (reply);
+			// }
+			// user->setRegistered(kUserCommand);
+			if (user->getRegistered() & kUserCommand) {
+				return (Reply::rplWelcome(*info, *user));
+			}
+		}
+	}
+	// return ("");
 	return (Reply::errNotRegistered(kERR_NOTREGISTERED, user->getNickName()));
 }
 
@@ -67,14 +80,14 @@ std::string	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info
 		return (cmdQuit(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "JOIN") {
 		return (cmdJoin(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "PART") {
-	// 	return (cmdPart(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "KICK") {
-	// 	return (cmdKick(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "PART") {
+		return (cmdPart(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "KICK") {
+		return (cmdKick(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "INVITE") {
 		return (cmdInvite(user, parsedMsg, info));
-	// } else if (parsedMsg.getCommand() == "TOPIC") {
-	// 	return (cmdTopic(user, parsedMsg, info));
+	} else if (parsedMsg.getCommand() == "TOPIC") {
+		return (cmdTopic(user, parsedMsg, info));
 	// TODO(hnoguchi): userMode();かchannelMode();なのか判定する処理が必要
 	// TODO(hnoguchi): Paramsのtypeにchannelやuser
 	} else if (parsedMsg.getCommand() == "MODE") {

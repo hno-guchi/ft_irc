@@ -23,9 +23,9 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-int	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	if (parsedMsg.getParams().size() == 0) {
-		return (kERR_NEEDMOREPARAMS);
+		return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 	}
 	// TODO(hnoguchi): std::vector<channel>::const_iterator	Info::getChannel(const std::string& name);を実装する？
 	std::vector<Channel>::iterator	channelsIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
@@ -35,7 +35,7 @@ int	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info) {
 		}
 	}
 	if (channelsIt == info->getChannels().end()) {
-		return (kERR_NOSUCHCHANNEL);
+		return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 	}
 	// TODO(hnoguchi): std::vector<channel>::const_iterator	Channel::isOnMember(const std::string& nickName);を実装する？
 	std::vector<User *>::iterator	userIt = const_cast<std::vector<User*>&>(channelsIt->getMembers()).begin();
@@ -44,9 +44,8 @@ int	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info) {
 			break;
 		}
 	}
-
 	if (userIt == channelsIt->getMembers().end()) {
-		return (kERR_NOTONCHANNEL);
+		return (Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 	}
 	// TODO(hnoguchi): Infoクラスに指定のチャンネルから指定のユーザを削除する関数を実装すること
 	channelsIt->eraseMember(user);
@@ -59,5 +58,5 @@ int	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	}
 	debugPrintSendMessage("SendMsg", msg);
 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-	return (0);
+	return ("");
 }
