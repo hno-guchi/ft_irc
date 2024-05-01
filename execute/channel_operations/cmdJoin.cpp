@@ -82,12 +82,12 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 			if (channelIt->getTopic().size() > 0) {
 				return (Reply::rplTopic(kRPL_TOPIC, user->getNickName(), channelIt->getName(), channelIt->getTopic()));
 			}
-			return (Reply::rplNoTopic(kRPL_TOPIC, user->getNickName(), channelIt->getName()));
+			return (Reply::rplNoTopic(kRPL_NOTOPIC, user->getNickName(), channelIt->getName()));
 		}
 		// <channel>が存在しない場合
 		// サーバが管理するchannel数が最大数を超えている場合
 		if (info->getChannels().size() >= static_cast<unsigned long>(info->getConfig().getMaxChannel())) {
-			return (Reply::errNoSuchChannel(kERR_TOOMANYCHANNELS, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		// <channel>を作成
 		info->addChannel(Channel(parsedMsg.getParams()[0].getValue()));
@@ -102,7 +102,7 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 				debugPrintSendMessage("SendMsg", msg);
 				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 				// TODO(hnoguchi): Check error
-				return (Reply::rplNoTopic(kRPL_TOPIC, user->getNickName(), channelIt->getName()));
+				return (Reply::rplNoTopic(kRPL_NOTOPIC, user->getNickName(), channelIt->getName()));
 			}
 		}
 

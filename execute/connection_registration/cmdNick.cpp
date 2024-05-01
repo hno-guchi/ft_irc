@@ -26,19 +26,24 @@
 
 std::string	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	try {
-		// TODO(hnoguchi): Parser classでバリデーションを行う？
-		if (parsedMsg.getParams().size() == 0) {
-			return (Reply::errNoNickNameGiven(kERR_NONICKNAMEGIVEN, user->getNickName()));
-		}
-		// if (parsedMsg.getParams().size() > 1) {
-		// 	return ("");
-		// }
-		// TODO(hnoguchi): Parser classでバリデーションを行う。
-		if (parsedMsg.getParams()[0].getValue().size() > 9) {
-			return (Reply::errOneUsNickName(kERR_ERRONEUSNICKNAME, user->getNickName(), parsedMsg.getParams()[0].getValue()));
-		}
-		std::string	nick = parsedMsg.getParams()[0].getValue();
+		std::string	nick;
 		if (!(user->getRegistered() & kNickCommand)) {
+			// TODO(hnoguchi): Parser classでバリデーションを行う？
+			if (parsedMsg.getParams().size() == 0) {
+				// return (Reply::errNoNickNameGiven(kERR_NONICKNAMEGIVEN, user->getNickName()));
+				return ("");
+			}
+			// if (parsedMsg.getParams().size() > 1) {
+			// 	return ("");
+			// }
+			// TODO(hnoguchi): Parser classでバリデーションを行う。
+			if (parsedMsg.getParams()[0].getValue().size() > 9) {
+				// return (Reply::errOneUsNickName(kERR_ERRONEUSNICKNAME, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+				return ("");
+			}
+			// std::string	nick = parsedMsg.getParams()[0].getValue();
+			nick = parsedMsg.getParams()[0].getValue();
+		// if (!(user->getRegistered() & kNickCommand)) {
 			char								sufix = '1';
 			std::vector<User>::const_iterator	it = info->getUsers().begin();
 			while (it != info->getUsers().end()) {
@@ -50,7 +55,19 @@ std::string	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* i
 					it += 1;
 				}
 			}
+			user->setRegistered(kNickCommand);
 		} else {
+			// TODO(hnoguchi): Parser classでバリデーションを行う？
+			if (parsedMsg.getParams().size() == 0) {
+				return (Reply::errNoNickNameGiven(kERR_NONICKNAMEGIVEN, user->getNickName()));
+			}
+			// if (parsedMsg.getParams().size() > 1) {
+			// 	return ("");
+			// }
+			// TODO(hnoguchi): Parser classでバリデーションを行う。
+			if (parsedMsg.getParams()[0].getValue().size() > 9) {
+				return (Reply::errOneUsNickName(kERR_ERRONEUSNICKNAME, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+			}
 			for (std::vector<User>::const_iterator it = info->getUsers().begin(); it != info->getUsers().end(); it++) {
 				if (it->getNickName() == nick) {
 					return (Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getNickName(), nick));
