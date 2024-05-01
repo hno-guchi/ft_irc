@@ -94,15 +94,22 @@ std::string	Reply::rplWelcome(const Info& info, const User& user) {
 
 std::string	Reply::rplUModeIs(int num, const std::string& toName, const User& user) {
 	try {
-		// std::string	message = "221 " + user.getNickName();
 		std::string	message = Reply::rplCmdToName(num, toName);
 
 		// message += user.getNickName();
 		if (user.getModes() & kAway) {
 			message += "+a";
-		} else if (user.getModes() & kOperator) {
+		}
+		if (user.getModes() & kOperator) {
+			if (message.size() > 0) {
+				message += " ";
+			}
 			message += "+o";
-		} else if (user.getModes() & kRestrict) {
+		}
+		if (user.getModes() & kRestrict) {
+			if (message.size() > 0) {
+				message += " ";
+			}
 			message += "+r";
 		}
 		message += Reply::delimiter_;

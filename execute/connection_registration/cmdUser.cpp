@@ -22,14 +22,14 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-int	Execute::cmdUser(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdUser(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	(void)info;
 	// TODO(hnoguchi): Parser classでバリデーションを行う。
 	if (parsedMsg.getParams().size() < 4) {
-		return (kERR_NEEDMOREPARAMS);
+		return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, "*", parsedMsg.getCommand()));
 	}
 	if (user->getRegistered() & kUserCommand) {
-		return (kERR_ALREADYREGISTRED);
+		return (Reply::errAlreadyRegistered(kERR_ALREADYREGISTRED, user->getNickName()));
 	}
 	try {
 		user->setUserName(parsedMsg.getParams()[0].getValue());
@@ -39,7 +39,7 @@ int	Execute::cmdUser(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		// TODO(hnoguchi): 適切なエラーナンバーを返す。
-		return (-1);
+		return ("");
 	}
-	return (0);
+	return ("");
 }

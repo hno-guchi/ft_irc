@@ -240,6 +240,11 @@ void	Server::handleReceivedData(int i) {
 					// コマンド実行処理
 					replyMsg = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
 				}
+				if (!replyMsg.empty()) {
+					std::string	buf = replyMsg;
+					replyMsg = Reply::rplFromName(this->info_.getConfig().getServerName());
+					replyMsg += buf;
+				}
 			} else {
 				// リプライメッセージの作成
 				replyMsg = reply.createMessage(replyNum, this->info_.getUser(i - 1), this->info_, parser.getParsedMessage());

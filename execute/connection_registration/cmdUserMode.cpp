@@ -28,55 +28,55 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-int	Execute::cmdUserMode(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdUserMode(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	(void)info;
-	if (parsedMsg.getParams().size() < 1) {
-		return (kERR_NEEDMOREPARAMS);
-	}
-	if (user->getNickName() != parsedMsg.getParams()[0].getValue()) {
-		return (kERR_USERSDONTMATCH);
-	}
-	if (parsedMsg.getParams().size() == 1) {
-		return (kRPL_UMODEIS);
-	}
-	if (parsedMsg.getParams()[1].getValue().size() != 2) {
-		return (kERR_UMODEUNKNOWNFLAG);
-	}
-	if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
-		return (kERR_UMODEUNKNOWNFLAG);
-	}
-	// TODO(hnoguchi): "+oOr"のような文字列はParser classで"+o", "+O", "+r"に分割する。
-	if (parsedMsg.getParams()[1].getValue()[0] == '-') {
-		if (parsedMsg.getParams()[1].getValue()[1] != 'o') {
-			return (kERR_UMODEUNKNOWNFLAG);
+	try {
+		if (parsedMsg.getParams().size() < 1) {
+			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 		}
-		user->unsetMode(kOperator);
-		std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :";
-		msg +=  "-o\r\n";
-		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-		// TODO(hnoguchi): 戻り値の確認
-		return (0);
-	}
-	if (parsedMsg.getParams()[1].getValue()[0] == '+') {
-		if (parsedMsg.getParams()[1].getValue()[1] != 'r') {
-			return (kERR_UMODEUNKNOWNFLAG);
+		if (user->getNickName() != parsedMsg.getParams()[0].getValue()) {
+			return (Reply::errUsersDontMatch(kERR_USERSDONTMATCH, user->getNickName()));
 		}
-		user->unsetMode(kOperator);
-		user->setMode(kRestrict);
-		try {
-			std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :";
-			msg +=  "+r\r\n";
-			msg += ":" + user->getNickName() + " MODE " + user->getNickName() + " :";
-			msg +=  "-o\r\n";
+		if (parsedMsg.getParams().size() == 1) {
+			return (Reply::rplUModeIs(kRPL_UMODEIS, user->getNickName(), *user));
+		}
+		if (parsedMsg.getParams()[1].getValue().size() != 2) {
+			return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
+		}
+		if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
+			return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
+		}
+		// TODO(hnoguchi): "+oOr"のような文字列はParser classで"+o", "+O", "+r"に分割する。
+		if (parsedMsg.getParams()[1].getValue()[0] == '-') {
+			if (parsedMsg.getParams()[1].getValue()[1] != 'o') {
+				return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
+			}
+			user->unsetMode(kOperator);
+			std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :-o\r\n";
 			debugPrintSendMessage("SendMsg", msg);
 			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			// TODO(hnoguchi): 戻り値の確認
-			return (0);
-		} catch (std::exception& e) {
-			std::cerr << e.what() << std::endl;
-			return (-1);
+			return ("");
 		}
+		if (parsedMsg.getParams()[1].getValue()[0] == '+') {
+			if (parsedMsg.getParams()[1].getValue()[1] != 'r') {
+				return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
+			}
+			user->unsetMode(kOperator);
+			user->setMode(kRestrict);
+			std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :+r\r\n";
+			if (user->getModes() & kOperator) {
+				msg += ":" + user->getNickName() + " MODE " + user->getNickName() + " :-o\r\n";
+			}
+			debugPrintSendMessage("SendMsg", msg);
+			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// TODO(hnoguchi): 戻り値の確認
+			return ("");
+		}
+		return ("");
+	} catch (std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return ("");
 	}
-	return (kERR_UMODEUNKNOWNFLAG);
+	return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
 }
