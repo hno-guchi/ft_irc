@@ -42,7 +42,7 @@ class Channel {
 	 // GETTER
 	const std::string&			getName() const;
 	const std::string&			getTopic() const;
-	const std::string&			getkey() const;
+	const std::string&			getKey() const;
 	int							getLimit() const;
 	unsigned int				getModes() const;
 	const std::vector<User*>&	getMembers() const;

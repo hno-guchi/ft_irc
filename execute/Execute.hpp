@@ -20,7 +20,7 @@ class Execute {
 	 // std::string	cmdPong(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 // std::string	cmdNotice(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 // std::string	cmdPrivmsg(User* user, const ParsedMessage& parsedMsg, Info* info);
-	 // std::string	cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 std::string	cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 // std::string	cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info);
