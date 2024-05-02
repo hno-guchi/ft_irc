@@ -53,7 +53,7 @@ std::string	Execute::cmdTopic(User* user, const ParsedMessage& parsedMsg, Info* 
 		if (operIt == channelIt->getOperators().end()) {
 			return (Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getNickName(), user->getNickName(), parsedMsg.getParams()[1].getValue()));
 		}
-		// <topic>がない場合、トピックを返す
+		// <topic>がない場合、RPL_(NO)TOPICを返す
 		if (parsedMsg.getParams().size() == 1) {
 			if (channelIt->getTopic().empty()) {
 				return (Reply::rplNoTopic(kRPL_NOTOPIC, user->getNickName(), channelIt->getName()));

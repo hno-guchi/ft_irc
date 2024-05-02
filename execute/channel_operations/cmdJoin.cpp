@@ -53,7 +53,15 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 		if (channelIt != const_cast<std::vector<Channel> &>(info->getChannels()).end()) {
 			// Check 473 ERR_INVITEONLYCHAN  "<channel> :Cannot join channel (+i)"
 			if (channelIt->getModes() & kInviteOnly) {
-				return (Reply::errInviteOnlyChan(kERR_INVITEONLYCHAN, user->getNickName(), channelIt->getName()));
+				std::vector<User *>::const_iterator	invitedIt = channelIt->getInvited().begin();
+				for (; invitedIt != channelIt->getInvited().end(); invitedIt++) {
+					if ((*invitedIt)->getNickName() == user->getNickName()) {
+						break;
+					}
+				}
+				if (invitedIt == channelIt->getInvited().end()) {
+					return (Reply::errInviteOnlyChan(kERR_INVITEONLYCHAN, user->getNickName(), channelIt->getName()));
+				}
 			}
 			// 475 ERR_BADCHANNELKEY   "<channel> :Cannot join channel (+k)"
 			if (channelIt->getModes() & kKey) {
@@ -71,18 +79,44 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 			}
 			// userを<channel>に追加
 			channelIt->addMember(user);
+			channelIt->eraseInvited(user);
 			std::string	msg = ":" + user->getNickName() + " JOIN " + channelIt->getName() + "\r\n";
 			debugPrintSendMessage("SendMsg", msg);
 			for (std::vector<User *>::const_iterator memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
 				sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 				// TODO(hnoguchi): Check error
 			}
-			// TODO(hnoguchi): <channel>情報を送る。RPL_CHANNELMODEIS
-			// sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			if (channelIt->getTopic().size() > 0) {
-				return (Reply::rplTopic(kRPL_TOPIC, user->getNickName(), channelIt->getName(), channelIt->getTopic()));
+				msg = ":" + info->getConfig().getServerName() + " TOPIC " + channelIt->getName() + " :" + channelIt->getTopic() + "\r\n";
+				debugPrintSendMessage("SendMsg", msg);
+				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			}
-			return (Reply::rplNoTopic(kRPL_NOTOPIC, user->getNickName(), channelIt->getName()));
+			if (channelIt->getModes() & kInviteOnly) {
+				msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+i\r\n";
+				debugPrintSendMessage("SendMsg", msg);
+				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			}
+			if (channelIt->getModes() & kKey) {
+				msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+k " + channelIt->getKey() + "\r\n";
+				debugPrintSendMessage("SendMsg", msg);
+				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			}
+			if (channelIt->getModes() & kLimit) {
+				msg += ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+l " + std::to_string(channelIt->getLimit()) + "\r\n";
+				debugPrintSendMessage("SendMsg", msg);
+				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			}
+			if (channelIt->getModes() & kRestrictTopicSetting) {
+				msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+t\r\n";
+				debugPrintSendMessage("SendMsg", msg);
+				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			}
+			for (std::vector<User *>::const_iterator operIt = channelIt->getOperators().begin(); operIt != channelIt->getOperators().end(); operIt++) {
+				msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " +o " + (*operIt)->getNickName() + "\r\n";
+				debugPrintSendMessage("SendMsg", msg);
+				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			}
+			return ("");
 		}
 		// <channel>が存在しない場合
 		// サーバが管理するchannel数が最大数を超えている場合
@@ -92,7 +126,6 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 		// <channel>を作成
 		info->addChannel(Channel(parsedMsg.getParams()[0].getValue()));
 		for (std::vector<Channel>::iterator it = const_cast<std::vector<Channel> &>(info->getChannels()).begin(); it != const_cast<std::vector<Channel> &>(info->getChannels()).end(); it++) {
-			std::cerr << "In for()" << std::endl;
 			// userを追加してメッセージを送信
 			if (parsedMsg.getParams()[0].getValue() == it->getName()) {
 				it->addMember(user);
@@ -103,10 +136,9 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 				debugPrintSendMessage("SendMsg", msg);
 				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 				// TODO(hnoguchi): Check error
-				return (Reply::rplNoTopic(kRPL_NOTOPIC, user->getNickName(), channelIt->getName()));
+				return ("");
 			}
 		}
-
 	} catch (std::exception& e) {
 		std::cerr << RED << e.what() << END << std::endl;
 	}

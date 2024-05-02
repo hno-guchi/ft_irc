@@ -24,6 +24,7 @@ class Channel {
 	 unsigned int		modes_;
 	 // TODO(hnoguchi): ChannelUsers classにする？
 	 std::vector<User*>	members_;
+	 std::vector<User*>	invited_;
 	 std::vector<User*>	operators_;
 
  public:
@@ -38,6 +39,7 @@ class Channel {
 	 void						setMode(kChannelMode mode);
 	 void						unsetMode(kChannelMode mode);
 	 void						setMember(User* user);
+	 void						setInvited(User* user);
 	 void						setOperator(User* user);
 	 // GETTER
 	const std::string&			getName() const;
@@ -46,12 +48,15 @@ class Channel {
 	int							getLimit() const;
 	unsigned int				getModes() const;
 	const std::vector<User*>&	getMembers() const;
+	const std::vector<User*>&	getInvited() const;
 	const std::vector<User*>&	getOperators() const;
 
 	// TODO(hnoguchi): ChannelUsers classにする？
 	void						addMember(User* user);
+	void						addInvited(User* user);
 	void						addOperator(User* user);
 	void						eraseMember(User* user);
+	void						eraseInvited(User* user);
 	void						eraseOperator(User* oper);
 };
 

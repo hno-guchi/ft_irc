@@ -27,7 +27,8 @@ std::string	Reply::rplCmdToName(int num, const std::string& toName) {
 	try {
 		std::stringstream	ss;
 		ss << num;
-		std::string	message = ss.str() + " " + toName + " :";
+		// std::string	message = ss.str() + " " + toName + " :";
+		std::string	message = ss.str() + " " + toName + " ";
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -120,7 +121,7 @@ std::string	Reply::rplUModeIs(int num, const std::string& toName, const User& us
 	}
 }
 
-std::string	Reply::rplChannelModeIs(int num, const std::string& toName, const std::string& channel, const std::string& mode, const std::string& param) {
+std::string	Reply::rplChannelModeIs(int num, const std::string& toName, const std::string& channel, const char mode, const std::string& param) {
 	try {
 		// std::string	message = "324 " + channel + " " + mode;
 		std::string	message = Reply::rplCmdToName(num, toName);
@@ -572,9 +573,9 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 			} else if (num == kRPL_CHANNELMODEIS) {
 				msg += this->rplFromName(info.getConfig().getServerName());
 				if (parsedMsg.getParams().size() > 2) {
-					msg += this->rplChannelModeIs(kRPL_CHANNELMODEIS, user.getNickName(), parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[2].getValue());
+					msg += this->rplChannelModeIs(kRPL_CHANNELMODEIS, user.getNickName(), parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue()[1], parsedMsg.getParams()[2].getValue());
 				} else {
-					msg += this->rplChannelModeIs(kRPL_CHANNELMODEIS, user.getNickName(), parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue(), "");
+					msg += this->rplChannelModeIs(kRPL_CHANNELMODEIS, user.getNickName(), parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue()[1], "");
 				}
 			} else if (num == kRPL_NOTOPIC) {
 				// TOPIC

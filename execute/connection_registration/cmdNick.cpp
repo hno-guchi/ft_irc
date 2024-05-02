@@ -59,8 +59,8 @@ std::string	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* i
 					return (Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getNickName(), nick));
 				}
 			}
-			user->setNickName(nick);
 			std::string	msg = ":" + user->getNickName() + " NICK :" + nick + "\r\n";
+			user->setNickName(nick);
 			debugPrintSendMessage("SendMsg", msg);
 			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			// TODO(hnoguchi): 戻り値の確認

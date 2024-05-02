@@ -77,7 +77,8 @@ std::string	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info*
 				return (Reply::errUserOnChannel(kERR_USERONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue(), parsedMsg.getParams()[1].getValue()));
 			}
 		}
-		channelIt->addMember(&(const_cast<User &>(info->getUser(targetUserIt->getIndex() - 1))));
+		// channelIt->addMember(&(const_cast<User &>(info->getUser(targetUserIt->getIndex() - 1))));
+		channelIt->addInvited(&(const_cast<User &>(info->getUser(targetUserIt->getIndex() - 1))));
 		std::string	msg = ":" + user->getNickName() + " INVITE " + targetUserIt->getNickName() + " " + channelIt->getName() + "\r\n";
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(targetUserIt->getFd(), msg.c_str(), msg.size());
