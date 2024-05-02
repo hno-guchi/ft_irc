@@ -42,7 +42,7 @@ std::string	Execute::cmdNotice(User* user, const ParsedMessage& parsedMsg, Info*
 			}
 		}
 		// メッセージの作成
-		std::string	message = ":" + user->getNickName() + " NOTICE " + parsedMsg.getParams()[0].getValue() + " " + parsedMsg.getParams()[1].getValue() + "\r\n";
+		std::string	message = ":" + user->getNickName() + " NOTICE " + parsedMsg.getParams()[0].getValue() + " :" + parsedMsg.getParams()[1].getValue() + "\r\n";
 		debugPrintSendMessage("cmdNotice", message);
 		// メッセージの送信先がuserの場合
 		if (it != info->getUsers().end()) {

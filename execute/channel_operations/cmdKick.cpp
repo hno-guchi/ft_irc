@@ -76,17 +76,27 @@ std::string	Execute::cmdKick(User* user, const ParsedMessage& parsedMsg, Info* i
 		// <channel>から<user>を削除
 		channelIt->eraseMember(*targetUserIt);
 		channelIt->eraseOperator(*targetUserIt);
-		// <user>にKICKメッセージを送信
-		std::string	msg = ":" + user->getNickName() + " KICK " + channelIt->getName() + " " + parsedMsg.getParams()[1].getValue();
+		// <user>にPARTメッセージを送信
+		std::string	msg = ":" + parsedMsg.getParams()[1].getValue() + " PART " + channelIt->getName();
+		// if (parsedMsg.getParams().size() > 2) {
+		// 	msg += " :" + parsedMsg.getParams()[2].getValue() + "\r\n";
+		// } else {
+			msg += " :" + parsedMsg.getParams()[1].getValue() + "\r\n";
+		// }
+		debugPrintSendMessage("SendMsg", msg);
+		sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+		msg = ":" + user->getNickName() + " KICK " + channelIt->getName() + " " + parsedMsg.getParams()[1].getValue();
 		if (parsedMsg.getParams().size() > 2) {
 			msg += " :" + parsedMsg.getParams()[2].getValue();
 		}
 		msg += "\r\n";
 		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+		for (std::vector<User *>::const_iterator memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
+			sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
+		}
+		return ("");
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		return ("");
 	}
-	return ("");
 }

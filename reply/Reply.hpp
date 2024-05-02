@@ -88,7 +88,7 @@ class Reply {
 
 	 static std::string	rplUModeIs(int num, const std::string& toName, const User& user);
 	 // TODO(hnoguchi): const Channel& channelに変更し、全てのmode情報を渡す。
-	 static std::string	rplChannelModeIs(int num, const std::string& toName, const std::string& channel, const std::string& mode, const std::string& param);
+	 static std::string	rplChannelModeIs(int num, const std::string& toName, const std::string& channel, const char mode, const std::string& param);
 	 static std::string	rplNoTopic(int num, const std::string& toName, const std::string& channel);
 	 static std::string	rplTopic(int num, const std::string& toName, const std::string& channel, const std::string& topic);
 	 static std::string	rplInviting(int num, const std::string& toName, const std::string& channel, const std::string& nickName);

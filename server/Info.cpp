@@ -56,3 +56,12 @@ void	Info::eraseUser(User* user) {
 		}
 	}
 }
+
+void	Info::eraseChannel(Channel* channel) {
+	for (std::vector<Channel>::iterator it = this->channels_.begin(); it != this->channels_.end(); it++) {
+		if (it->getName() == channel->getName()) {
+			this->channels_.erase(it);
+			return;
+		}
+	}
+}

@@ -84,21 +84,25 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 			// TODO(hnoguchi): Info::getChannelByName(std::string name);を実装する。
 			// TODO(hnoguchi): Channel::getModesStr();を実装する。
 			if (parsedMsg.getParams()[0].getValue() == channelIt->getName()) {
-				std::string		modesStr = "";
+				std::string		reply;
 				if (channelIt->getModes() & kInviteOnly) {
-					modesStr += "i";
+					reply = Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'i', "");
 				}
 				if (channelIt->getModes() & kKey) {
-					modesStr += "k";
+					reply += Reply::rplFromName(user->getNickName());
+					reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'k', channelIt->getKey());
 				}
 				if (channelIt->getModes() & kLimit) {
-					modesStr += "l";
+					reply += Reply::rplFromName(user->getNickName());
+					std::stringstream	ss;
+					ss << channelIt->getLimit();
+					reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'l', ss.str());
 				}
 				if (channelIt->getModes() & kRestrictTopicSetting) {
-					modesStr += "t";
+					reply += Reply::rplFromName(user->getNickName());
+					reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 't', "");
 				}
-				// TODO(hnoguchi): Reply::rplChannelModeIs();の仕様を変更する。
-				return (Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), modesStr, ""));
+				return (reply);
 			}
 		}
 		if (parsedMsg.getParams()[1].getValue().size() != 2) {

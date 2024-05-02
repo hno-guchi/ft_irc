@@ -84,6 +84,25 @@ void	Channel::setMember(User* user) {
 	}
 }
 
+void	Channel::setInvited(User* user) {
+	// TODO(hnoguchi): バリデーションは別でやる？
+	if (user == NULL) {
+		// throw std::invalid_argument("Invalid argument");
+		return;
+	}
+	// TODO(hnoguchi): バリデーションは別でやる？
+	if ((this->modes_ & kLimit) && \
+			static_cast<int>(this->members_.size()) >= this->limit_) {
+		// throw std::invalid_argument("Channel is full");
+		return;
+	}
+	try {
+		this->invited_.push_back(user);
+	} catch (std::exception& e) {
+		throw;
+	}
+}
+
 void	Channel::setOperator(User* user) {
 	try {
 		this->operators_.push_back(user);
@@ -116,6 +135,10 @@ const std::vector<User*>&	Channel::getMembers() const {
 	return (this->members_);
 }
 
+const std::vector<User*>&	Channel::getInvited() const {
+	return (this->invited_);
+}
+
 const std::vector<User*>&	Channel::getOperators() const {
 	return (this->operators_);
 }
@@ -123,6 +146,14 @@ const std::vector<User*>&	Channel::getOperators() const {
 void	Channel::addMember(User* user) {
 	try {
 		this->members_.push_back(user);
+	} catch (std::exception& e) {
+		throw;
+	}
+}
+
+void	Channel::addInvited(User* user) {
+	try {
+		this->invited_.push_back(user);
 	} catch (std::exception& e) {
 		throw;
 	}
@@ -140,6 +171,15 @@ void	Channel::eraseMember(User* user) {
 	for (std::vector<User *>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
 		if (*it == user) {
 			this->members_.erase(it);
+			return;
+		}
+	}
+}
+
+void	Channel::eraseInvited(User* user) {
+	for (std::vector<User *>::iterator it = this->invited_.begin(); it != this->invited_.end(); it++) {
+		if (*it == user) {
+			this->invited_.erase(it);
 			return;
 		}
 	}

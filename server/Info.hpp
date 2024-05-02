@@ -27,6 +27,7 @@ class Info {
 	 void	addUser(const User& user);
 	 void	addChannel(const Channel& channel);
 	 void	eraseUser(User* user);
+	 void	eraseChannel(Channel* channel);
 };
 
 #endif

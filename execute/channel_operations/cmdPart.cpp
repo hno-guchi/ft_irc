@@ -24,39 +24,49 @@
 #include "../../reply/Reply.hpp"
 
 std::string	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info) {
-	if (parsedMsg.getParams().size() == 0) {
-		return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
-	}
-	// TODO(hnoguchi): std::vector<channel>::const_iterator	Info::getChannel(const std::string& name);を実装する？
-	std::vector<Channel>::iterator	channelsIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
-	for (; channelsIt != info->getChannels().end(); channelsIt++) {
-		if (channelsIt->getName() == parsedMsg.getParams()[0].getValue()) {
-			break;
+	try {
+		if (parsedMsg.getParams().size() == 0) {
+			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 		}
-	}
-	if (channelsIt == info->getChannels().end()) {
-		return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
-	}
-	// TODO(hnoguchi): std::vector<channel>::const_iterator	Channel::isOnMember(const std::string& nickName);を実装する？
-	std::vector<User *>::iterator	userIt = const_cast<std::vector<User*>&>(channelsIt->getMembers()).begin();
-	for (; userIt != channelsIt->getMembers().end(); channelsIt++) {
-		if ((*userIt)->getNickName() == user->getNickName()) {
-			break;
+		// TODO(hnoguchi): std::vector<channel>::const_iterator	Info::getChannel(const std::string& name);を実装する？
+		std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
+		for (; channelIt != info->getChannels().end(); channelIt++) {
+			if (channelIt->getName() == parsedMsg.getParams()[0].getValue()) {
+				break;
+			}
 		}
+		if (channelIt == info->getChannels().end()) {
+			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+		}
+		// TODO(hnoguchi): std::vector<channel>::const_iterator	Channel::isOnMember(const std::string& nickName);を実装する？
+		std::vector<User *>::iterator	userIt = const_cast<std::vector<User*>&>(channelIt->getMembers()).begin();
+		for (; userIt != channelIt->getMembers().end(); userIt++) {
+			if ((*userIt)->getNickName() == user->getNickName()) {
+				break;
+			}
+		}
+		if (userIt == channelIt->getMembers().end()) {
+			return (Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+		}
+		// TODO(hnoguchi): Infoクラスに指定のチャンネルから指定のユーザを削除する関数を実装すること
+		channelIt->eraseMember(user);
+		channelIt->eraseOperator(user);
+		std::string	msg = ":" + user->getNickName() + " PART " + channelIt->getName() + " :";
+		if (parsedMsg.getParams().size() > 1) {
+			msg += parsedMsg.getParams()[1].getValue() + "\r\n";
+		} else {
+			msg += user->getNickName() + "\r\n";
+		}
+		debugPrintSendMessage("SendMsg", msg);
+		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		for (std::vector<User *>::const_iterator memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
+			sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
+		}
+		if (channelIt->getMembers().size() == 0) {
+			info->eraseChannel(&(*channelIt));
+		}
+		return ("");
+	} catch (std::exception& e) {
+		throw;
 	}
-	if (userIt == channelsIt->getMembers().end()) {
-		return (Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
-	}
-	// TODO(hnoguchi): Infoクラスに指定のチャンネルから指定のユーザを削除する関数を実装すること
-	channelsIt->eraseMember(user);
-	channelsIt->eraseOperator(user);
-	std::string	msg = ":" + user->getNickName() + " PART " + channelsIt->getName() + " :";
-	if (parsedMsg.getParams().size() == 1) {
-		msg += user->getNickName() + "\r\n";
-	} else {
-		msg += parsedMsg.getParams()[1].getValue() + "\r\n";
-	}
-	debugPrintSendMessage("SendMsg", msg);
-	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-	return ("");
 }
