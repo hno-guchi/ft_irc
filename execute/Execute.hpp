@@ -18,8 +18,8 @@ class Execute {
 	 std::string	cmdOper(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdQuit(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdPong(User* user, const ParsedMessage& parsedMsg, Info* info);
-	 // std::string	cmdNotice(User* user, const ParsedMessage& parsedMsg, Info* info);
-	 // std::string	cmdPrivmsg(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 std::string	cmdNotice(User* user, const ParsedMessage& parsedMsg, Info* info);
+	 std::string	cmdPrivmsg(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdPart(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info);
