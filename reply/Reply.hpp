@@ -96,6 +96,7 @@ class Reply {
 	 static std::string	errNoSuchNick(int num, const std::string& toName, const std::string& nickName);
 	 static std::string	errNoSuchServer(int num, const std::string& toName, const std::string& serverName);
 	 static std::string	errNoSuchChannel(int num, const std::string& toName, const std::string& channelName);
+	 static std::string	errCanNotSendToChan(int num, const std::string& toName, const std::string& channelName);
 	 static std::string	errNoOrigin(int num, const std::string& toName);
 	 static std::string	errNoRecipient(int num, const std::string& toName, const std::string& command);
 	 static std::string	errNoTextToSend(int num, const std::string& toName);

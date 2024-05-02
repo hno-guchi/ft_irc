@@ -92,6 +92,7 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 		// <channel>を作成
 		info->addChannel(Channel(parsedMsg.getParams()[0].getValue()));
 		for (std::vector<Channel>::iterator it = const_cast<std::vector<Channel> &>(info->getChannels()).begin(); it != const_cast<std::vector<Channel> &>(info->getChannels()).end(); it++) {
+			std::cerr << "In for()" << std::endl;
 			// userを追加してメッセージを送信
 			if (parsedMsg.getParams()[0].getValue() == it->getName()) {
 				it->addMember(user);

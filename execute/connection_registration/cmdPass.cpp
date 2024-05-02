@@ -21,17 +21,13 @@
 std::string	Execute::cmdPass(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	(void)info;
 	if (parsedMsg.getParams().size() < 1) {
-		// return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
-	return ("");
+		return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 	}
 	if (user->getRegistered() & kPassCommand) {
-		// return (Reply::errAlreadyRegistered(kERR_ALREADYREGISTRED, user->getNickName()));
-	return ("");
+		return (Reply::errAlreadyRegistered(kERR_ALREADYREGISTRED, user->getNickName()));
 	}
 	if (parsedMsg.getParams()[0].getValue() != info->getConfig().getPassword()) {
 		return (Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getNickName()));
-		// return ("");
 	}
-	user->setRegistered(kPassCommand);
 	return ("");
 }

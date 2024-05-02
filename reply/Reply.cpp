@@ -232,6 +232,19 @@ std::string	Reply::errNoSuchChannel(int num, const std::string& toName, const st
 	}
 }
 
+std::string	Reply::errCanNotSendToChan(int num, const std::string& toName, const std::string& channelName) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		message += channelName + " :Cannot send to channel";
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
 std::string	Reply::errNoOrigin(int num, const std::string& toName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);

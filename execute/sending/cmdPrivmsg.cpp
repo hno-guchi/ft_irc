@@ -49,49 +49,81 @@
 #include "../../parser/Parser.hpp"
 #include "../../error/error.hpp"
 
-int Execute::cmdPrivmsg(User* user, const ParsedMessage& parsedMsg, Info* info) {
-	if (parsedMsg.getParams().size() == 0) {
-		return(kERR_NORECIPIENT);
-	}
-	if (parsedMsg.getParams().size() < 2) {
-		if (parsedMsg.getParams()[0].getType() == kPTrailing) {
-			return(kERR_NORECIPIENT);
-		} else if (parsedMsg.getParams()[0].getType() == kPMiddle) {
-			return(kERR_NOTEXTTOSEND);
+std::string	Execute::cmdPrivmsg(User* user, const ParsedMessage& parsedMsg, Info* info) {
+	try {
+		// TODO(hnoguchi): Parser classで処理する。
+		if (parsedMsg.getParams().size() == 0) {
+			return(Reply::errNoRecipient(kERR_NORECIPIENT, user->getNickName(), parsedMsg.getCommand()));
 		}
-	}
-	// channelがなければ、エラーリプライナンバーを返す
-	// channelを探す
-	std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
-	for (; channelIt != info->getChannels().end(); channelIt++) {
-		if (parsedMsg.getParams()[0].getValue() == channelIt->getName()) {
-			break;
+		if (parsedMsg.getParams().size() < 2) {
+			if (parsedMsg.getParams()[0].getType() == kPTrailing) {
+				return(Reply::errNoRecipient(kERR_NORECIPIENT, user->getNickName(), parsedMsg.getCommand()));
+			} else if (parsedMsg.getParams()[0].getType() == kPMiddle) {
+				return(Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user->getNickName()));
+			}
 		}
-	}
-	if (channelIt == info->getChannels().end()) {
-		// std::cerr << "No such channel" << std::endl;
-		return (kERR_NOSUCHNICK);
-	}
-	// TODO(hnoguchi): <msgtarget>がchannelのときuserがmemberが確認する。kERR_CANNOTSENDTOCHAN
-	// Create message
-	std::string	message = ":" + user->getNickName() + " PRIVMSG " + parsedMsg.getParams()[0].getValue() + " " + parsedMsg.getParams()[1].getValue() + "\r\n";
-	debugPrintSendMessage("cmdPrivmsg", message);
-	// TODO(hnoguchi): このやり方は、良くないと思うので、改善が必要。
-	// const std::vector<User*>& members = channelIt->getMembers();
-	for (std::vector<User*>::const_iterator member = channelIt->getMembers().begin(); member != channelIt->getMembers().end(); member++) {
-		if (user->getNickName() == (*member)->getNickName()) {
-			continue;
+		std::vector<User>::const_iterator	it = info->getUsers().begin();
+		for (; it != info->getUsers().end(); it++) {
+			if (parsedMsg.getParams()[0].getValue() == it->getNickName()) {
+				break;
+			}
 		}
-		ssize_t		sendMsgSize = sendNonBlocking((*member)->getFd(), message.c_str(), message.size());
-		if (sendMsgSize <= 0) {
-			// handleClientDisconnect(&(*member)->getFd());
-			return (-1);
+		// メッセージの作成
+		std::string	message = ":" + user->getNickName() + " PRIVMSG " + parsedMsg.getParams()[0].getValue() + " " + parsedMsg.getParams()[1].getValue() + "\r\n";
+		debugPrintSendMessage("cmdPrivMsg", message);
+		// メッセージの送信先がuserの場合
+		if (it != info->getUsers().end()) {
+			// 送信
+			ssize_t		sendMsgSize = sendNonBlocking(it->getFd(), message.c_str(), message.size());
+			if (sendMsgSize <= 0) {
+				// handleClientDisconnect(&it->getFd);
+				return ("");
+			}
+			// TODO(hnoguchi): castは使わない実装にする？？
+			if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
+				fatalError("send");
+			}
+			return ("");
 		}
-		// TODO(hnoguchi): castは使わない実装にする？？
-		if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
-			fatalError("send PRIVMSG");
+		// メッセージの送信先がchannelの場合
+		std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
+		for (; channelIt != info->getChannels().end(); channelIt++) {
+			if (parsedMsg.getParams()[0].getValue() == channelIt->getName()) {
+				break;
+			}
 		}
+		if (channelIt == info->getChannels().end()) {
+			// std::cerr << "No such channel" << std::endl;
+			return (Reply::errNoSuchNick(kERR_NOSUCHNICK, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+		}
+		std::vector<User*>::const_iterator	memberIt = channelIt->getMembers().begin();
+		for (; memberIt != channelIt->getMembers().end(); memberIt++) {
+			if (user->getNickName() == (*memberIt)->getNickName()) {
+				break;
+			}
+		}
+		if (memberIt == channelIt->getMembers().end()) {
+			return (Reply::errCanNotSendToChan(kERR_CANNOTSENDTOCHAN, user->getNickName(), channelIt->getName()));
+		}
+		memberIt = channelIt->getMembers().begin();
+		for (; memberIt != channelIt->getMembers().end(); memberIt++) {
+			if (user->getNickName() == (*memberIt)->getNickName()) {
+				continue;
+			}
+			ssize_t		sendMsgSize = sendNonBlocking((*memberIt)->getFd(), message.c_str(), message.size());
+			if (sendMsgSize <= 0) {
+				// handleClientDisconnect(&(*member)->getFd());
+				return ("");
+			}
+			// TODO(hnoguchi): castは使わない実装にする？？
+			if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
+				fatalError("send PRIVMSG");
+			}
+		}
+		return ("");
+	} catch (std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		// handleClientDisconnect(&it->getFd);
+		return ("");
 	}
-	// TODO(hnoguchi): 成功用のenumを作成するかも。。。
-	return (0);
 }
