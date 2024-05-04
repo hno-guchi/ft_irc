@@ -58,6 +58,9 @@ class Channel {
 	void						eraseMember(User* user);
 	void						eraseInvited(User* user);
 	void						eraseOperator(User* oper);
+
+	// debug
+	void						printData() const;
 };
 
 #endif  // CHANNEL_HPP

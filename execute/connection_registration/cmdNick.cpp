@@ -56,10 +56,10 @@ std::string	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* i
 			// 既存ユーザのニックネーム変更処理
 			for (std::vector<User>::const_iterator it = info->getUsers().begin(); it != info->getUsers().end(); it++) {
 				if (it->getNickName() == nick) {
-					return (Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getNickName(), nick));
+					return (Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getReplyName(), nick));
 				}
 			}
-			std::string	msg = ":" + user->getNickName() + " NICK :" + nick + "\r\n";
+			std::string	msg = ":" + user->getReplyName() + " NICK :" + nick + "\r\n";
 			user->setNickName(nick);
 			debugPrintSendMessage("SendMsg", msg);
 			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());

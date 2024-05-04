@@ -76,15 +76,15 @@ std::string	Reply::rplMyInfo(const std::string& toName, const Config& config) {
 
 std::string	Reply::rplWelcome(const Info& info, const User& user) {
 	try {
-		std::string	message = "001 " + user.getNickName() + " :Welcome to the Internet Relay Network " + user.getNickName() + "!" + user.getUserName() + "@" + user.getServerName();
+		std::string	message = "001 " + user.getNickName() + " :Welcome to the Internet Relay Network " + user.getReplyName();
 		message += Reply::delimiter_;
 		message += Reply::rplFromName(info.getConfig().getServerName());
-		message += Reply::rplYourHost(user.getNickName(), info.getConfig().getServerName(), info.getConfig().getVersion());
+		message += Reply::rplYourHost(user.getReplyName(), info.getConfig().getServerName(), info.getConfig().getVersion());
 		message += Reply::rplFromName(info.getConfig().getServerName());
-		message += Reply::rplCreated(user.getNickName(), info.getConfig().getCreatedData());
+		message += Reply::rplCreated(user.getReplyName(), info.getConfig().getCreatedData());
 		message += Reply::rplFromName(info.getConfig().getServerName());
-		message += Reply::rplMyInfo(user.getNickName(), info.getConfig());
-		message += Reply::rplFromName(user.getNickName());
+		message += Reply::rplMyInfo(user.getReplyName(), info.getConfig());
+		message += Reply::rplFromName(user.getReplyName());
 		message += "NICK :" + user.getNickName() + Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
@@ -121,9 +121,9 @@ std::string	Reply::rplUModeIs(int num, const std::string& toName, const User& us
 	}
 }
 
+// 324	RPL_CHANNELMODEIS	<channel> <mode> <mode params>
 std::string	Reply::rplChannelModeIs(int num, const std::string& toName, const std::string& channel, const char mode, const std::string& param) {
 	try {
-		// std::string	message = "324 " + channel + " " + mode;
 		std::string	message = Reply::rplCmdToName(num, toName);
 
 		message += channel + " " + mode;
@@ -173,6 +173,46 @@ std::string	Reply::rplInviting(int num, const std::string& toName, const std::st
 
 		message += channel + " " + nickName;
 		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+// 353	RPL_NAMREPLY	"( "=" / "*" / "@" ) <channel> :[ "@" / "+" ] <nick> *( " " [ "@" / "+" ] <nick> )"
+std::string	Reply::rplNamReply(int num, const std::string& toName, const Channel& channel) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName);
+
+		if (channel.getName()[0] == '#') {
+			message += "= " + channel.getName() + " :";
+		}
+		for (std::vector<User *>::const_iterator it = channel.getMembers().begin(); it != channel.getMembers().end(); ++it) {
+			std::vector<User *>::const_iterator	operIt = channel.getOperators().begin();
+			for (; operIt != channel.getOperators().end(); ++operIt) {
+				if ((*it)->getNickName() == (*operIt)->getNickName()) {
+					break;
+				}
+			}
+			if (operIt != channel.getOperators().end()) {
+				message += "@" + (*it)->getNickName() + " ";
+			} else {
+				message += (*it)->getNickName() + " ";
+			}
+		}
+		message += Reply::delimiter_;
+		return (message);
+	} catch (const std::exception& e) {
+		fatalError(e.what());
+		return ("");
+	}
+}
+
+// 366	RPL_ENDOFNAMES	"<channel> :End of NAMES list"
+std::string	Reply::rplEndOfNames(int num, const std::string& toName, const std::string& channel) {
+	try {
+		std::string	message = Reply::rplCmdToName(num, toName) + channel + " :End of NAMES list" + Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
 		fatalError(e.what());
@@ -492,6 +532,7 @@ std::string	Reply::errBadChannelKey(int num, const std::string& toName, const st
 	}
 }
 
+// 477	ERR_NOCHANMODES	"<channel> :Channel doesn't support modes"
 std::string	Reply::errNoChanModes(int num, const std::string& toName, const std::string& nickName, const std::string& channel) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);

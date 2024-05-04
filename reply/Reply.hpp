@@ -24,6 +24,8 @@ enum kCmdReplyNum {
 	kRPL_ENDOFINVITELIST	= 347,
 	kRPL_EXCEPTLIST			= 348,
 	kRPL_ENDOFEXCEPTLIST	= 349,
+	kRPL_NAMREPLY			= 353,
+	kRPL_ENDOFNAMES			= 366,
 	kRPL_BANLIST			= 367,
 	kRPL_ENDOFBANLIST		= 368,
 	kRPL_YOUREOPER			= 381
@@ -92,6 +94,8 @@ class Reply {
 	 static std::string	rplNoTopic(int num, const std::string& toName, const std::string& channel);
 	 static std::string	rplTopic(int num, const std::string& toName, const std::string& channel, const std::string& topic);
 	 static std::string	rplInviting(int num, const std::string& toName, const std::string& channel, const std::string& nickName);
+	 static std::string	rplNamReply(int num, const std::string& toName, const Channel& channel);
+	 static std::string	rplEndOfNames(int num, const std::string& toName, const std::string& channel);
 	 static std::string	rplYourOper(int num, const std::string& toName, const std::string& nickName);
 	 static std::string	errNoSuchNick(int num, const std::string& toName, const std::string& nickName);
 	 static std::string	errNoSuchServer(int num, const std::string& toName, const std::string& serverName);

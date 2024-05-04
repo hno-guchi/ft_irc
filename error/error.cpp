@@ -2,9 +2,12 @@
 #include "../color.hpp"
 
 void	debugPrintSendMessage(const std::string& prefix, const std::string &message) {
-	std::cout << "[" << prefix << "] _______________________________" << std::endl;
-	std::cout << YELLOW << message << END << std::endl;
-	std::cout << "----------------------------------------------" << std::endl;
+	(void)prefix;
+	// std::cout << "[" << prefix << "] _______________________________" << std::endl;
+	// std::cout << "[" << prefix << "] [" << std::flush;
+	// std::cout << YELLOW << message << END << "]" << std::endl;
+	std::cout << YELLOW << message << END << std::flush;
+	// std::cout << "------------------------------------------" << std::endl;
 }
 
 void	printErrorMessage(const std::string &message) {

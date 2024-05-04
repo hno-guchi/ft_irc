@@ -26,21 +26,23 @@ class User {
 	 std::string	hostName_;
 	 std::string	serverName_;
 	 std::string	realName_;
+	 std::string	replyName_;
 	 int			index_;
 	 int			fd_;
 	 unsigned int	registered_;
 	 unsigned int	modes_;
 
  public:
-	 explicit	User(int i = -1);
+	 User();
 	 ~User();
 
 	 // SETTERS
-	 void	setNickName(const std::string &nickName);
-	 void	setUserName(const std::string &userName);
-	 void	setHostName(const std::string &hostName);
-	 void	setServerName(const std::string &serverName);
-	 void	setRealName(const std::string &realName);
+	 void	setNickName(const std::string &name);
+	 void	setUserName(const std::string &name);
+	 void	setHostName(const std::string &name);
+	 void	setServerName(const std::string &name);
+	 void	setRealName(const std::string &name);
+	 void	setReplyName(const std::string &name);
 	 void	setIndex(int i);
 	 void	setFd(int fd);
 	 void	setRegistered(kExecCommand flag);
@@ -52,6 +54,7 @@ class User {
 	 const std::string&	getHostName() const;
 	 const std::string&	getServerName() const;
 	 const std::string&	getRealName() const;
+	 const std::string&	getReplyName() const;
 	 int				getIndex() const;
 	 int				getFd() const;
 	 unsigned int		getRegistered() const;

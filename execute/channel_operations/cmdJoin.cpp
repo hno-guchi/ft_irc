@@ -51,6 +51,12 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 		}
 		// <channel>が存在する場合
 		if (channelIt != const_cast<std::vector<Channel> &>(info->getChannels()).end()) {
+			// 471 ERR_CHANNELISFULL   "<channel> :Cannot join channel (+l)"
+			if (channelIt->getModes() & kLimit) {
+				if (channelIt->getMembers().size() >= static_cast<unsigned long>(channelIt->getLimit())) {
+					return (Reply::errChannelIsFull(kERR_CHANNELISFULL, user->getNickName(), channelIt->getName()));
+				}
+			}
 			// Check 473 ERR_INVITEONLYCHAN  "<channel> :Cannot join channel (+i)"
 			if (channelIt->getModes() & kInviteOnly) {
 				std::vector<User *>::const_iterator	invitedIt = channelIt->getInvited().begin();
@@ -62,60 +68,73 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 				if (invitedIt == channelIt->getInvited().end()) {
 					return (Reply::errInviteOnlyChan(kERR_INVITEONLYCHAN, user->getNickName(), channelIt->getName()));
 				}
+				channelIt->eraseInvited(user);
 			}
 			// 475 ERR_BADCHANNELKEY   "<channel> :Cannot join channel (+k)"
 			if (channelIt->getModes() & kKey) {
+					std::cerr << "[" << parsedMsg.getParams()[1].getValue() <<"] | [" << channelIt->getKey() << "]" << std::endl;
 				if (parsedMsg.getParams().size() < 2) {
-					return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
-				} else if (parsedMsg.getParams()[1].getValue() != channelIt->getKey()) {
 					return (Reply::errBadChannelKey(kERR_BADCHANNELKEY, user->getNickName(), channelIt->getName()));
 				}
-			}
-			// 471 ERR_CHANNELISFULL   "<channel> :Cannot join channel (+l)"
-			if (channelIt->getModes() & kLimit) {
-				if (channelIt->getMembers().size() >= static_cast<unsigned long>(channelIt->getLimit())) {
-					return (Reply::errChannelIsFull(kERR_CHANNELISFULL, user->getNickName(), channelIt->getName()));
+				if (parsedMsg.getParams()[1].getValue() != channelIt->getKey()) {
+					return (Reply::errBadChannelKey(kERR_BADCHANNELKEY, user->getNickName(), channelIt->getName()));
 				}
 			}
 			// userを<channel>に追加
 			channelIt->addMember(user);
-			channelIt->eraseInvited(user);
 			std::string	msg = ":" + user->getNickName() + " JOIN " + channelIt->getName() + "\r\n";
 			debugPrintSendMessage("SendMsg", msg);
+			channelIt->printData();
 			for (std::vector<User *>::const_iterator memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
+				(*memberIt)->printData();
 				sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
-				// TODO(hnoguchi): Check error
 			}
+			// JOINしたuserへchannel情報(RPL_(NO)TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES)を送信
+			msg = Reply::rplFromName(info->getConfig().getServerName());
 			if (channelIt->getTopic().size() > 0) {
-				msg = ":" + info->getConfig().getServerName() + " TOPIC " + channelIt->getName() + " :" + channelIt->getTopic() + "\r\n";
-				debugPrintSendMessage("SendMsg", msg);
-				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+				msg += Reply::rplTopic(kRPL_TOPIC, user->getNickName(), channelIt->getName(), channelIt->getTopic());
+			} else {
+				msg += Reply::rplNoTopic(kRPL_NOTOPIC, user->getNickName(), channelIt->getName());
 			}
-			if (channelIt->getModes() & kInviteOnly) {
-				msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+i\r\n";
-				debugPrintSendMessage("SendMsg", msg);
-				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-			}
-			if (channelIt->getModes() & kKey) {
-				msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+k " + channelIt->getKey() + "\r\n";
-				debugPrintSendMessage("SendMsg", msg);
-				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-			}
-			if (channelIt->getModes() & kLimit) {
-				msg += ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+l " + std::to_string(channelIt->getLimit()) + "\r\n";
-				debugPrintSendMessage("SendMsg", msg);
-				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-			}
-			if (channelIt->getModes() & kRestrictTopicSetting) {
-				msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+t\r\n";
-				debugPrintSendMessage("SendMsg", msg);
-				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-			}
-			for (std::vector<User *>::const_iterator operIt = channelIt->getOperators().begin(); operIt != channelIt->getOperators().end(); operIt++) {
-				msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " +o " + (*operIt)->getNickName() + "\r\n";
-				debugPrintSendMessage("SendMsg", msg);
-				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-			}
+			debugPrintSendMessage("SendMsg", msg);
+			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+
+			msg = Reply::rplFromName(info->getConfig().getServerName());
+			msg += Reply::rplNamReply(kRPL_NAMREPLY, user->getNickName(), *channelIt);
+			msg += Reply::rplFromName(info->getConfig().getServerName());
+			msg += Reply::rplEndOfNames(kRPL_ENDOFNAMES, user->getNickName(), channelIt->getName());
+			debugPrintSendMessage("SendMsg", msg);
+			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// if (channelIt->getTopic().size() > 0) {
+			// 	msg = ":" + info->getConfig().getServerName() + " TOPIC " + channelIt->getName() + " :" + channelIt->getTopic() + "\r\n";
+			// 	debugPrintSendMessage("SendMsg", msg);
+			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// }
+			// if (channelIt->getModes() & kInviteOnly) {
+			// 	msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+i\r\n";
+			// 	debugPrintSendMessage("SendMsg", msg);
+			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// }
+			// if (channelIt->getModes() & kKey) {
+			// 	msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+k " + channelIt->getKey() + "\r\n";
+			// 	debugPrintSendMessage("SendMsg", msg);
+			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// }
+			// if (channelIt->getModes() & kLimit) {
+			// 	msg += ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+l " + std::to_string(channelIt->getLimit()) + "\r\n";
+			// 	debugPrintSendMessage("SendMsg", msg);
+			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// }
+			// if (channelIt->getModes() & kRestrictTopicSetting) {
+			// 	msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " :+t\r\n";
+			// 	debugPrintSendMessage("SendMsg", msg);
+			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// }
+			// for (std::vector<User *>::const_iterator operIt = channelIt->getOperators().begin(); operIt != channelIt->getOperators().end(); operIt++) {
+			// 	msg = ":" + info->getConfig().getServerName() + " MODE " + channelIt->getName() + " +o " + (*operIt)->getNickName() + "\r\n";
+			// 	debugPrintSendMessage("SendMsg", msg);
+			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// }
 			return ("");
 		}
 		// <channel>が存在しない場合
@@ -126,21 +145,43 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 		// <channel>を作成
 		info->addChannel(Channel(parsedMsg.getParams()[0].getValue()));
 		for (std::vector<Channel>::iterator it = const_cast<std::vector<Channel> &>(info->getChannels()).begin(); it != const_cast<std::vector<Channel> &>(info->getChannels()).end(); it++) {
-			// userを追加してメッセージを送信
-			if (parsedMsg.getParams()[0].getValue() == it->getName()) {
-				it->addMember(user);
-				it->addOperator(user);
-				std::string	msg = ":" + user->getNickName() + " JOIN " + it->getName() + "\r\n";
-				msg += ":" + info->getConfig().getServerName() + " MODE " + it->getName() + " +o " + user->getNickName() + "\r\n";
-				// TODO(hnoguchi): Send RPL_CHANNELMODEIS
-				debugPrintSendMessage("SendMsg", msg);
-				sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-				// TODO(hnoguchi): Check error
-				return ("");
+
+			if (parsedMsg.getParams()[0].getValue() != it->getName()) {
+				continue;
 			}
+			// userを追加してメッセージを送信
+			it->addMember(user);
+			it->addOperator(user);
+			std::string	msg = ":" + user->getNickName() + " JOIN " + it->getName() + "\r\n";
+			debugPrintSendMessage("SendMsg", msg);
+			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// msg = ":" + info->getConfig().getServerName() + " MODE " + it->getName() + " +o " + user->getNickName() + "\r\n";
+			// debugPrintSendMessage("SendMsg", msg);
+			// sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			// TODO(hnoguchi): Send RPL_CHANNELMODEIS
+			// JOINしたuserへchannel情報(RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES)を送信
+			msg = Reply::rplFromName(info->getConfig().getServerName());
+			if (it->getTopic().size() > 0) {
+				msg += Reply::rplTopic(kRPL_TOPIC, user->getNickName(), it->getName(), it->getTopic());
+			} else {
+				msg += Reply::rplNoTopic(kRPL_NOTOPIC, user->getNickName(), it->getName());
+			}
+			debugPrintSendMessage("SendMsg", msg);
+			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+
+			msg = Reply::rplFromName(info->getConfig().getServerName());
+			msg += Reply::rplNamReply(kRPL_NAMREPLY, user->getNickName(), *it);
+			debugPrintSendMessage("SendMsg", msg);
+			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+
+			msg = Reply::rplFromName(info->getConfig().getServerName());
+			msg += Reply::rplEndOfNames(kRPL_ENDOFNAMES, user->getNickName(), it->getName());
+			debugPrintSendMessage("SendMsg", msg);
+			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		}
+		return ("");
 	} catch (std::exception& e) {
 		std::cerr << RED << e.what() << END << std::endl;
+		return ("");
 	}
-	return ("");
 }

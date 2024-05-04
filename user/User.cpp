@@ -1,8 +1,8 @@
 #include "./User.hpp"
 
 // CONSTRUCTORS and DESTRUCTORS
-User::User(int i) :
-	index_(i), fd_(-1), registered_(0), modes_(0) {}
+User::User() :
+	index_(-1), fd_(-1), registered_(0), modes_(0) {}
 
 User::~User() {}
 
@@ -25,6 +25,10 @@ void	User::setServerName(const std::string &name) {
 
 void	User::setRealName(const std::string &name) {
 	this->realName_ = name;
+}
+
+void	User::setReplyName(const std::string &name) {
+	this->replyName_ = name;
 }
 
 void	User::setIndex(int i) {
@@ -68,6 +72,10 @@ const std::string&	User::getRealName() const {
 	return (this->realName_);
 }
 
+const std::string&	User::getReplyName() const {
+	return (this->replyName_);
+}
+
 int	User::getIndex() const {
 	return (this->index_);
 }
@@ -96,5 +104,6 @@ void	User::printData() const {
 	std::cout << "[userName]     : [" << this->userName_ << "]" << std::endl;
 	std::cout << "[serverName]   : [" << this->serverName_ << "]" << std::endl;
 	std::cout << "[realName]     : [" << this->realName_ << "]" << std::endl;
+	std::cout << "[replyName]     : [" << this->replyName_ << "]" << std::endl;
 	std::cout << MAGENTA << "--------------------------------\n" << END << std::endl;
 }

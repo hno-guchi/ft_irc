@@ -29,8 +29,11 @@ class Server {
  public:
 	 explicit Server(unsigned short port);
 	 ~Server();
+	 // void	setPassword(const std::string& password);
 	 void	run(void);
 
+	 // debug
+	 void	printData() const;
 	// class GradeTooHighException : public std::out_of_range {
 	// public:
 	// 	GradeTooHighException(const std::string& msg = "Grade is too high.");
