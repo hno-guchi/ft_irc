@@ -90,10 +90,12 @@ ssize_t	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
 			// sendMsgSize = -1;
 			// break;
 			// handleClientDisconnect(fd);
+			fatalError("send");
 			throw std::runtime_error("send");
 		} else {
 			// fatalError("send");
 			// handleClientDisconnect(fd);
+			fatalError("send");
 			throw std::runtime_error("send");
 		}
 	}
@@ -131,25 +133,24 @@ Server::~Server() {
 void	Server::run() {
 	while (1) {
 
-		int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 2, 3 * 1000);
+		int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 2, 3 * 10000);
 
 		if (result == -1) {
-			// TODO(hnoguchi): fatalerrorにするか？
 			throw std::runtime_error("poll");
 		}
 		if (result == 0) {
 			// std::cout << "poll: Timeout 3 seconds..." << std::endl;
-			// TODO(hnoguchi): PINGするかcheck
+			// TODO(hnoguchi): PINGするならここ。
 			continue;
 		}
-		this->handleServerSocket();
 		try {
+			this->handleServerSocket();
 			this->handleStandardInput();
+			this->handleClientSocket();
 		} catch (std::exception& e) {
 			throw;
 		}
-		this->handleClientSocket();
-		// TODO(hnoguchi): PINGするかcheck
+		// TODO(hnoguchi): PINGするならここ。
 	}
 }
 
@@ -157,7 +158,8 @@ void	Server::handleServerSocket() {
 	if (!(this->fds_[0].revents & POLLIN)) {
 		return;
 	}
-	int	i = 1;
+	int		i = 1;
+	User	user;
 	try {
 		int	newSocket = this->socket_.createClientSocket();
 		for (; i <= this->info_.getConfig().getMaxClient(); ++i) {
@@ -173,14 +175,15 @@ void	Server::handleServerSocket() {
 		}
 		// ユーザ仮登録
 		this->fds_[i].fd = newSocket;
-		User	user(i);
+		user.setIndex(i);
 		user.setFd(newSocket);
 		this->info_.addUser(user);
 		std::cout << "New client connected. Socket: " << newSocket << std::endl;
 	} catch (std::exception& e) {
 		// TODO(hnoguchi): messageを送る。
 		handleClientDisconnect(&this->fds_[i].fd);
-		// TODO(hnoguchi): this->info_.removeUser(i - 1);
+		this->info_.eraseUser(&user);
+		// throw;
 	}
 }
 
@@ -203,10 +206,17 @@ void	Server::handleStandardInput() {
 }
 
 void	Server::handleClientSocket() {
-	for (int i = 1; i <= this->info_.getConfig().getMaxClient(); ++i) {
-		if (this->fds_[i].fd != -1 && (this->fds_[i].revents & POLLIN)) {
-			handleReceivedData(i);
+	try {
+		for (int i = 1; i <= this->info_.getConfig().getMaxClient(); ++i) {
+			if (this->fds_[i].fd != -1 && (this->fds_[i].revents & POLLIN)) {
+				handleReceivedData(i);
+				std::cout << i << std::endl;
+				// this->printData();
+			}
 		}
+	} catch (std::exception& e) {
+		std::cerr << RED << e.what() << END << std::endl;
+		// throw;
 	}
 }
 
@@ -228,8 +238,8 @@ void	Server::handleReceivedData(int i) {
 			Parser		parser;
 
 			replyNum = parser.parse(*it);
-			parser.getParsedMessage().printParsedMessage();
-			std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
+			// parser.getParsedMessage().printParsedMessage();
+			// std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
 			// this->info_.getUser(i - 1).printData();
 			if (replyNum == 0) {
 				// 登録ユーザか確認
@@ -239,6 +249,9 @@ void	Server::handleReceivedData(int i) {
 				} else {
 					// コマンド実行処理
 					replyMsg = execute.exec(const_cast<User *>(&this->info_.getUser(i - 1)), parser.getParsedMessage(), &this->info_);
+					// if (this->info_.getChannels().size() != 0) {
+					// 	this->info_.getChannels()[0].printData();
+					// }
 				}
 				if (!replyMsg.empty()) {
 					std::string	buf = replyMsg;
@@ -253,7 +266,7 @@ void	Server::handleReceivedData(int i) {
 				continue;
 			}
 			// debug
-			this->info_.getUser(i - 1).printData();
+			// this->info_.getUser(i - 1).printData();
 			debugPrintSendMessage("replyMsg", replyMsg);
 			// send
 			sendMsgSize = sendNonBlocking(this->fds_[i].fd, replyMsg.c_str(), replyMsg.size());
@@ -268,14 +281,24 @@ void	Server::handleReceivedData(int i) {
 			}
 		}
 	} catch (std::out_of_range& e) {
-		std::cerr << RED << e.what() << END << std::endl;
-		return;
+		throw;
 	} catch (std::exception& e) {
 		// TODO(hnoguchi): メッセージ受信に失敗したことをユーザに通知（メッセージを送信）する？
 		handleClientDisconnect(&this->fds_[i].fd);
-		// TODO(hnoguchi): this->users_を削除する。
-		std::cerr << RED << e.what() << END << std::endl;
+		this->info_.eraseUser(&(const_cast<User &>(this->info_.getUser(i - 1))));
+		throw;
 	}
+}
+
+void	Server::printData() const {
+	std::cout << "[SERVER DATA]__________________" << std::endl;
+	std::cout << "this->fds_[" << MAX_FD << "];" << std::endl;
+	for (int i = 0; i < MAX_FD; i++) {
+		std::cout << "[" << i << "].fd == " << this->fds_[i].fd << std::endl;
+	}
+	std::cout << "this->info_;" << std::endl;
+	// this->info_.printData();
+	std::cout << "_______________________________" << std::endl;
 }
 
 // TODO(hnoguchi): サーバーの終了処理を実装する。

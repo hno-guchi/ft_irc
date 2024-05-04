@@ -26,15 +26,15 @@ void	Channel::setTopic(const std::string& topic) {
 
 void	Channel::setKey(const std::string& key) {
 	// TODO(hnoguchi): バリデーションは別でやる？
-	if (key.size() == 0 || key.size() > 30) {
-		return;
-		// throw std::invalid_argument("Invalid key");
-	}
+	// if (key.size() == 0 || key.size() > 30) {
+	// 	return;
+	// 	// throw std::invalid_argument("Invalid key");
+	// }
 	// TODO(hnoguchi): バリデーションは別でやる？
-	if ((this->modes_ & kKey) == 0) {
-		return;
-		// throw std::invalid_argument("Channel is not mode key protected.");
-	}
+	// if (!(this->modes_ & kKey)) {
+	// 	return;
+	// 	// throw std::invalid_argument("Channel is not mode key protected.");
+	// }
 	this->key_ = key;
 }
 
@@ -170,6 +170,7 @@ void	Channel::addOperator(User* user) {
 void	Channel::eraseMember(User* user) {
 	for (std::vector<User *>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
 		if (*it == user) {
+			*it = NULL;
 			this->members_.erase(it);
 			return;
 		}
@@ -179,6 +180,7 @@ void	Channel::eraseMember(User* user) {
 void	Channel::eraseInvited(User* user) {
 	for (std::vector<User *>::iterator it = this->invited_.begin(); it != this->invited_.end(); it++) {
 		if (*it == user) {
+			*it = NULL;
 			this->invited_.erase(it);
 			return;
 		}
@@ -186,10 +188,32 @@ void	Channel::eraseInvited(User* user) {
 }
 
 void	Channel::eraseOperator(User* oper) {
-	for (std::vector<User *>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
+	for (std::vector<User *>::iterator it = this->operators_.begin(); it != this->operators_.end(); it++) {
 		if (*it == oper) {
-			this->members_.erase(it);
+			*it = NULL;
+			this->operators_.erase(it);
 			return;
 		}
 	}
+}
+
+void	Channel::printData() const {
+	std::cout << "[" << this->getName() << "]" << "__________" << std::endl;
+	std::cout << "[topic]     | [" << this->getName() << "]" << std::endl;
+	std::cout << "[key]       | [" << this->getKey() << "]" << std::endl;
+	std::cout << "[limit]     | [" << this->getLimit() << "]" << std::endl;
+	std::cout << "[modes]     | [" << this->getModes() << "]" << std::endl;
+	std::cout << "[operators]" << std::endl;
+	for (std::vector<User *>::const_iterator it = this->getOperators().begin(); it != this->getOperators().end(); it++) {
+		std::cout << "            | [" << (*it)->getNickName() << "]" << std::endl;
+	}
+	std::cout << "[members]" << std::endl;
+	for (std::vector<User *>::const_iterator it = this->getMembers().begin(); it != this->getMembers().end(); it++) {
+		std::cout << "            | [" << (*it)->getNickName() << "]" << std::endl;
+	}
+	std::cout << "[invited]" << std::endl;
+	for (std::vector<User *>::const_iterator it = this->getInvited().begin(); it != this->getInvited().end(); it++) {
+		std::cout << "            | [" << (*it)->getNickName() << "]" << std::endl;
+	}
+	std::cout << "______________________________________" << std::endl;
 }

@@ -36,6 +36,9 @@ std::string	Execute::cmdUser(User* user, const ParsedMessage& parsedMsg, Info* i
 		user->setHostName(parsedMsg.getParams()[1].getValue());
 		user->setServerName(parsedMsg.getParams()[2].getValue());
 		user->setRealName(parsedMsg.getParams()[3].getValue());
+		// std::string replyName = user->getNickName() + "!" + parsedMsg.getParams()[0].getValue() + "@" + parsedMsg.getParams()[2].getValue();
+		std::string replyName = user->getNickName() + "!" + user->getUserName() + "@" + user->getServerName();
+		user->setReplyName(replyName);
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		// TODO(hnoguchi): 適切なエラーナンバーを返す。

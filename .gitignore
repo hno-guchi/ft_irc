@@ -33,3 +33,5 @@
 
 ./objs
 ircserv
+a.out
+./*.dSYM

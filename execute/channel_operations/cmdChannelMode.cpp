@@ -71,6 +71,40 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 		if (channelIt == info->getChannels().end()) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
+		// RPL_CHANNELMODEIS を返す。
+		if (parsedMsg.getParams().size() == 1) {
+			// TODO(hnoguchi): Info::getChannelByName(std::string name);を実装する。
+			if (channelIt->getModes() & kInviteOnly) {
+				std::string	reply = Reply::rplFromName(user->getNickName());
+				reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'i', "");
+				debugPrintSendMessage("SendMsg", reply);
+				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			}
+			if (channelIt->getModes() & kKey) {
+				std::string	reply = Reply::rplFromName(user->getNickName());
+				reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'k', channelIt->getKey());
+				debugPrintSendMessage("SendMsg", reply);
+				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			}
+			if (channelIt->getModes() & kLimit) {
+				std::string			reply = Reply::rplFromName(user->getNickName());
+				std::stringstream	ss;
+				ss << channelIt->getLimit();
+				reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'l', ss.str());
+				debugPrintSendMessage("SendMsg", reply);
+				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			}
+			if (channelIt->getModes() & kRestrictTopicSetting) {
+				std::string	reply = Reply::rplFromName(user->getNickName());
+				reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 't', "");
+				debugPrintSendMessage("SendMsg", reply);
+				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			}
+			std::string	reply = Reply::rplFromName(user->getNickName());
+			reply += Reply::errNoChanModes(kERR_NOCHANMODES, user->getNickName(), user->getNickName(), parsedMsg.getParams()[0].getValue());
+			return (reply);
+		}
+		// channel operatorか確認する。
 		std::vector<User*>::iterator	operIt = const_cast<std::vector<User*> &>(channelIt->getOperators()).begin();
 		for (; operIt != channelIt->getOperators().end(); operIt++) {
 			if ((*operIt)->getNickName() == user->getNickName()) {
@@ -79,31 +113,6 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 		}
 		if (operIt == channelIt->getOperators().end()) {
 			return (Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getNickName(), user->getNickName(), parsedMsg.getParams()[0].getValue()));
-		}
-		if (parsedMsg.getParams().size() == 1) {
-			// TODO(hnoguchi): Info::getChannelByName(std::string name);を実装する。
-			// TODO(hnoguchi): Channel::getModesStr();を実装する。
-			if (parsedMsg.getParams()[0].getValue() == channelIt->getName()) {
-				std::string		reply;
-				if (channelIt->getModes() & kInviteOnly) {
-					reply = Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'i', "");
-				}
-				if (channelIt->getModes() & kKey) {
-					reply += Reply::rplFromName(user->getNickName());
-					reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'k', channelIt->getKey());
-				}
-				if (channelIt->getModes() & kLimit) {
-					reply += Reply::rplFromName(user->getNickName());
-					std::stringstream	ss;
-					ss << channelIt->getLimit();
-					reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'l', ss.str());
-				}
-				if (channelIt->getModes() & kRestrictTopicSetting) {
-					reply += Reply::rplFromName(user->getNickName());
-					reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 't', "");
-				}
-				return (reply);
-			}
 		}
 		if (parsedMsg.getParams()[1].getValue().size() != 2) {
 			return (Reply::errUnknownMode(kERR_UNKNOWNMODE, user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
@@ -134,6 +143,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 				channelIt->setKey(parsedMsg.getParams()[2].getValue());
 				channelIt->setMode(kKey);
 				msg += " " + parsedMsg.getParams()[2].getValue() + "\r\n";
+				std::cerr << "key: " << channelIt->getKey() << std::endl;
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'l') {
 				if (parsedMsg.getParams().size() < 3) {
 					return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
@@ -157,14 +167,14 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 				}
 				channelIt->addOperator(*targetUserIt);
 				msg += " " + parsedMsg.getParams()[2].getValue() + "\r\n";
-				debugPrintSendMessage("SendMsg", msg);
-				sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+				// debugPrintSendMessage("SendMsg", msg);
+				// sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
 				// TODO(hnoguchi): Check error
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
 				channelIt->setMode(kRestrictTopicSetting);
 				msg += "\r\n";
 			}
-		} else {
+		} else if (parsedMsg.getParams()[1].getValue()[0] == '-') {
 			if (parsedMsg.getParams()[1].getValue()[1] == 'i') {
 				// TODO(hnoguchi): Change prefix
 				channelIt->unsetMode(kInviteOnly);
@@ -201,12 +211,14 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 			}
 		}
 		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		for (std::vector<User*>::iterator it = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin(); it != channelIt->getMembers().end(); it++) {
+			sendNonBlocking((*it)->getFd(), msg.c_str(), msg.size());
+			// TODO(hnoguchi): Check error
+		}
 		return ("");
 		// TODO(hnoguchi): Check error
 	} catch (const std::exception& e) {
 		std::cerr << RED << e.what() << END << std::endl;
 		throw;
-		// return (-1);
 	}
 }
