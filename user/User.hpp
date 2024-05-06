@@ -1,6 +1,7 @@
 #ifndef USER_HPP
 # define USER_HPP
 
+#include <poll.h>
 #include <iostream>
 #include <string>
 #include "../color.hpp"
@@ -28,13 +29,16 @@ class User {
 	 std::string	realName_;
 	 std::string	replyName_;
 	 int			index_;
-	 int			fd_;
+	 int*			fd_;
 	 unsigned int	registered_;
 	 unsigned int	modes_;
 
  public:
 	 User();
 	 ~User();
+
+	 // OPERATOR
+	 // User&	operator=(const User& rhs);
 
 	 // SETTERS
 	 void	setNickName(const std::string &name);
@@ -44,7 +48,7 @@ class User {
 	 void	setRealName(const std::string &name);
 	 void	setReplyName(const std::string &name);
 	 void	setIndex(int i);
-	 void	setFd(int fd);
+	 void	setFd(int* fd);
 	 void	setRegistered(kExecCommand flag);
 	 void	setMode(kUserMode mode);
 	 void	unsetMode(kUserMode mode);
@@ -56,9 +60,13 @@ class User {
 	 const std::string&	getRealName() const;
 	 const std::string&	getReplyName() const;
 	 int				getIndex() const;
+	 // int*				getFdAddr() const;
 	 int				getFd() const;
 	 unsigned int		getRegistered() const;
 	 unsigned int		getModes() const;
+
+	 void				disconnect();
+	 void				resetDate();
 	 // DEBUG
 	 void	printData() const;
 };

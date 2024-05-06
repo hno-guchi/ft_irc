@@ -63,7 +63,7 @@ std::string	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* i
 			sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 		}
 		if (channelIt->getMembers().size() == 0) {
-			info->eraseChannel(&(*channelIt));
+			info->eraseChannel(channelIt);
 		}
 		return ("");
 	} catch (std::exception& e) {

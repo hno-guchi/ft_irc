@@ -12,8 +12,10 @@
 #include "./Config.hpp"
 #include "./Info.hpp"
 #include "../reply/Reply.hpp"
+#include "../user/User.hpp"
 
-#define MAX_FD 7
+// #define MAX_FD 7
+#define MAX_FD 6
 
 class Server {
  private:
@@ -21,10 +23,11 @@ class Server {
 	 Info					info_;
 	 struct pollfd			fds_[MAX_FD];
 
+	 int	setFd(int fd);
 	 void	handleServerSocket();
-	 void	handleStandardInput();
+	 // void	handleStandardInput();
 	 void	handleClientSocket();
-	 void	handleReceivedData(int i);
+	 void	handleReceivedData(User* user);
 
  public:
 	 explicit Server(unsigned short port);

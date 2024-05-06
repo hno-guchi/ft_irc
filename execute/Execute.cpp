@@ -76,17 +76,10 @@ std::string	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info
 		return (cmdTopic(user, parsedMsg, info));
 	// TODO(hnoguchi): Paramsのtypeにchannelやuser
 	} else if (parsedMsg.getCommand() == "MODE") {
-		for(std::vector<User>::const_iterator it = info->getUsers().begin(); it != info->getUsers().end(); it++) {
-			if (parsedMsg.getParams()[0].getValue() == it->getNickName()) {
-				return (cmdUserMode(user, parsedMsg, info));
-			}
+		if (info->findUser(parsedMsg.getParams()[0].getValue()) != info->getUsers().end()) {
+			return (cmdUserMode(user, parsedMsg, info));
 		}
-		for(std::vector<Channel>::const_iterator it = info->getChannels().begin(); it != info->getChannels().end(); it++) {
-			if (parsedMsg.getParams()[0].getValue() == it->getName()) {
-				return (cmdChannelMode(user, parsedMsg, info));
-			}
-		}
-		return (Reply::errNoSuchNick(kERR_NOSUCHNICK, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+		return (cmdChannelMode(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "PRIVMSG") {
 		return (cmdPrivmsg(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "NOTICE") {

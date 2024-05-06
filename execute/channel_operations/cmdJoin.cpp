@@ -143,7 +143,7 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		// <channel>を作成
-		info->addChannel(Channel(parsedMsg.getParams()[0].getValue()));
+		info->pushBackChannel(Channel(parsedMsg.getParams()[0].getValue()));
 		for (std::vector<Channel>::iterator it = const_cast<std::vector<Channel> &>(info->getChannels()).begin(); it != const_cast<std::vector<Channel> &>(info->getChannels()).end(); it++) {
 
 			if (parsedMsg.getParams()[0].getValue() != it->getName()) {

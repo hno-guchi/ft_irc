@@ -9,25 +9,28 @@
 class Info {
  private:
 	 const Config			config_;
-	 // TODO(hnoguchi): 定数で配列のサイズを指定する。
 	 std::vector<User>		users_;
-	 // TODO(hnoguchi): std::mapの方が良い？
 	 std::vector<Channel>	channels_;
  public:
 	 Info();
 	 ~Info();
 	 // GETTER
-	 const Config&					getConfig() const;
-	 const std::vector<User>&		getUsers() const;
-	 const User&					getUser(unsigned long i) const;
-	 const std::vector<Channel>&	getChannels() const;
-	 // const Channel&	getChannel(const std::string& name) const;
+	 const Config&							getConfig() const;
+	 const std::vector<User>&				getUsers() const;
+	 const std::vector<Channel>&			getChannels() const;
 	 // SETTER
 	 // void	setConfig(const Config& config);
-	 void	addUser(const User& user);
-	 void	addChannel(const Channel& channel);
-	 void	eraseUser(User* user);
-	 void	eraseChannel(Channel* channel);
+
+	 std::vector<User>::iterator			findUser(const std::string& name);
+	 std::vector<User>::const_iterator		findUser(const std::string& name) const;
+	 std::vector<User>::iterator			findUser(int fd);
+	 std::vector<User>::const_iterator		findUser(int fd) const;
+	 std::vector<Channel>::iterator			findChannel(const std::string& name);
+	 std::vector<Channel>::const_iterator	findChannel(const std::string& name) const;
+	 void									pushBackUser(const User& user);
+	 void									pushBackChannel(const Channel& channel);
+	 void									eraseUser(std::vector<User>::iterator it);
+	 void									eraseChannel(std::vector<Channel>::iterator it);
 };
 
 #endif
