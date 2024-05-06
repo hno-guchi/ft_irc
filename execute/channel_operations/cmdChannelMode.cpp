@@ -62,12 +62,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 		if (parsedMsg.getParams().size() < 1) {
 			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 		}
-		std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
-		for (; channelIt != info->getChannels().end(); channelIt++) {
-			if (parsedMsg.getParams()[0].getValue() == channelIt->getName()) {
-				break;
-			}
-		}
+		std::vector<Channel>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
@@ -203,7 +198,6 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
 				debugPrintSendMessage("SendMsg", msg);
 				sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
-				// TODO(hnoguchi): Check error
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
 				channelIt->unsetMode(kRestrictTopicSetting);
 				msg += "\r\n";
@@ -212,12 +206,11 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 		debugPrintSendMessage("SendMsg", msg);
 		for (std::vector<User*>::iterator it = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin(); it != channelIt->getMembers().end(); it++) {
 			sendNonBlocking((*it)->getFd(), msg.c_str(), msg.size());
-			// TODO(hnoguchi): Check error
 		}
 		return ("");
-		// TODO(hnoguchi): Check error
 	} catch (const std::exception& e) {
-		std::cerr << RED << e.what() << END << std::endl;
+		fatalError(e.what());
 		throw;
+		// return ("");
 	}
 }

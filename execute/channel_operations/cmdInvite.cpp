@@ -31,13 +31,8 @@ std::string	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info*
 		if (parsedMsg.getParams().size() < 2) {
 			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 		}
-		std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
+		std::vector<Channel>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[1].getValue());
 		// Channelが存在するか確認
-		for (; channelIt != info->getChannels().end(); channelIt++) {
-			if (parsedMsg.getParams()[1].getValue() == channelIt->getName()) {
-				break;
-			}
-		}
 		if (channelIt == info->getChannels().end()) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
@@ -82,15 +77,12 @@ std::string	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info*
 		std::string	msg = ":" + user->getNickName() + " INVITE " + targetUserIt->getNickName() + " " + channelIt->getName() + "\r\n";
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(targetUserIt->getFd(), msg.c_str(), msg.size());
-		// TODO(hnoguchi): Check error
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-		// TODO(hnoguchi): Check error
 		return (Reply::rplInviting(kRPL_INVITING, user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		throw;
-		// return (-1);
+		// return ("");
 	}
-	return ("");
 }

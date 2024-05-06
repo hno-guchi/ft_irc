@@ -55,7 +55,6 @@ std::string	Execute::cmdUserMode(User* user, const ParsedMessage& parsedMsg, Inf
 			std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :-o\r\n";
 			debugPrintSendMessage("SendMsg", msg);
 			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-			// TODO(hnoguchi): 戻り値の確認
 			return ("");
 		}
 		if (parsedMsg.getParams()[1].getValue()[0] == '+') {
@@ -70,13 +69,11 @@ std::string	Execute::cmdUserMode(User* user, const ParsedMessage& parsedMsg, Inf
 			}
 			debugPrintSendMessage("SendMsg", msg);
 			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-			// TODO(hnoguchi): 戻り値の確認
 			return ("");
 		}
-		return ("");
+		return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		return ("");
 	}
-	return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
 }

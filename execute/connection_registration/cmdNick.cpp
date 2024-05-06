@@ -40,30 +40,21 @@ std::string	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* i
 		std::string	nick = parsedMsg.getParams()[0].getValue();
 		if (!(user->getRegistered() & kNickCommand)) {
 			// ユーザ登録処理
-			char								sufix = '0';
-			std::vector<User>::const_iterator	it = info->getUsers().begin();
-			while (it != info->getUsers().end()) {
-				if (it->getNickName() == nick) {
-					sufix += 1;
-					nick = parsedMsg.getParams()[0].getValue() + sufix;
-					it = info->getUsers().begin();
-				} else {
-					it += 1;
-				}
+			char	sufix = '0';
+			while (info->findUser(nick) != info->getUsers().end()) {
+				sufix += 1;
+				nick = parsedMsg.getParams()[0].getValue() + sufix;
 			}
 			user->setNickName(nick);
 		} else {
 			// 既存ユーザのニックネーム変更処理
-			for (std::vector<User>::const_iterator it = info->getUsers().begin(); it != info->getUsers().end(); it++) {
-				if (it->getNickName() == nick) {
-					return (Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getReplyName(), nick));
-				}
+			if (info->findUser(nick) != info->getUsers().end()) {
+				return (Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getReplyName(), nick));
 			}
-			std::string	msg = ":" + user->getReplyName() + " NICK :" + nick + "\r\n";
 			user->setNickName(nick);
+			std::string	msg = ":" + user->getReplyName() + " NICK :" + nick + "\r\n";
 			debugPrintSendMessage("SendMsg", msg);
 			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-			// TODO(hnoguchi): 戻り値の確認
 		}
 		return ("");
 	} catch (std::exception& e) {

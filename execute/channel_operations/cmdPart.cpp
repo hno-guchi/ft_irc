@@ -28,13 +28,8 @@ std::string	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* i
 		if (parsedMsg.getParams().size() == 0) {
 			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 		}
-		// TODO(hnoguchi): std::vector<channel>::const_iterator	Info::getChannel(const std::string& name);を実装する？
-		std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
-		for (; channelIt != info->getChannels().end(); channelIt++) {
-			if (channelIt->getName() == parsedMsg.getParams()[0].getValue()) {
-				break;
-			}
-		}
+		// <channel>が存在するか確認
+		std::vector<Channel>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}

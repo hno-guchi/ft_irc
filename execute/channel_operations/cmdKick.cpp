@@ -33,12 +33,7 @@ std::string	Execute::cmdKick(User* user, const ParsedMessage& parsedMsg, Info* i
 			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 		}
 		// <channel>が存在するか確認
-		std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
-		for (; channelIt != info->getChannels().end(); channelIt++) {
-			if (channelIt->getName() == parsedMsg.getParams()[0].getValue()) {
-				break;
-			}
-		}
+		std::vector<Channel>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
@@ -96,7 +91,8 @@ std::string	Execute::cmdKick(User* user, const ParsedMessage& parsedMsg, Info* i
 		}
 		return ("");
 	} catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return ("");
+		fatalError(e.what());
+		throw;
+		// return ("");
 	}
 }
