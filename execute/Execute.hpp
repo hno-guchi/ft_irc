@@ -26,6 +26,7 @@ class Execute {
 	 std::string	cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdKick(User* user, const ParsedMessage& parsedMsg, Info* info);
 	 std::string	cmdTopic(User* user, const ParsedMessage& parsedMsg, Info* info);
+
  public:
 	 Execute();
 	 ~Execute();

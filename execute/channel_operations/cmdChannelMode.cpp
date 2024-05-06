@@ -168,8 +168,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 				channelIt->addOperator(*targetUserIt);
 				msg += " " + parsedMsg.getParams()[2].getValue() + "\r\n";
 				// debugPrintSendMessage("SendMsg", msg);
-				// sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
-				// TODO(hnoguchi): Check error
+				// sendNonBlocking(*((*targetUserIt)->getFd()), msg.c_str(), msg.size());
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
 				channelIt->setMode(kRestrictTopicSetting);
 				msg += "\r\n";

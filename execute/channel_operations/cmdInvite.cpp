@@ -78,7 +78,7 @@ std::string	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info*
 			}
 		}
 		// channelIt->addMember(&(const_cast<User &>(info->getUser(targetUserIt->getIndex() - 1))));
-		channelIt->addInvited(&(const_cast<User &>(info->getUser(targetUserIt->getIndex() - 1))));
+		channelIt->addInvited(&(*targetUserIt));
 		std::string	msg = ":" + user->getNickName() + " INVITE " + targetUserIt->getNickName() + " " + channelIt->getName() + "\r\n";
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(targetUserIt->getFd(), msg.c_str(), msg.size());

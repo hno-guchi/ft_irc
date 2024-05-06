@@ -26,6 +26,9 @@ class Channel {
 	 std::vector<User*>	members_;
 	 std::vector<User*>	invited_;
 	 std::vector<User*>	operators_;
+	 // std::vector<std::string>	members_;
+	 // std::vector<std::string>	invited_;
+	 // std::vector<std::string>	operators_;
 
  public:
 	 explicit Channel(const std::string& name);
@@ -38,9 +41,7 @@ class Channel {
 	 void						setLimit(int limit);
 	 void						setMode(kChannelMode mode);
 	 void						unsetMode(kChannelMode mode);
-	 void						setMember(User* user);
-	 void						setInvited(User* user);
-	 void						setOperator(User* user);
+
 	 // GETTER
 	const std::string&			getName() const;
 	const std::string&			getTopic() const;
@@ -50,6 +51,9 @@ class Channel {
 	const std::vector<User*>&	getMembers() const;
 	const std::vector<User*>&	getInvited() const;
 	const std::vector<User*>&	getOperators() const;
+	// const std::vector<std::string>&	getMembers() const;
+	// const std::vector<std::string>&	getInvited() const;
+	// const std::vector<std::string>&	getOperators() const;
 
 	// TODO(hnoguchi): ChannelUsers classにする？
 	void						addMember(User* user);
@@ -58,7 +62,13 @@ class Channel {
 	void						eraseMember(User* user);
 	void						eraseInvited(User* user);
 	void						eraseOperator(User* oper);
-
+	// void						addMember(const std::string& name);
+	// void						addInvited(const std::string& name);
+	// void						addOperator(const std::string& name);
+	// void						eraseMember(const std::string& name);
+	// void						eraseInvited(const std::string& name);
+	// void						eraseOperator(const std::string& name);
+	void						resetDate();
 	// debug
 	void						printData() const;
 };

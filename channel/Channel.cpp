@@ -65,52 +65,6 @@ void	Channel::unsetMode(kChannelMode mode) {
 	this->modes_ ^= (this->modes_ & mode);
 }
 
-void	Channel::setMember(User* user) {
-	// TODO(hnoguchi): バリデーションは別でやる？
-	if (user == NULL) {
-		// throw std::invalid_argument("Invalid argument");
-		return;
-	}
-	// TODO(hnoguchi): バリデーションは別でやる？
-	if ((this->modes_ & kLimit) && \
-			static_cast<int>(this->members_.size()) >= this->limit_) {
-		// throw std::invalid_argument("Channel is full");
-		return;
-	}
-	try {
-		this->members_.push_back(user);
-	} catch (std::exception& e) {
-		throw;
-	}
-}
-
-void	Channel::setInvited(User* user) {
-	// TODO(hnoguchi): バリデーションは別でやる？
-	if (user == NULL) {
-		// throw std::invalid_argument("Invalid argument");
-		return;
-	}
-	// TODO(hnoguchi): バリデーションは別でやる？
-	if ((this->modes_ & kLimit) && \
-			static_cast<int>(this->members_.size()) >= this->limit_) {
-		// throw std::invalid_argument("Channel is full");
-		return;
-	}
-	try {
-		this->invited_.push_back(user);
-	} catch (std::exception& e) {
-		throw;
-	}
-}
-
-void	Channel::setOperator(User* user) {
-	try {
-		this->operators_.push_back(user);
-	} catch (std::exception& e) {
-		throw;
-	}
-}
-
 // GETTER
 const std::string&	Channel::getName() const {
 	return (this->name_);
@@ -142,6 +96,73 @@ const std::vector<User*>&	Channel::getInvited() const {
 const std::vector<User*>&	Channel::getOperators() const {
 	return (this->operators_);
 }
+
+// const std::vector<std::string>&	Channel::getMembers() const {
+// 	return (this->members_);
+// }
+// 
+// const std::vector<std::string>&	Channel::getInvited() const {
+// 	return (this->invited_);
+// }
+// 
+// const std::vector<std::string>&	Channel::getOperators() const {
+// 	return (this->operators_);
+// }
+
+
+// void	Channel::addMember(User* user) {
+// 	try {
+// 		this->members_.push_back(user);
+// 	} catch (std::exception& e) {
+// 		throw;
+// 	}
+// }
+// 
+// void	Channel::addInvited(User* user) {
+// 	try {
+// 		this->invited_.push_back(user);
+// 	} catch (std::exception& e) {
+// 		throw;
+// 	}
+// }
+// 
+// void	Channel::addOperator(User* user) {
+// 	try {
+// 		this->operators_.push_back(user);
+// 	} catch (std::exception& e) {
+// 		throw;
+// 	}
+// }
+
+// void	Channel::eraseMember(User* user) {
+// 	for (std::vector<User *>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
+// 		if (*it == user) {
+// 			*it = NULL;
+// 			this->members_.erase(it);
+// 			return;
+// 		}
+// 	}
+// }
+// 
+// void	Channel::eraseInvited(User* user) {
+// 	for (std::vector<User *>::iterator it = this->invited_.begin(); it != this->invited_.end(); it++) {
+// 		if (*it == user) {
+// 			*it = NULL;
+// 			this->invited_.erase(it);
+// 			return;
+// 		}
+// 	}
+// }
+// 
+// void	Channel::eraseOperator(User* oper) {
+// 	for (std::vector<User *>::iterator it = this->operators_.begin(); it != this->operators_.end(); it++) {
+// 		if (*it == oper) {
+// 			*it = NULL;
+// 			this->operators_.erase(it);
+// 			return;
+// 		}
+// 	}
+// }
 
 void	Channel::addMember(User* user) {
 	try {
@@ -194,6 +215,30 @@ void	Channel::eraseOperator(User* oper) {
 			this->operators_.erase(it);
 			return;
 		}
+	}
+}
+
+void	Channel::resetDate() {
+	try {
+	 	this->name_ = "";
+	 	this->topic_ = "";
+	 	this->key_ = "";
+	 	this->limit_ = -1;
+	 	this->modes_ = 0;
+		// for (std::vector<std::string>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
+		// 	*it = "";
+		// 	this->members_.erase(it);
+		// }
+		// for (std::vector<std::string>::iterator it = this->invited_.begin(); it != this->invited_.end(); it++) {
+		// 	*it = "";
+		// 	this->invited_.erase(it);
+		// }
+		// for (std::vector<std::string>::iterator it = this->operators_.begin(); it != this->operators_.end(); it++) {
+		// 	*it = "";
+		// 	this->operators_.erase(it);
+		// }
+	} catch (std::exception& e) {
+		throw;
 	}
 }
 
