@@ -35,39 +35,19 @@ std::string	Execute::cmdNotice(User* user, const ParsedMessage& parsedMsg, Info*
 				return(Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user->getNickName()));
 			}
 		}
-		std::vector<User>::const_iterator	it = info->getUsers().begin();
-		for (; it != info->getUsers().end(); it++) {
-			if (parsedMsg.getParams()[0].getValue() == it->getNickName()) {
-				break;
-			}
-		}
+		std::vector<User>::const_iterator	userIt = info->findUser(parsedMsg.getParams()[0].getValue());
 		// メッセージの作成
 		std::string	message = ":" + user->getNickName() + " NOTICE " + parsedMsg.getParams()[0].getValue() + " :" + parsedMsg.getParams()[1].getValue() + "\r\n";
 		debugPrintSendMessage("cmdNotice", message);
 		// メッセージの送信先がuserの場合
-		if (it != info->getUsers().end()) {
-			// 送信
-			ssize_t		sendMsgSize = sendNonBlocking(it->getFd(), message.c_str(), message.size());
-			if (sendMsgSize <= 0) {
-				// handleClientDisconnect(&it->getFd);
-				return ("");
-			}
-			// TODO(hnoguchi): castは使わない実装にする？？
-			if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
-				fatalError("send");
-			}
+		if (userIt != info->getUsers().end()) {
+			sendNonBlocking(userIt->getFd(), message.c_str(), message.size());
 			return ("");
 		}
 		// メッセージの送信先がchannelの場合
-		std::vector<Channel>::iterator	channelIt = const_cast<std::vector<Channel> &>(info->getChannels()).begin();
-		for (; channelIt != info->getChannels().end(); channelIt++) {
-			if (parsedMsg.getParams()[0].getValue() == channelIt->getName()) {
-				break;
-			}
-		}
+		std::vector<Channel>::const_iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
-			// std::cerr << "No such channel" << std::endl;
-			return (Reply::errNoSuchNick(kERR_NOSUCHNICK, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		std::vector<User*>::const_iterator	memberIt = channelIt->getMembers().begin();
 		for (; memberIt != channelIt->getMembers().end(); memberIt++) {
@@ -78,25 +58,17 @@ std::string	Execute::cmdNotice(User* user, const ParsedMessage& parsedMsg, Info*
 		if (memberIt == channelIt->getMembers().end()) {
 			return (Reply::errCanNotSendToChan(kERR_CANNOTSENDTOCHAN, user->getNickName(), channelIt->getName()));
 		}
-		memberIt = channelIt->getMembers().begin();
-		for (; memberIt != channelIt->getMembers().end(); memberIt++) {
+		for (memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
 			if (user->getNickName() == (*memberIt)->getNickName()) {
 				continue;
 			}
-			ssize_t		sendMsgSize = sendNonBlocking((*memberIt)->getFd(), message.c_str(), message.size());
-			if (sendMsgSize <= 0) {
-				// handleClientDisconnect(&(*member)->getFd());
-				return ("");
-			}
-			// TODO(hnoguchi): castは使わない実装にする？？
-			if (static_cast<ssize_t>(message.size()) != sendMsgSize) {
-				fatalError("send NOTICE");
-			}
+			sendNonBlocking((*memberIt)->getFd(), message.c_str(), message.size());
 		}
 		return ("");
 	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
+		fatalError(e.what());
 		// handleClientDisconnect(&it->getFd);
-		return ("");
+		throw;
+		// return ("");
 	}
 }

@@ -31,8 +31,6 @@ std::string	Execute::cmdQuit(User* user, const ParsedMessage& parsedMsg, Info* i
 	}
 	message += "\r\n";
 	sendNonBlocking(user->getFd(), message.c_str(), message.size());
-	// TODO(hnoguchi): Check
-
 	info->eraseUser(info->findUser(user->getFd()));
 	return ("");
 }
