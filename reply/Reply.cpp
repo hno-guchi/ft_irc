@@ -187,7 +187,7 @@ std::string	Reply::rplNamReply(int num, const std::string& toName, const Channel
 
 		if (channel.getName()[0] == '#') {
 			// message += "= " + channel.getName() + " :";
-			message += "=" + channel.getName() + " :";
+			message += "= " + channel.getName() + " :";
 		}
 		for (std::vector<User*>::const_iterator it = channel.getMembers().begin(); it != channel.getMembers().end(); ++it) {
 			if (channel.isOperator((*it)->getNickName())) {

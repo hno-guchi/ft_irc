@@ -1,3 +1,4 @@
+#include <signal.h>
 #include "./Server.hpp"
 #include "./ServerSocket.hpp"
 #include "./Config.hpp"
@@ -11,63 +12,29 @@
 /*
  * Helper functions
  */
-// static void	handleClientDisconnect(int* fd) {
-// 	std::cout << "Client socket " << *fd << " disconnected." << std::endl;
-// 	if (*fd < 0) {
-// 		return ;
-// 	}
-// 	close(*fd);
-// 	*fd = -1;
-// }
-
-static ssize_t	recvNonBlocking(int fd, char* buffer, size_t bufferSize) {
-	ssize_t	recvMsgSize = 0;
+static void	recvNonBlocking(int fd, char* buffer, size_t dataSize) {
+	ssize_t recvMsgSize = 0;
 
 	while (1) {
-		recvMsgSize = recv(fd, buffer, bufferSize, MSG_DONTWAIT);
+		recvMsgSize = recv(fd, buffer, dataSize, MSG_DONTWAIT);
 
 		if (recvMsgSize >= 0) {
 			break;
 		}
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			errno = 0;
-			recvMsgSize = 0;
-			continue;
-		} else if (errno == ECONNRESET) {
-			// recvMsgSize = -1;
-			// handleClientDisconnect(fd);
-			throw std::runtime_error("recv");
-		} else {
-			// handleClientDisconnect(fd);
+		if (errno != EAGAIN && errno != EWOULDBLOCK) {
 			throw std::runtime_error("recv");
 		}
+		std::cout << "No data sent." << std::endl;
+		errno = 0;
+		recvMsgSize = 0;
 	}
-	return (recvMsgSize);
+	if (recvMsgSize == 0) {
+		throw std::runtime_error("recv");
+	}
+	// if (static_cast<ssize_t>(dataSize) != recvMsgSize) {
+	// 	throw std::runtime_error("recv");
+	// }
 }
-
-// void	recvNonBlocking(int fd, const char* buffer, size_t dataSize) {
-// 	ssize_t recvMsgSize = 0;
-//
-// 	while (1) {
-// 		recvMsgSize = recv(fd, buffer, dataSize, MSG_DONTWAIT);
-//
-// 		if (recvMsgSize >= 0) {
-// 			break;
-// 		}
-// 		if (errno != EAGAIN && errno != EWOULDBLOCK) {
-// 			throw std::runtime_error("recv");
-// 		}
-// 		std::cout << "No data sent." << std::endl;
-// 		errno = 0;
-// 		recvMsgSize = 0;
-// 	}
-// 	if (recvMsgSize == 0) {
-// 		throw std::runtime_error("recv");
-// 	}
-// 	if (static_cast<ssize_t>(dataSize) != recvMsgSize) {
-// 		throw std::runtime_error("recv");
-// 	}
-// }
 
 
 static std::vector<std::string>	split(const std::string& message, const std::string delim) {
@@ -94,7 +61,7 @@ static std::vector<std::string>	split(const std::string& message, const std::str
 /*
  * Global functions
  */
-ssize_t	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
+void	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
 	ssize_t sendMsgSize = 0;
 
 	while (1) {
@@ -103,46 +70,20 @@ ssize_t	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
 		if (sendMsgSize >= 0) {
 			break;
 		}
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			std::cout << "No data sent." << std::endl;
-			errno = 0;
-			sendMsgSize = 0;
-			continue;
-		} else if (errno == ECONNRESET) {
-			// sendMsgSize = -1;
-			// handleClientDisconnect(fd);
-			throw std::runtime_error("send");
-		} else {
-			// handleClientDisconnect(fd);
+		if (errno != EAGAIN && errno != EWOULDBLOCK) {
 			throw std::runtime_error("send");
 		}
+		std::cout << "No data sent." << std::endl;
+		errno = 0;
+		sendMsgSize = 0;
 	}
-	return (sendMsgSize);
+	if (sendMsgSize == 0) {
+		throw std::runtime_error("send");
+	}
+	if (static_cast<ssize_t>(dataSize) != sendMsgSize) {
+		throw std::runtime_error("send");
+	}
 }
-
-// void	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
-// 	ssize_t sendMsgSize = 0;
-// 
-// 	while (1) {
-// 		sendMsgSize = send(fd, buffer, dataSize, MSG_DONTWAIT);
-// 
-// 		if (sendMsgSize >= 0) {
-// 			break;
-// 		}
-// 		if (errno != EAGAIN && errno != EWOULDBLOCK) {
-// 			throw std::runtime_error("send");
-// 		}
-// 		std::cout << "No data sent." << std::endl;
-// 		errno = 0;
-// 		sendMsgSize = 0;
-// 	}
-// 	if (sendMsgSize == 0) {
-// 		throw std::runtime_error("send");
-// 	}
-// 	if (static_cast<ssize_t>(dataSize) != sendMsgSize) {
-// 		throw std::runtime_error("send");
-// 	}
-// }
 
 /*
  * Server class
@@ -227,14 +168,15 @@ void	Server::handleServerSocket() {
 			return;
 		}
 		// ユーザ仮登録
-		User	user;
-		user.setFd(&(this->fds_[i].fd));
-		this->info_.pushBackUser(user);
+		this->info_.pushBackUser(new User(&(this->fds_[i].fd)));
+		// const_cast<std::vector<User*>&>(this->info_.getUsers()).back().setFd(&(this->fds_[i].fd));
 		std::cout << "New client connected. Socket: " << this->fds_[i].fd << std::endl;
 	} catch (std::exception& e) {
 		this->info_.eraseUser(this->info_.findUser(this->fds_[i].fd));
 		throw;
 	}
+	// this->info_.findUser(this->fds_[i].fd)->printData();
+	this->info_.printUsers();
 }
 
 // void	Server::handleStandardInput() {
@@ -259,9 +201,7 @@ void	Server::handleClientSocket() {
 	try {
 		for (int i = 1; i <= this->info_.getConfig().getMaxClient(); ++i) {
 			if (this->fds_[i].fd != -1 && (this->fds_[i].revents & POLLIN)) {
-				// handleReceivedData(i);
-				handleReceivedData(&(*this->info_.findUser(this->fds_[i].fd)));
-				// std::cout << i << std::endl;
+				handleReceivedData(*this->info_.findUser(this->fds_[i].fd));
 				// this->printData();
 			}
 		}
@@ -325,7 +265,7 @@ void	Server::handleReceivedData(User* user) {
 	// 	throw;
 	} catch (std::exception& e) {
 		// TODO(hnoguchi): メッセージ受信に失敗したことをユーザに通知（メッセージを送信）する？
-		this->info_.eraseUser(this->info_.findUser(user->getFd()));
+		// this->info_.eraseUser(this->info_.findUser(user->getFd()));
 		throw;
 	}
 }

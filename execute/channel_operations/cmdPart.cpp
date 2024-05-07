@@ -29,17 +29,17 @@ std::string	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* i
 			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 		}
 		// <channel>が存在するか確認
-		std::vector<Channel>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
+		std::vector<Channel*>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		// userが<channel>にいるか確認
-		if (!channelIt->isMember(user->getNickName())) {
+		if (!(*channelIt)->isMember(user->getNickName())) {
 			return (Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
-		channelIt->eraseMember(user);
-		channelIt->eraseOperator(user);
-		std::string	msg = ":" + user->getNickName() + " PART " + channelIt->getName() + " :";
+		(*channelIt)->eraseMember(user);
+		(*channelIt)->eraseOperator(user);
+		std::string	msg = ":" + user->getNickName() + " PART " + (*channelIt)->getName() + " :";
 		if (parsedMsg.getParams().size() > 1) {
 			msg += parsedMsg.getParams()[1].getValue() + "\r\n";
 		} else {
@@ -47,10 +47,10 @@ std::string	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* i
 		}
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-		for (std::vector<User *>::const_iterator memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
+		for (std::vector<User *>::const_iterator memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
 			sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 		}
-		if (channelIt->getMembers().size() == 0) {
+		if ((*channelIt)->getMembers().size() == 0) {
 			info->eraseChannel(channelIt);
 		}
 		return ("");

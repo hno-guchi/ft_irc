@@ -34,7 +34,7 @@ class User {
 	 unsigned int	modes_;
 
  public:
-	 User();
+	 explicit User(int* fd = NULL);
 	 ~User();
 
 	 // OPERATOR

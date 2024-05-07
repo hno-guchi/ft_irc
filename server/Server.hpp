@@ -45,6 +45,6 @@ class Server {
 	// Bureaucrat::GradeTooHighException::GradeTooHighException(const std::string& msg) : std::out_of_range(msg) {}
 };
 
-ssize_t	sendNonBlocking(int fd, const char* buffer, size_t dataSize);
+void	sendNonBlocking(int fd, const char* buffer, size_t dataSize);
 
 #endif  // SERVER_HPP
