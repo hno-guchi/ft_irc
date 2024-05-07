@@ -81,7 +81,7 @@ std::string	Reply::rplWelcome(const Info& info, const User& user) {
 		message += Reply::rplFromName(info.getConfig().getServerName());
 		message += Reply::rplYourHost(user.getReplyName(), info.getConfig().getServerName(), info.getConfig().getVersion());
 		message += Reply::rplFromName(info.getConfig().getServerName());
-		message += Reply::rplCreated(user.getReplyName(), info.getConfig().getCreatedData());
+		message += Reply::rplCreated(user.getReplyName(), info.getConfig().getCreatedDate());
 		message += Reply::rplFromName(info.getConfig().getServerName());
 		message += Reply::rplMyInfo(user.getReplyName(), info.getConfig());
 		message += Reply::rplFromName(user.getReplyName());

@@ -135,6 +135,7 @@ void	Server::run() {
 		} catch (std::exception& e) {
 			throw;
 		}
+		this->info_.printInfo();
 		// TODO(hnoguchi): PINGするならここ。
 	}
 }
@@ -169,14 +170,12 @@ void	Server::handleServerSocket() {
 		}
 		// ユーザ仮登録
 		this->info_.pushBackUser(new User(&(this->fds_[i].fd)));
-		// const_cast<std::vector<User*>&>(this->info_.getUsers()).back().setFd(&(this->fds_[i].fd));
 		std::cout << "New client connected. Socket: " << this->fds_[i].fd << std::endl;
 	} catch (std::exception& e) {
 		this->info_.eraseUser(this->info_.findUser(this->fds_[i].fd));
 		throw;
 	}
-	// this->info_.findUser(this->fds_[i].fd)->printData();
-	this->info_.printUsers();
+	// this->info_.printUsers();
 }
 
 // void	Server::handleStandardInput() {

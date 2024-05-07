@@ -66,7 +66,7 @@ class User {
 	 unsigned int		getModes() const;
 
 	 void				disconnect();
-	 void				resetDate();
+	 void				resetData();
 	 // DEBUG
 	 void	printData() const;
 };

@@ -1,4 +1,5 @@
 #include "./Channel.hpp"
+#include "../color.hpp"
 #include "../user/User.hpp"
 
 Channel::Channel(const std::string& name) :
@@ -148,7 +149,7 @@ void	Channel::eraseOperator	(User* user) {
 	}
 }
 
-void	Channel::resetDate() {
+void	Channel::resetData() {
 	try {
 	 	this->name_ = "";
 	 	this->topic_ = "";
@@ -197,22 +198,44 @@ bool	Channel::isOperator(const std::string& name) const {
 }
 
 void	Channel::printData() const {
-	std::cout << "[" << this->getName() << "]" << "__________" << std::endl;
+	std::cout << CYAN << "[CHANNEL INFO] -----------------" << END << std::endl;
+	std::cout << "[name]      | [" << this->getName() << "]" << std::endl;
 	std::cout << "[topic]     | [" << this->getName() << "]" << std::endl;
 	std::cout << "[key]       | [" << this->getKey() << "]" << std::endl;
 	std::cout << "[limit]     | [" << this->getLimit() << "]" << std::endl;
 	std::cout << "[modes]     | [" << this->getModes() << "]" << std::endl;
-	std::cout << "[operators]" << std::endl;
+	std::cout << "[operators] | " << std::flush;
 	for (std::vector<User*>::const_iterator it = this->getOperators().begin(); it != this->getOperators().end(); it++) {
-		std::cout << "            | [" << (*it)->getNickName() << "]" << std::endl;
+		if (it != this->getOperators().begin()) {
+			std::cout << "            | " << std::flush;
+		}
+		std::cout << "[" << (*it)->getNickName() << "]" << std::flush;
+		if ((it + 1) != this->getOperators().end()) {
+			std::cout << std::endl;
+		}
 	}
-	std::cout << "[members]" << std::endl;
+	std::cout << std::endl;
+	std::cout << "[members]   | " << std::flush;
 	for (std::vector<User*>::const_iterator it = this->getMembers().begin(); it != this->getMembers().end(); it++) {
-		std::cout << "            | [" << (*it)->getNickName() << "]" << std::endl;
+		if (it != this->getMembers().begin()) {
+			std::cout << "            | " << std::flush;
+		}
+		std::cout << "[" << (*it)->getNickName() << "]" << std::flush;
+		if ((it + 1) != this->getMembers().end()) {
+			std::cout << std::endl;
+		}
 	}
-	std::cout << "[invited]" << std::endl;
+	std::cout << std::endl;
+	std::cout << "[invited]   | " << std::flush;
 	for (std::vector<User*>::const_iterator it = this->getInvited().begin(); it != this->getInvited().end(); it++) {
-		std::cout << "            | [" << (*it)->getNickName() << "]" << std::endl;
+		if (it != this->getInvited().begin()) {
+			std::cout << "            | " << std::flush;
+		}
+		std::cout << "[" << (*it)->getNickName() << "]" << std::flush;
+		if ((it + 1) != this->getInvited().end()) {
+			std::cout << std::endl;
+		}
 	}
-	std::cout << "______________________________________" << std::endl;
+	std::cout << std::endl;
+	std::cout << CYAN << "--------------------------------\n" << END << std::endl;
 }

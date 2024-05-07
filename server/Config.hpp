@@ -9,7 +9,7 @@ class Config {
  private:
 	 const int					maxClient_;
 	 const int					maxChannel_;
-	 const time_t				createdData_;
+	 const time_t				createdDate_;
 	 const std::string			version_;
 	 const std::string			serverName_;
 	 const std::string			password_;
@@ -25,7 +25,7 @@ class Config {
 	 // GETTERS
 	 int				getMaxClient() const;
 	 int				getMaxChannel() const;
-	 const time_t&		getCreatedData() const;
+	 const time_t&		getCreatedDate() const;
 	 const std::string&	getVersion() const;
 	 const std::string&	getServerName() const;
 	 const std::string&	getPassword() const;
@@ -40,6 +40,8 @@ class Config {
 	 // void	setPassword(const std::string& password);
 	 // void	setUserModes(const std::string& userModes);
 	 // void	setChannelModes(const std::string& channelModes);
+	 // DEBUG
+	 void				printData() const;
 };
 
 #endif  // CONFIG_HPP

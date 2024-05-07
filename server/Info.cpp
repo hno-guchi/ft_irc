@@ -110,7 +110,7 @@ void	Info::pushBackChannel(Channel* channel) {
 void	Info::eraseUser(std::vector<User*>::iterator it) {
 	try {
 		(*it)->disconnect();
-		(*it)->resetDate();
+		(*it)->resetData();
 		delete *it;
 		this->users_.erase(it);
 		// *it = NULL;
@@ -123,7 +123,7 @@ void	Info::eraseUser(std::vector<User*>::iterator it) {
 
 void	Info::eraseChannel(std::vector<Channel*>::iterator it) {
 	try {
-		(*it)->resetDate();
+		(*it)->resetData();
 		delete *it;
 		this->channels_.erase(it);
 		// *it = NULL;
@@ -134,9 +134,27 @@ void	Info::eraseChannel(std::vector<Channel*>::iterator it) {
 	}
 }
 
+void	Info::printConfig() const {
+	this->config_.printData();
+	std::cout << std::endl;
+}
+
 void	Info::printUsers() const {
 	for (std::vector<User*>::const_iterator it = this->users_.begin(); it != this->users_.end(); it++) {
 		(*it)->printData();
 		std::cout << std::endl;
 	}
+}
+
+void	Info::printChannels() const {
+	for (std::vector<Channel*>::const_iterator it = this->channels_.begin(); it != this->channels_.end(); it++) {
+		(*it)->printData();
+		std::cout << std::endl;
+	}
+}
+
+void	Info::printInfo() const {
+	this->printConfig();
+	this->printUsers();
+	this->printChannels();
 }

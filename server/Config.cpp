@@ -1,4 +1,6 @@
+# include <iostream>
 # include "./Config.hpp"
+# include "../color.hpp"
 
 const std::string	Config::commandList_[] = {
 	"PASS",
@@ -21,7 +23,7 @@ const std::string	Config::commandList_[] = {
 };
 
 Config::Config() : \
-	maxClient_(5), maxChannel_(5), createdData_(std::time(NULL)), version_("1"), serverName_("ft_irc.42tokyo.net"), password_("password"), userModes_("or"), channelModes_("iklot") {
+	maxClient_(5), maxChannel_(5), createdDate_(std::time(NULL)), version_("1"), serverName_("ft_irc.42tokyo.net"), password_("password"), userModes_("or"), channelModes_("iklot") {
 }
 
 // Config&	operator=(const Config& rhs) {
@@ -51,8 +53,8 @@ const std::string&	Config::getVersion() const {
 	return (this->version_);
 }
 
-const time_t&	Config::getCreatedData() const {
-	return (this->createdData_);
+const time_t&	Config::getCreatedDate() const {
+	return (this->createdDate_);
 }
 
 const std::string&	Config::getServerName() const {
@@ -95,3 +97,31 @@ const std::string*	Config::getCommandList() const {
 // 	this->channelModes_ = channelModes;
 // }
 
+void	Config::printData() const {
+	std::cout << "[CONFIG INFO] ------------------" << std::endl;
+	std::cout << "[maxClient]    : [" << this->maxClient_ << "]" << std::endl;
+	std::cout << "[maxChannel]   : [" << this->maxChannel_ << "]" << std::endl;
+	std::cout << "[createdDate]  : [" << std::asctime(std::localtime(&(this->createdDate_))) << std::flush;  // << "]" << std::endl;
+	std::cout << "[version]      : [" << this->version_ << "]" << std::endl;
+	std::cout << "[serverName]   : [" << this->serverName_ << "]" << std::endl;
+	std::cout << "[password]     : [" << this->password_ << "]" << std::endl;
+	std::cout << "[userModes]    : [" << this->userModes_ << "]" << std::endl;
+	std::cout << "[channelModes] : [" << this->channelModes_ << "]" << std::endl;
+	std::cout << "[commandList]  : ["<< std::flush;
+	for (int i = 0; this->commandList_[i] != ""; i++) {
+		std::cout << this->commandList_[i] << std::flush;
+		if ((i + 1) % 5 != 0 && this->commandList_[i + 1] != "") {
+			std::cout << ", " << std::flush;
+		}
+		if ((i + 1) % 5 == 0) {
+			std::cout << "]" << std::endl;
+		}
+		if ((i + 1) % 5 == 0 && this->commandList_[i + 1] != "") {
+			std::cout << "               : ["<< std::flush;
+		}
+		if (this->commandList_[i + 1] == "") {
+			std::cout << "]" << std::endl;
+		}
+	}
+	std::cout << "--------------------------------\n" << std::endl;
+}
