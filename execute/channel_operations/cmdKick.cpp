@@ -37,49 +37,36 @@ std::string	Execute::cmdKick(User* user, const ParsedMessage& parsedMsg, Info* i
 		if (channelIt == info->getChannels().end()) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
-		// userがchannel operatorか確認
-		std::vector<User*>::const_iterator	operIt = channelIt->getOperators().begin();
-		for (; operIt != channelIt->getOperators().end(); operIt++) {
-			if ((*operIt)->getNickName() == user->getNickName()) {
-				break;
-			}
+		// <user>が存在するか確認
+		std::vector<User>::iterator	targetUserIt = info->findUser(parsedMsg.getParams()[1].getValue());
+		if (targetUserIt == info->getUsers().end()) {
+			return (Reply::errNoSuchNick(kERR_NOSUCHNICK, user->getNickName(), parsedMsg.getParams()[1].getValue()));
 		}
-		if (operIt == channelIt->getOperators().end()) {
+		// userがchannel operatorか確認
+		if (!channelIt->isOperator(user->getNickName())) {
 			return (Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getNickName(), user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
-		std::vector<User*>::const_iterator	targetUserIt = channelIt->getMembers().begin();
-		for (; targetUserIt != channelIt->getMembers().end(); targetUserIt++) {
-			if ((*targetUserIt)->getNickName() == parsedMsg.getParams()[1].getValue()) {
-				break;
-			}
-		}
 		// <user>が<channel>にいるか確認
-		if (targetUserIt == channelIt->getMembers().end()) {
+		if (!channelIt->isMember(parsedMsg.getParams()[1].getValue())) {
 			return (Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
 		}
 		// userが<channel>にいるか確認
-		std::vector<User*>::const_iterator	userIt = channelIt->getMembers().begin();
-		for (; userIt != channelIt->getMembers().end(); userIt++) {
-			if ((*userIt)->getNickName() == user->getNickName()) {
-				break;
-			}
-		}
-		if (userIt == channelIt->getMembers().end()) {
+		if (!channelIt->isMember(user->getNickName())) {
 			return (Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		// 実行処理
 		// <channel>から<user>を削除
-		channelIt->eraseMember(*targetUserIt);
-		channelIt->eraseOperator(*targetUserIt);
+		channelIt->eraseMember(&(*targetUserIt));
+		channelIt->eraseOperator(&(*targetUserIt));
 		// <user>にPARTメッセージを送信
-		std::string	msg = ":" + parsedMsg.getParams()[1].getValue() + " PART " + channelIt->getName();
-		// if (parsedMsg.getParams().size() > 2) {
-		// 	msg += " :" + parsedMsg.getParams()[2].getValue() + "\r\n";
-		// } else {
+		std::string	msg = ":" + targetUserIt->getNickName() + " PART " + channelIt->getName();
+		if (parsedMsg.getParams().size() > 2) {
+			msg += " :" + parsedMsg.getParams()[2].getValue() + "\r\n";
+		} else {
 			msg += " :" + parsedMsg.getParams()[1].getValue() + "\r\n";
-		// }
+		}
 		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+		sendNonBlocking(targetUserIt->getFd(), msg.c_str(), msg.size());
 		msg = ":" + user->getNickName() + " KICK " + channelIt->getName() + " " + parsedMsg.getParams()[1].getValue();
 		if (parsedMsg.getParams().size() > 2) {
 			msg += " :" + parsedMsg.getParams()[2].getValue();

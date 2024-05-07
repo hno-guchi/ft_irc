@@ -45,20 +45,16 @@ std::string	Execute::cmdNotice(User* user, const ParsedMessage& parsedMsg, Info*
 			return ("");
 		}
 		// メッセージの送信先がchannelの場合
+		// <channel>が存在するか確認
 		std::vector<Channel>::const_iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
-		std::vector<User*>::const_iterator	memberIt = channelIt->getMembers().begin();
-		for (; memberIt != channelIt->getMembers().end(); memberIt++) {
-			if (user->getNickName() == (*memberIt)->getNickName()) {
-				break;
-			}
-		}
-		if (memberIt == channelIt->getMembers().end()) {
+		// userが<channel>にいるか確認
+		if (!channelIt->isMember(user->getNickName())) {
 			return (Reply::errCanNotSendToChan(kERR_CANNOTSENDTOCHAN, user->getNickName(), channelIt->getName()));
 		}
-		for (memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
+		for (std::vector<User*>::const_iterator memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
 			if (user->getNickName() == (*memberIt)->getNickName()) {
 				continue;
 			}
