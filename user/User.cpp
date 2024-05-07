@@ -3,10 +3,11 @@
 #include "../error/error.hpp"
 
 // CONSTRUCTORS and DESTRUCTORS
-User::User() : index_(-1), fd_(NULL), registered_(0), modes_(0) {
+User::User(int* fd) : index_(-1), fd_(fd), registered_(0), modes_(0) {
 }
 
 User::~User() {
+	std::cerr << "User destructor called" << std::endl;
 	if (this->fd_ != NULL) {
 		if (*(this->fd_) != -1) {
 			close(*(this->fd_));
@@ -183,6 +184,6 @@ void	User::printData() const {
 	std::cout << "[userName]     : [" << this->userName_ << "]" << std::endl;
 	std::cout << "[serverName]   : [" << this->serverName_ << "]" << std::endl;
 	std::cout << "[realName]     : [" << this->realName_ << "]" << std::endl;
-	std::cout << "[replyName]     : [" << this->replyName_ << "]" << std::endl;
+	std::cout << "[replyName]    : [" << this->replyName_ << "]" << std::endl;
 	std::cout << MAGENTA << "--------------------------------\n" << END << std::endl;
 }

@@ -35,26 +35,26 @@ std::string	Execute::cmdNotice(User* user, const ParsedMessage& parsedMsg, Info*
 				return(Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user->getNickName()));
 			}
 		}
-		std::vector<User>::const_iterator	userIt = info->findUser(parsedMsg.getParams()[0].getValue());
+		std::vector<User*>::const_iterator	userIt = info->findUser(parsedMsg.getParams()[0].getValue());
 		// メッセージの作成
 		std::string	message = ":" + user->getNickName() + " NOTICE " + parsedMsg.getParams()[0].getValue() + " :" + parsedMsg.getParams()[1].getValue() + "\r\n";
 		debugPrintSendMessage("cmdNotice", message);
 		// メッセージの送信先がuserの場合
 		if (userIt != info->getUsers().end()) {
-			sendNonBlocking(userIt->getFd(), message.c_str(), message.size());
+			sendNonBlocking((*userIt)->getFd(), message.c_str(), message.size());
 			return ("");
 		}
 		// メッセージの送信先がchannelの場合
 		// <channel>が存在するか確認
-		std::vector<Channel>::const_iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
+		std::vector<Channel*>::const_iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		// userが<channel>にいるか確認
-		if (!channelIt->isMember(user->getNickName())) {
-			return (Reply::errCanNotSendToChan(kERR_CANNOTSENDTOCHAN, user->getNickName(), channelIt->getName()));
+		if (!(*channelIt)->isMember(user->getNickName())) {
+			return (Reply::errCanNotSendToChan(kERR_CANNOTSENDTOCHAN, user->getNickName(), (*channelIt)->getName()));
 		}
-		for (std::vector<User*>::const_iterator memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
+		for (std::vector<User*>::const_iterator memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
 			if (user->getNickName() == (*memberIt)->getNickName()) {
 				continue;
 			}

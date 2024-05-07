@@ -14,17 +14,17 @@ const Config&	Info::getConfig() const {
 	return (this->config_);
 }
 
-const std::vector<User>&	Info::getUsers() const {
+const std::vector<User*>&	Info::getUsers() const {
 	return (this->users_);
 }
 
-const std::vector<Channel>&	Info::getChannels() const {
+const std::vector<Channel*>&	Info::getChannels() const {
 	return (this->channels_);
 }
 
-std::vector<User>::iterator	Info::findUser(const std::string& name) {
-	for (std::vector<User>::iterator it = this->users_.begin(); it != this->users_.end(); it++) {
-		if (it->getNickName() != name) {
+std::vector<User*>::iterator	Info::findUser(const std::string& name) {
+	for (std::vector<User*>::iterator it = this->users_.begin(); it != this->users_.end(); it++) {
+		if ((*it)->getNickName() != name) {
 			continue;
 		}
 		return (it);
@@ -32,9 +32,9 @@ std::vector<User>::iterator	Info::findUser(const std::string& name) {
 	return (this->users_.end());
 }
 
-std::vector<User>::const_iterator	Info::findUser(const std::string& name) const {
-	for (std::vector<User>::const_iterator it = this->users_.begin(); it != this->users_.end(); it++) {
-		if (it->getNickName() != name) {
+std::vector<User*>::const_iterator	Info::findUser(const std::string& name) const {
+	for (std::vector<User*>::const_iterator it = this->users_.begin(); it != this->users_.end(); it++) {
+		if ((*it)->getNickName() != name) {
 			continue;
 		}
 		return (it);
@@ -42,9 +42,9 @@ std::vector<User>::const_iterator	Info::findUser(const std::string& name) const 
 	return (this->users_.end());
 }
 
-std::vector<User>::iterator	Info::findUser(int fd) {
-	for (std::vector<User>::iterator it = this->users_.begin(); it != this->users_.end(); it++) {
-		if (it->getFd() != fd) {
+std::vector<User*>::iterator	Info::findUser(int fd) {
+	for (std::vector<User*>::iterator it = this->users_.begin(); it != this->users_.end(); it++) {
+		if ((*it)->getFd() != fd) {
 			continue;
 		}
 		return (it);
@@ -52,9 +52,9 @@ std::vector<User>::iterator	Info::findUser(int fd) {
 	return (this->users_.end());
 }
 
-std::vector<User>::const_iterator	Info::findUser(int fd) const {
-	for (std::vector<User>::const_iterator it = this->users_.begin(); it != this->users_.end(); it++) {
-		if (it->getFd() != fd) {
+std::vector<User*>::const_iterator	Info::findUser(int fd) const {
+	for (std::vector<User*>::const_iterator it = this->users_.begin(); it != this->users_.end(); it++) {
+		if ((*it)->getFd() != fd) {
 			continue;
 		}
 		return (it);
@@ -62,9 +62,9 @@ std::vector<User>::const_iterator	Info::findUser(int fd) const {
 	return (this->users_.end());
 }
 
-std::vector<Channel>::iterator	Info::findChannel(const std::string& name) {
-	for (std::vector<Channel>::iterator it = this->channels_.begin(); it != this->channels_.end(); it++) {
-		if (it->getName() != name) {
+std::vector<Channel*>::iterator	Info::findChannel(const std::string& name) {
+	for (std::vector<Channel*>::iterator it = this->channels_.begin(); it != this->channels_.end(); it++) {
+		if ((*it)->getName() != name) {
 			continue;
 		}
 		return (it);
@@ -72,9 +72,9 @@ std::vector<Channel>::iterator	Info::findChannel(const std::string& name) {
 	return (this->channels_.end());
 }
 
-std::vector<Channel>::const_iterator	Info::findChannel(const std::string& name) const {
-	for (std::vector<Channel>::const_iterator it = this->channels_.begin(); it != this->channels_.end(); it++) {
-		if (it->getName() != name) {
+std::vector<Channel*>::const_iterator	Info::findChannel(const std::string& name) const {
+	for (std::vector<Channel*>::const_iterator it = this->channels_.begin(); it != this->channels_.end(); it++) {
+		if ((*it)->getName() != name) {
 			continue;
 		}
 		return (it);
@@ -87,7 +87,7 @@ std::vector<Channel>::const_iterator	Info::findChannel(const std::string& name) 
 // 	this->config_ = config;
 // }
 
-void	Info::pushBackUser(const User& user) {
+void	Info::pushBackUser(User* user) {
 	try {
 		this->users_.push_back(user);
 	} catch (std::exception& e) {
@@ -97,7 +97,7 @@ void	Info::pushBackUser(const User& user) {
 	}
 }
 
-void	Info::pushBackChannel(const Channel& channel) {
+void	Info::pushBackChannel(Channel* channel) {
 	try {
 		this->channels_.push_back(channel);
 	} catch (std::exception& e) {
@@ -107,10 +107,13 @@ void	Info::pushBackChannel(const Channel& channel) {
 	}
 }
 
-void	Info::eraseUser(std::vector<User>::iterator it) {
+void	Info::eraseUser(std::vector<User*>::iterator it) {
 	try {
-		it->disconnect();
-		it->resetDate();
+		(*it)->disconnect();
+		(*it)->resetDate();
+		delete *it;
+		this->users_.erase(it);
+		// *it = NULL;
 	} catch (std::exception& e) {
 		// throw std::invalid_argument("Info::deleteUser()");
 		fatalError(e.what());
@@ -118,13 +121,22 @@ void	Info::eraseUser(std::vector<User>::iterator it) {
 	}
 }
 
-void	Info::eraseChannel(std::vector<Channel>::iterator it) {
+void	Info::eraseChannel(std::vector<Channel*>::iterator it) {
 	try {
-		it->resetDate();
+		(*it)->resetDate();
+		delete *it;
 		this->channels_.erase(it);
+		// *it = NULL;
 	} catch (std::exception& e) {
 		// throw std::invalid_argument("Info::deleteChannel()");
 		fatalError(e.what());
 		throw;
+	}
+}
+
+void	Info::printUsers() const {
+	for (std::vector<User*>::const_iterator it = this->users_.begin(); it != this->users_.end(); it++) {
+		(*it)->printData();
+		std::cout << std::endl;
 	}
 }
