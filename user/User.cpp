@@ -150,7 +150,7 @@ void	User::disconnect() {
 	}
 }
 
-void	User::resetDate() {
+void	User::resetData() {
 	try {
 		this->nickName_ = "";
 		this->userName_ = "";

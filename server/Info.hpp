@@ -33,7 +33,10 @@ class Info {
 	 void									eraseChannel(std::vector<Channel*>::iterator it);
 
 	 // debug
+	 void									printConfig() const;
 	 void									printUsers() const;
+	 void									printChannels() const;
+	 void									printInfo() const;
 };
 
 #endif

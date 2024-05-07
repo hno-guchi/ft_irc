@@ -57,7 +57,7 @@ class Channel {
 	bool						isMember(const std::string& name) const;
 	bool						isInvited(const std::string& name) const;
 	bool						isOperator(const std::string& name) const;
-	void						resetDate();
+	void						resetData();
 	// debug
 	void						printData() const;
 };
