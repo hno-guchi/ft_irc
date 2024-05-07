@@ -33,17 +33,10 @@ std::string	Execute::cmdPart(User* user, const ParsedMessage& parsedMsg, Info* i
 		if (channelIt == info->getChannels().end()) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
-		// TODO(hnoguchi): std::vector<channel>::const_iterator	Channel::isOnMember(const std::string& nickName);を実装する？
-		std::vector<User *>::iterator	userIt = const_cast<std::vector<User*>&>(channelIt->getMembers()).begin();
-		for (; userIt != channelIt->getMembers().end(); userIt++) {
-			if ((*userIt)->getNickName() == user->getNickName()) {
-				break;
-			}
-		}
-		if (userIt == channelIt->getMembers().end()) {
+		// userが<channel>にいるか確認
+		if (!channelIt->isMember(user->getNickName())) {
 			return (Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
-		// TODO(hnoguchi): Infoクラスに指定のチャンネルから指定のユーザを削除する関数を実装すること
 		channelIt->eraseMember(user);
 		channelIt->eraseOperator(user);
 		std::string	msg = ":" + user->getNickName() + " PART " + channelIt->getName() + " :";

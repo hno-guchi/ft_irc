@@ -54,16 +54,10 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 			}
 			// Check 473 ERR_INVITEONLYCHAN  "<channel> :Cannot join channel (+i)"
 			if (channelIt->getModes() & kInviteOnly) {
-				std::vector<User *>::const_iterator	invitedIt = channelIt->getInvited().begin();
-				for (; invitedIt != channelIt->getInvited().end(); invitedIt++) {
-					if ((*invitedIt)->getNickName() == user->getNickName()) {
-						break;
-					}
-				}
-				if (invitedIt == channelIt->getInvited().end()) {
+				if (!channelIt->isInvited(user->getNickName())) {
 					return (Reply::errInviteOnlyChan(kERR_INVITEONLYCHAN, user->getNickName(), channelIt->getName()));
 				}
-				channelIt->eraseInvited(user);
+				channelIt->eraseInvited(&(*info->findUser(user->getNickName())));
 			}
 			// 475 ERR_BADCHANNELKEY   "<channel> :Cannot join channel (+k)"
 			if (channelIt->getModes() & kKey) {
@@ -76,12 +70,12 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 				}
 			}
 			// userを<channel>に追加
-			channelIt->addMember(user);
+			channelIt->pushBackMember(user);
 			std::string	msg = ":" + user->getNickName() + " JOIN " + channelIt->getName() + "\r\n";
 			debugPrintSendMessage("SendMsg", msg);
 			channelIt->printData();
-			for (std::vector<User *>::const_iterator memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
-				(*memberIt)->printData();
+			for (std::vector<User*>::const_iterator memberIt = channelIt->getMembers().begin(); memberIt != channelIt->getMembers().end(); memberIt++) {
+				// (*memberIt)->printData();
 				sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 			}
 			// JOINしたuserへchannel情報(RPL_(NO)TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES)を送信
@@ -141,8 +135,8 @@ std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* i
 		info->pushBackChannel(Channel(parsedMsg.getParams()[0].getValue()));
 		channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		// userを追加してメッセージを送信
-		channelIt->addMember(user);
-		channelIt->addOperator(user);
+		channelIt->pushBackMember(user);
+		channelIt->pushBackOperator(user);
 		std::string	msg = ":" + user->getNickName() + " JOIN " + channelIt->getName() + "\r\n";
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());

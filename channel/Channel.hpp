@@ -22,13 +22,9 @@ class Channel {
 	 std::string		key_;
 	 int				limit_;
 	 unsigned int		modes_;
-	 // TODO(hnoguchi): ChannelUsers classにする？
 	 std::vector<User*>	members_;
 	 std::vector<User*>	invited_;
 	 std::vector<User*>	operators_;
-	 // std::vector<std::string>	members_;
-	 // std::vector<std::string>	invited_;
-	 // std::vector<std::string>	operators_;
 
  public:
 	 explicit Channel(const std::string& name);
@@ -51,23 +47,16 @@ class Channel {
 	const std::vector<User*>&	getMembers() const;
 	const std::vector<User*>&	getInvited() const;
 	const std::vector<User*>&	getOperators() const;
-	// const std::vector<std::string>&	getMembers() const;
-	// const std::vector<std::string>&	getInvited() const;
-	// const std::vector<std::string>&	getOperators() const;
 
-	// TODO(hnoguchi): ChannelUsers classにする？
-	void						addMember(User* user);
-	void						addInvited(User* user);
-	void						addOperator(User* user);
+	void						pushBackMember(User* user);
+	void						pushBackInvited(User* user);
+	void						pushBackOperator(User* user);
 	void						eraseMember(User* user);
 	void						eraseInvited(User* user);
-	void						eraseOperator(User* oper);
-	// void						addMember(const std::string& name);
-	// void						addInvited(const std::string& name);
-	// void						addOperator(const std::string& name);
-	// void						eraseMember(const std::string& name);
-	// void						eraseInvited(const std::string& name);
-	// void						eraseOperator(const std::string& name);
+	void						eraseOperator(User* user);
+	bool						isMember(const std::string& name) const;
+	bool						isInvited(const std::string& name) const;
+	bool						isOperator(const std::string& name) const;
 	void						resetDate();
 	// debug
 	void						printData() const;

@@ -39,14 +39,8 @@ std::string	Execute::cmdTopic(User* user, const ParsedMessage& parsedMsg, Info* 
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		// userがchannel operatorか確認
-		std::vector<User*>::const_iterator	operIt = channelIt->getOperators().begin();
-		for (; operIt != channelIt->getOperators().end(); operIt++) {
-			if ((*operIt)->getNickName() == user->getNickName()) {
-				break;
-			}
-		}
-		if (operIt == channelIt->getOperators().end()) {
-			return (Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getNickName(), user->getNickName(), parsedMsg.getParams()[1].getValue()));
+		if (!channelIt->isOperator(user->getNickName())) {
+			return (Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getNickName(), user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		// <topic>がない場合、RPL_(NO)TOPICを返す
 		if (parsedMsg.getParams().size() == 1) {
@@ -57,13 +51,7 @@ std::string	Execute::cmdTopic(User* user, const ParsedMessage& parsedMsg, Info* 
 		}
 		// topicの設定処理
 		// userが<channel>に参加しているか確認
-		std::vector<User*>::const_iterator	userIt = channelIt->getMembers().begin();
-		for (; userIt != channelIt->getMembers().end(); userIt++) {
-			if ((*userIt)->getNickName() == user->getNickName()) {
-				break;
-			}
-		}
-		if (userIt == channelIt->getMembers().end()) {
+		if (!channelIt->isMember(user->getNickName())) {
 			return (Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		// <channel>にt modeが設定されているか確認

@@ -100,13 +100,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 			return (reply);
 		}
 		// channel operatorか確認する。
-		std::vector<User*>::iterator	operIt = const_cast<std::vector<User*> &>(channelIt->getOperators()).begin();
-		for (; operIt != channelIt->getOperators().end(); operIt++) {
-			if ((*operIt)->getNickName() == user->getNickName()) {
-				break;
-			}
-		}
-		if (operIt == channelIt->getOperators().end()) {
+		if (!channelIt->isOperator(user->getNickName())) {
 			return (Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getNickName(), user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		if (parsedMsg.getParams()[1].getValue().size() != 2) {
@@ -151,16 +145,10 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 				if (parsedMsg.getParams().size() < 3) {
 					return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 				}
-				std::vector<User*>::iterator	targetUserIt = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin();
-				for (; targetUserIt != channelIt->getMembers().end(); targetUserIt++) {
-					if (parsedMsg.getParams()[2].getValue() == (*targetUserIt)->getNickName()) {
-						break;
-					}
-				}
-				if (targetUserIt == channelIt->getMembers().end()) {
+				if (!channelIt->isMember(parsedMsg.getParams()[2].getValue())) {
 					return (Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getNickName(), parsedMsg.getParams()[2].getValue(), channelIt->getName()));
 				}
-				channelIt->addOperator(*targetUserIt);
+				channelIt->pushBackOperator(&(*info->findUser(parsedMsg.getParams()[2].getValue())));
 				msg += " " + parsedMsg.getParams()[2].getValue() + "\r\n";
 				// debugPrintSendMessage("SendMsg", msg);
 				// sendNonBlocking(*((*targetUserIt)->getFd()), msg.c_str(), msg.size());
@@ -185,26 +173,23 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 				if (parsedMsg.getParams().size() < 3) {
 					return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
 				}
-				std::vector<User*>::iterator	targetUserIt = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin();
-				for (; targetUserIt != channelIt->getMembers().end(); targetUserIt++) {
-					if (parsedMsg.getParams()[2].getValue() == (*targetUserIt)->getNickName()) {
-						break;
-					}
-				}
-				if (targetUserIt == channelIt->getMembers().end()) {
+				if (channelIt->isMember(parsedMsg.getParams()[2].getValue())) {
 					return (Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getNickName(), parsedMsg.getParams()[2].getValue(), channelIt->getName()));
 				}
-				channelIt->eraseOperator(*targetUserIt);
+				if (channelIt->isOperator(parsedMsg.getParams()[2].getValue())) {
+					return (Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getNickName(), parsedMsg.getParams()[2].getValue(), channelIt->getName()));
+				}
+				channelIt->eraseOperator(&(*info->findUser(parsedMsg.getParams()[2].getValue())));
 				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
 				debugPrintSendMessage("SendMsg", msg);
-				sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+				sendNonBlocking(info->findUser(parsedMsg.getParams()[2].getValue())->getFd(), msg.c_str(), msg.size());
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
 				channelIt->unsetMode(kRestrictTopicSetting);
 				msg += "\r\n";
 			}
 		}
 		debugPrintSendMessage("SendMsg", msg);
-		for (std::vector<User*>::iterator it = const_cast<std::vector<User*> &>(channelIt->getMembers()).begin(); it != channelIt->getMembers().end(); it++) {
+		for (std::vector<User*>::const_iterator it = channelIt->getMembers().begin(); it != channelIt->getMembers().end(); it++) {
 			sendNonBlocking((*it)->getFd(), msg.c_str(), msg.size());
 		}
 		return ("");
