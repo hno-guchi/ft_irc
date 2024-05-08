@@ -10,15 +10,6 @@
 Execute::Execute() {}
 Execute::~Execute() {}
 
-bool	Execute::isCommand(const std::string& command, const std::string* cmdList) {
-	for (int i = 0; cmdList[i] != ""; i++) {
-		if (command == cmdList[i]) {
-			return (true);
-		}
-	}
-	return (false);
-}
-
 std::string	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, Info* info) {
 	if (!(user->getRegistered() & kPassCommand) && parsedMsg.getCommand() == "PASS") {
 		std::string	reply = this->cmdPass(user, parsedMsg, info);

@@ -7,38 +7,32 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-// #include <map>
 
 enum kTokenType {
-	kCommand = 0,
-	kMiddle,
-	kTrailing
-};
-
-enum kCommandType {
-	kString = 0,
-	kDigit
+	kCmdString = 0,
+	kCmdDigit,
+	kParamMiddle,
+	kParamTrailing
 };
 
 enum kParamType {
 	kNone = 0,
-	kPMiddle,
-	kPTrailing
+	kServer,
+	kPassword,
+	kNickName,
+	kUserName,
+	kHostName,
+	kServerName,
+	kRealName,
+	kMessage,
+	kMode,
+	kChannel,
+	kModeParam,
+	kKey,
+	kTopic,
+	kMsgTarget,
+	kText
 };
-// 	kPassword,
-// 	kNickName,
-// 	kUserName,
-// 	kHostName,
-// 	kServerName,
-// 	kRealName,
-// 	kMessage,
-// 	kMode,
-// 	kChannel,
-// 	kModeParam,
-// 	kKey,
-// 	kTopic,
-// 	kMsgTarget,
-// 	kText
 
 class Token {
  private:
@@ -78,17 +72,18 @@ class Param {
 
 class ParsedMessage {
  private:
-	kCommandType		type_;
+	// kCommandType		type_;
 	std::string			command_;
 	std::vector<Param>	params_;
-	// std::map<Param>	params_;
+
  public:
 	ParsedMessage();
 	~ParsedMessage();
 
 	// SETTER
 	void	setCommand(const std::string& command);
-	void	setParam(const Token& token);
+	// void	setParam(const Token& token);
+	void	setParam(kParamType type, const std::string& value);
 	// GETTER
 	const std::string&			getCommand() const;
 	const std::vector<Param>&	getParams() const;
@@ -108,6 +103,8 @@ class Parser {
 	int						parse(std::string message);
 	// GETTER
 	const ParsedMessage&	getParsedMessage() const;
+
+	bool					isCommand(const std::string& command, const std::string* cmdList);
 };
 
 #endif  // PARSER_HPP

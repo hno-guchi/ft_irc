@@ -31,8 +31,6 @@ class Execute {
 	 Execute();
 	 ~Execute();
 
-	// TODO(hnoguchi): コマンドのバリデーションは、Parser classで行うので必要ない。コマンドで条件分岐を行い、バリデーションを実行する。
-	bool			isCommand(const std::string& command, const std::string* cmdList);
 	std::string		registerUser(User* user, const ParsedMessage& parsedMsg, Info* info);
 	std::string		exec(User* user, const ParsedMessage& parsedMsg, Info* info);
 };
