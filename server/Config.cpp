@@ -2,6 +2,8 @@
 # include "./Config.hpp"
 # include "../color.hpp"
 
+// 	"PONG",
+// 	"ERROR",
 const std::string	Config::commandList_[] = {
 	"PASS",
 	"NICK",
@@ -17,13 +19,11 @@ const std::string	Config::commandList_[] = {
 	"PRIVMSG",
 	"NOTICE",
 	"PING",
-	"PONG",
-	"ERROR",
 	""
 };
 
 Config::Config() : \
-	maxClient_(5), maxChannel_(5), createdDate_(std::time(NULL)), version_("1"), serverName_("ft_irc.42tokyo.net"), password_("password"), userModes_("or"), channelModes_("iklot") {
+	maxClient_(5), maxChannel_(5), createdDate_(std::time(NULL)), version_("1"), serverName_("ft_irc.42tokyo.net"), password_("password"), userModes_("o"), channelModes_("iklot") {
 }
 
 // Config&	operator=(const Config& rhs) {
