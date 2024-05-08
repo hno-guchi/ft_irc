@@ -23,22 +23,22 @@ enum kCommandType {
 enum kParamType {
 	kNone = 0,
 	kPMiddle,
-	kPTrailing,
-	kPassword,
-	kNickName,
-	kUserName,
-	kHostName,
-	kServerName,
-	kRealName,
-	kMessage,
-	kMode,
-	kChannel,
-	kModeParam,
-	kKey,
-	kTopic,
-	kMsgTarget,
-	kText
+	kPTrailing
 };
+// 	kPassword,
+// 	kNickName,
+// 	kUserName,
+// 	kHostName,
+// 	kServerName,
+// 	kRealName,
+// 	kMessage,
+// 	kMode,
+// 	kChannel,
+// 	kModeParam,
+// 	kKey,
+// 	kTopic,
+// 	kMsgTarget,
+// 	kText
 
 class Token {
  private:
