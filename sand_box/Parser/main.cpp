@@ -1,5 +1,69 @@
 #include "./Parser.hpp"
+#include "../../color.hpp"
 
+#ifdef UTEST_TOKENIZE
+
+int main() {
+	std::string	testList[] = {
+		"COMMAND",
+		"COMMAND param1",
+		"COMMAND param1 param2",
+		"COMMAND param1 param2 param3",
+		"COMMAND param1 param2 param3 param4",
+		"COMMAND param1 param2 param3 param4 param5",
+		"",
+		" ",
+		"  ",
+		"   ",
+		"    ",
+		"     ",
+		" COMMAND",
+		"  COMMAND",
+		"   COMMAND",
+		"    COMMAND",
+		"     COMMAND",
+		"COMMAND ",
+		"COMMAND  ",
+		"COMMAND   ",
+		"COMMAND    ",
+		"COMMAND     ",
+		" COMMAND param1",
+		"    COMMAND param1",
+		"COMMAND  param1",
+		"COMMAND   param1",
+		"COMMAND    param1",
+		"COMMAND     param1",
+		"COMMAND param1 ",
+		"COMMAND param1  ",
+		"COMMAND param1   ",
+		"COMMAND param1    ",
+		"COMMAND param1     ",
+		"COMMAND param1  param2",
+		"COMMAND param1   param2",
+		"COMMAND param1    param2",
+		"COMMAND param1     param2",
+	};
+	for (size_t i = 0; i < sizeof(testList) / sizeof(testList[0]); i++) {
+		// std::cout << "[Message]    ____________________" << std::endl;
+		std::cout << "[" << GREEN << testList[i] << END << "]" << std::endl;
+		// std::cout << "_________________________________" << std::endl;
+
+		Parser				parser;
+		std::vector<Token>	tokens;
+
+		parser.tokenize(&testList[i], &tokens);
+		parser.printTokens(tokens);
+		// parser.getParsedMessage().printParsedMessage();
+		// std::cout << YELLOW << "[Execute]   ____________________" << END << std::endl;
+		// std::cout << YELLOW << "[Reply]     ____________________" << END << std::endl;
+		// std::cout << std::endl;
+	}
+
+}
+
+#endif  // UTEST_TOKENIZE
+
+#ifdef UTEST_SPLIT
 const std::string	commandList_[] = {
 	"PASS",
 	"NICK",
@@ -73,6 +137,7 @@ int	main() {
 		std::cout << "_________________________________" << std::endl;
 
 		// TODO(hnoguchi): crlfをデリミタに、メッセージの分割処理を実装する（複数のメッセージが一度に来る場合がある。）
+		// TODO(hnoguchi): メッセージが途中で切れているものがあるので、一時的にバッファリングする。
 		// TODO(hnoguchi): 終端にcrlfがあるかチェックする。
 		// TODO(hnoguchi): メッセージの長さが512文字(crlfを含む)を超えていないかチェックする。
 
@@ -84,7 +149,7 @@ int	main() {
 
 			// parser.tokenize();
 			// parser.printTokens();
-			parser.parse(*it);
+			parser.parse(*it, commandList_);
 			parser.getParsedMessage().printParsedMessage();
 			std::cout << YELLOW << "[Execute]   ____________________" << END << std::endl;
 			std::cout << YELLOW << "[Reply]     ____________________" << END << std::endl;
@@ -96,4 +161,4 @@ int	main() {
 #endif  // LEAKS
 	return(0);
 }
-#endif  // DEBUG
+#endif  // UTEST_SPLIT
