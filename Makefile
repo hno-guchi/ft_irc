@@ -5,7 +5,8 @@
 NAME = ircserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
-DEBUGFLAGS = -g -fsanitize=address -fsanitize=undefined -fsanitize=integer
+DEBUGFLAGS = -g -fsanitize=address
+# DEBUGFLAGS = -g -fsanitize=address -fsanitize=undefined -fsanitize=integer
 LEAKSFLAG = -DSERVER_LEAKS
 RM = rm -r -f
 SRCS = Server.cpp ServerSocket.cpp Config.cpp Info.cpp \
