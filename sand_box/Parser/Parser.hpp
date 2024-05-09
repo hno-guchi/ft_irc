@@ -72,7 +72,7 @@ class Param {
 
 class ParsedMessage {
  private:
-	// kCommandType		type_;
+	// kcommandType		type_;
 	std::string			command_;
 	std::vector<Param>	params_;
 
@@ -100,7 +100,7 @@ class Parser {
 	~Parser();
 
 	// SETTER
-	int						parse(std::string message);
+	int						parse(std::string message, const std::string* cmdList);
 	// GETTER
 	const ParsedMessage&	getParsedMessage() const;
 
