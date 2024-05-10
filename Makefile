@@ -9,7 +9,7 @@ DEBUGFLAGS = -g -fsanitize=address
 # DEBUGFLAGS = -g -fsanitize=address -fsanitize=undefined -fsanitize=integer
 LEAKSFLAG = -DSERVER_LEAKS
 RM = rm -r -f
-SRCS = Server.cpp ServerSocket.cpp Config.cpp Info.cpp \
+SRCS = Server.cpp ServerSocket.cpp Config.cpp Info.cpp split.cpp \
 	   User.cpp \
 	   Channel.cpp \
 	   Parser.cpp \

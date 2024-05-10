@@ -36,28 +36,6 @@ static void	recvNonBlocking(int fd, char* buffer, size_t dataSize) {
 	// }
 }
 
-
-static std::vector<std::string>	split(const std::string& message, const std::string delim) {
-	try {
-		std::vector<std::string>	messages;
-		std::string::size_type		startPos(0);
-
-		while (startPos < message.size()) {
-			std::string::size_type	delimPos = message.find(delim, startPos);
-			if (delimPos == message.npos) {
-				break;
-			}
-			// TODO(hnoguchi): std::string::substr(); throw exception std::out_of_range();
-			std::string	buf = message.substr(startPos, delimPos - startPos);
-			messages.push_back(buf);
-			startPos = delimPos + delim.size();
-		}
-		return (messages);
-	} catch (std::exception& e) {
-		throw;
-	}
-}
-
 /*
  * Global functions
  */
@@ -95,7 +73,6 @@ Server::Server(unsigned short port) : socket_(port), info_() {
 		for (int i = 1; i <= this->info_.getConfig().getMaxClient(); i++) {
 			this->fds_[i].fd = -1;
 		}
-		// this->fds_[this->info_.getConfig().getMaxClient() + 1].fd = STDIN_FILENO;
 		for (int i = 0; i <= this->info_.getConfig().getMaxClient(); i++) {
 			this->fds_[i].events = POLLIN;
 			this->fds_[i].revents = 0;
@@ -130,7 +107,6 @@ void	Server::run() {
 		}
 		try {
 			this->handleServerSocket();
-			// this->handleStandardInput();
 			this->handleClientSocket();
 		} catch (std::exception& e) {
 			throw;
@@ -178,24 +154,6 @@ void	Server::handleServerSocket() {
 	// this->info_.printUsers();
 }
 
-// void	Server::handleStandardInput() {
-// 	if (!(this->fds_[this->info_.getConfig().getMaxClient() + 1].revents & POLLIN)) {
-// 		return;
-// 	}
-// 	try {
-// 		std::string	input;
-// 		std::getline(std::cin, input);
-// 		// TODO(hnoguchi): Check bit.
-// 		if (input != "exit") {
-// 			return;
-// 		}
-// 		std::cout << "See You..." << std::endl;
-// 		throw std::runtime_error("exit");
-// 	} catch (std::exception& e) {
-// 		throw;
-// 	}
-// }
-
 void	Server::handleClientSocket() {
 	try {
 		for (int i = 1; i <= this->info_.getConfig().getMaxClient(); ++i) {
@@ -217,10 +175,15 @@ void	Server::handleReceivedData(User* user) {
 		recvNonBlocking(user->getFd(), buffer, sizeof(buffer) - 1);
 		// debug
 		std::cout << GREEN << buffer << END << std::flush;
-		// Split message
 		Execute						execute;
 		Reply						reply;
-		std::vector<std::string>	messages = split(buffer, reply.getDelimiter());
+		// Split message
+		std::string					bufferStr(buffer);
+		if (user->getLeftMsg().size() != 0) {
+			bufferStr = user->getLeftMsg() + bufferStr;
+			user->setLeftMsg("");
+		}
+		std::vector<std::string>	messages = split(buffer, reply.getDelimiter(), user);
 		for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
 			int			replyNum = 0;
 			std::string	replyMsg("");
