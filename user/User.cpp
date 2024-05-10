@@ -82,6 +82,10 @@ void	User::setMode(kUserMode mode) {
 	this->modes_ |= mode;
 }
 
+void	User::setLeftMsg(const std::string& msg) {
+	this->leftMsg_ = msg;
+}
+
 void	User::unsetMode(kUserMode mode) {
 	this->modes_ ^= (this->modes_ & mode);
 }
@@ -129,6 +133,10 @@ unsigned int	User::getRegistered() const {
 
 unsigned int	User::getModes() const {
 	return (this->modes_);
+}
+
+const std::string&	User::getLeftMsg() const {
+	return (this->leftMsg_);
 }
 
 void	User::disconnect() {

@@ -32,6 +32,7 @@ class User {
 	 int*			fd_;
 	 unsigned int	registered_;
 	 unsigned int	modes_;
+	 std::string	leftMsg_;
 
  public:
 	 explicit User(int* fd = NULL);
@@ -51,6 +52,7 @@ class User {
 	 void	setFd(int* fd);
 	 void	setRegistered(kExecCommand flag);
 	 void	setMode(kUserMode mode);
+	 void	setLeftMsg(const std::string &msg);
 	 void	unsetMode(kUserMode mode);
 	 // GETTERS
 	 const std::string&	getNickName() const;
@@ -64,6 +66,7 @@ class User {
 	 int				getFd() const;
 	 unsigned int		getRegistered() const;
 	 unsigned int		getModes() const;
+	 const std::string&	getLeftMsg() const;
 
 	 void				disconnect();
 	 void				resetData();

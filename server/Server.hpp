@@ -25,7 +25,6 @@ class Server {
 
 	 int	setFd(int fd);
 	 void	handleServerSocket();
-	 // void	handleStandardInput();
 	 void	handleClientSocket();
 	 void	handleReceivedData(User* user);
 
@@ -45,6 +44,7 @@ class Server {
 	// Bureaucrat::GradeTooHighException::GradeTooHighException(const std::string& msg) : std::out_of_range(msg) {}
 };
 
-void	sendNonBlocking(int fd, const char* buffer, size_t dataSize);
+void						sendNonBlocking(int fd, const char* buffer, size_t dataSize);
+std::vector<std::string>	split(const std::string& message, const std::string delim, User* user);
 
 #endif  // SERVER_HPP
