@@ -56,8 +56,12 @@ leaks:
 	leaks -q --atExit -- ./$(NAME)
 
 .PHONY: tokenize
-tokenize: CXXFLAGS += -DUTEST_TOKENIZE
-tokenize: re
+tokenize: CXXFLAGS = $(DEBUGFLAGS) -DUTEST_TOKENIZE
+tokenize: $(OBJS_DIR)
+tokenize: $(OBJS)
+tokenize:
+	$(CXX) $(DEBUGFLAGS) -o $(NAME) $(OBJS)
+	./$(NAME)
 
 .PHONY: validparam
 validparam:

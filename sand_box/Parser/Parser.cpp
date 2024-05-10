@@ -4,7 +4,6 @@
 #include "./Param.hpp"
 #include "./ValidParam.hpp"
 #include "../../color.hpp"
-// #include "../../error/error.hpp"
 
 static std::string	toUpperString(const std::string& str) {
 	std::string	ret = str;
@@ -32,49 +31,53 @@ Parser::~Parser() {}
 void	Parser::tokenize(std::string *message, std::vector<Token> *tokens) {
 	try {
 		if (message->empty()) {
-			return;
 			// throw std::invalid_argument("Message is empty.");
+			return;
 		}
-		std::string			word("");
-		std::istringstream	msgStream(*message);
-		std::cin.clear(std::ios::goodbit);
-		while (word.empty()) {
-			std::getline(msgStream, word, ' ');
+		std::string				word("");
+		std::string::size_type	startPos(0);
+
+		// TODO(hnoguchi): std::string::substr(); throw exception std::out_of_range();
+		while (startPos < message->size() && message->at(startPos) == ' ') {
+			startPos++;
 		}
-		if (std::cin.fail()) {
-			throw std::invalid_argument("Failed to read message.");
+		if (startPos == message->size()) {
+			// throw std::invalid_argument("Message is empty.");
+			return;
+		}
+		std::string::size_type	delimPos = message->find(' ', startPos);
+		if (delimPos == message->npos) {
+			word = message->substr(startPos);
+			startPos = message->size();
+		} else {
+			word = message->substr(startPos, delimPos - startPos);
+			startPos = delimPos + 1;
 		}
 		Token	command;
 		command.setType(kCmdString);
 		command.setValue(word);
 		tokens->push_back(command);
-		std::cin.clear(std::ios::goodbit);
-		while (std::getline(msgStream, word, ' ')) {
+		while(startPos < message->size()) {
+			Token	param;
+			delimPos = message->find(' ', startPos);
+			if (delimPos == message->npos && startPos < message->size()) {
+				word = message->substr(startPos);
+				startPos = message->size();
+			} else {
+				word = message->substr(startPos, delimPos - startPos);
+				startPos = delimPos + 1;
+			}
 			if (word.empty()) {
 				continue;
 			}
-			Token	param;
 			if (word[0] != ':') {
 				param.setType(kParamMiddle);
 			} else {
-				word = word.substr(1);
-				std::string	trailing("");
-				std::cin.clear(std::ios::goodbit);
-
-				std::getline(msgStream, trailing);
-				if (std::cin.fail()) {
-					throw std::invalid_argument("Failed to read message.");
-				}
-				if (trailing.size() > 0) {
-					word += " " + trailing;
-				}
 				param.setType(kParamTrailing);
+				word = word.substr(1) + message->substr(startPos - 1);
 			}
 			param.setValue(word);
 			tokens->push_back(param);
-		}
-		if (std::cin.fail()) {
-			throw std::invalid_argument("Failed to read message.");
 		}
 	} catch (std::exception& e) {
 		throw;
@@ -88,9 +91,11 @@ int	Parser::parse(std::string message, const std::string* cmdList) {
 		// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
 		return (-1);
 	}
-	// check message length
+	if (message.size() > 510) {
+		// 412 ERR_NOMOTD ":No message of the day is available"
+		return (-1);
+	}
 	try {
-		// TODO(hnoguchi): TokenList classを作成した方が良い？
 		std::vector<Token>	tokens;
 
 		this->tokenize(&message, &tokens);
