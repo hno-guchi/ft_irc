@@ -8,9 +8,8 @@
 
 enum kChannelMode {
 	kInviteOnly = (1 << 0),
-	kKey = (1 << 1),
+	kKeySet = (1 << 1),
 	kLimit = (1 << 2),
-	// kChannelOperator = (1 << 3), // User classのkUserModeで扱う。
 	kRestrictTopicSetting = (1 << 3)
 };
 

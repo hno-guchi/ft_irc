@@ -22,7 +22,7 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdUser(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdUser(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	(void)info;
 	try {
 		// TODO(hnoguchi): Parser classでバリデーションを行う。

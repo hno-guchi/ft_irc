@@ -2,6 +2,7 @@
 # define PARAM_HPP
 
 #include <string>
+#include "./Token.hpp"
 
 enum kParamType {
 	kNone = 0,
@@ -24,17 +25,20 @@ enum kParamType {
 
 class Param {
  private:
-	kParamType	type_;
+	kTokenType	tType_;
+	kParamType	pType_;
 	std::string	value_;
  public:
 	Param();
 	~Param();
 
 	// SETTER
-	void				setType(const kParamType type);
+	void				setTokenType(const kTokenType type);
+	void				setParamType(const kParamType type);
 	void				setValue(const std::string &value);
 	// GETTER
-	kParamType			getType() const;
+	kTokenType			getTokenType() const;
+	kParamType			getParamType() const;
 	const std::string&	getValue() const;
 	// debug
 	void				printParam() const;

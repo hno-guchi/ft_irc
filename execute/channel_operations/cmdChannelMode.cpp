@@ -57,7 +57,7 @@
 #include "../../reply/Reply.hpp"
 
 // TODO(hnoguchi): MODE(channel)コマンドによる変更は、チャンネルに所属するユーザに通知する必要があるものもある。
-std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		if (parsedMsg.getParams().size() < 1) {
 			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
@@ -75,7 +75,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 				debugPrintSendMessage("SendMsg", reply);
 				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			}
-			if ((*channelIt)->getModes() & kKey) {
+			if ((*channelIt)->getModes() & kKeySet) {
 				std::string	reply = Reply::rplFromName(user->getNickName());
 				reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'k', (*channelIt)->getKey());
 				debugPrintSendMessage("SendMsg", reply);
@@ -122,7 +122,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 				msg += "\r\n";
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'k') {
 				// keyフラグが既に立っているか確認する。
-				if ((*channelIt)->getModes() & kKey) {
+				if ((*channelIt)->getModes() & kKeySet) {
 					return (Reply::errKeySet(kERR_KEYSET, user->getNickName(), user->getNickName(), (*channelIt)->getName()));
 				}
 				if (parsedMsg.getParams().size() < 3) {
@@ -130,7 +130,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 				}
 				// TODO(hnoguchi): Validate string key
 				(*channelIt)->setKey(parsedMsg.getParams()[2].getValue());
-				(*channelIt)->setMode(kKey);
+				(*channelIt)->setMode(kKeySet);
 				msg += " " + parsedMsg.getParams()[2].getValue() + "\r\n";
 				std::cerr << "key: " << (*channelIt)->getKey() << std::endl;
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'l') {
@@ -163,7 +163,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMessage& parsedMsg, 
 				msg += "\r\n";
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'k') {
 				(*channelIt)->setKey("");
-				(*channelIt)->unsetMode(kKey);
+				(*channelIt)->unsetMode(kKeySet);
 				msg += "\r\n";
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'l') {
 				(*channelIt)->setLimit(0);

@@ -47,18 +47,19 @@
 #include "../../server/Server.hpp"
 #include "../../reply/Reply.hpp"
 #include "../../parser/Parser.hpp"
+#include "../../parser/ParsedMsg.hpp"
 #include "../../error/error.hpp"
 
-std::string	Execute::cmdPrivmsg(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdPrivmsg(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		// TODO(hnoguchi): Parser classで処理する。
 		if (parsedMsg.getParams().size() == 0) {
 			return(Reply::errNoRecipient(kERR_NORECIPIENT, user->getNickName(), parsedMsg.getCommand()));
 		}
 		if (parsedMsg.getParams().size() < 2) {
-			if (parsedMsg.getParams()[0].getType() == kPTrailing) {
+			if (parsedMsg.getParams()[0].getParamType() == kText) {
 				return(Reply::errNoRecipient(kERR_NORECIPIENT, user->getNickName(), parsedMsg.getCommand()));
-			} else if (parsedMsg.getParams()[0].getType() == kPMiddle) {
+			} else if (parsedMsg.getParams()[0].getParamType() == kMsgTarget) {
 				return(Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user->getNickName()));
 			}
 		}

@@ -20,7 +20,7 @@
 #include "../../parser/Parser.hpp"
 #include "../../error/error.hpp"
 
-std::string	Execute::cmdPong(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdPong(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		// TODO(hnoguchi): Parser classでバリデーションを行う。
 		if (parsedMsg.getParams().size() < 1) {

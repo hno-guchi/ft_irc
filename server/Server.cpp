@@ -189,18 +189,18 @@ void	Server::handleReceivedData(User* user) {
 			std::string	replyMsg("");
 			Parser		parser;
 
-			replyNum = parser.parse(*it);
-			// parser.getParsedMessage().printParsedMessage();
+			replyNum = parser.parse(*it, this->info_.getConfig().getCommandList());
+			// parser.getParsedMsg().printParsedMsg();
 			// std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
 			// this->info_.getUser(i - 1).printData();
 			if (replyNum == 0) {
 				// 登録ユーザか確認
 				if ((user->getRegistered() & kExecAllCmd) != kExecAllCmd) {
 					// ユーザ登録処理
-					replyMsg = execute.registerUser(user, parser.getParsedMessage(), &this->info_);
+					replyMsg = execute.registerUser(user, parser.getParsedMsg(), &this->info_);
 				} else {
 					// コマンド実行処理
-					replyMsg = execute.exec(user, parser.getParsedMessage(), &this->info_);
+					replyMsg = execute.exec(user, parser.getParsedMsg(), &this->info_);
 					// if (this->info_.getChannels().size() != 0) {
 					// 	this->info_.getChannels()[0].printData();
 					// }
@@ -212,7 +212,7 @@ void	Server::handleReceivedData(User* user) {
 				}
 			} else {
 				// リプライメッセージの作成
-				replyMsg = reply.createMessage(replyNum, *user, this->info_, parser.getParsedMessage());
+				replyMsg = reply.createMessage(replyNum, *user, this->info_, parser.getParsedMsg());
 			}
 			if (replyMsg.empty()) {
 				continue;
