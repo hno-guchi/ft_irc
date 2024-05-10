@@ -13,52 +13,18 @@
  * Helper functions
  */
 static void	recvNonBlocking(int fd, char* buffer, size_t dataSize) {
-	ssize_t recvMsgSize = 0;
-
-	while (1) {
-		recvMsgSize = recv(fd, buffer, dataSize, MSG_DONTWAIT);
-
-		if (recvMsgSize >= 0) {
-			break;
-		}
-		if (errno != EAGAIN && errno != EWOULDBLOCK) {
-			throw std::runtime_error("recv");
-		}
-		std::cout << "No data sent." << std::endl;
-		errno = 0;
-		recvMsgSize = 0;
-	}
-	if (recvMsgSize == 0) {
+	ssize_t	recvMsgSize = recv(fd, buffer, dataSize, MSG_DONTWAIT);
+	if (recvMsgSize < 0) {
 		throw std::runtime_error("recv");
 	}
-	// if (static_cast<ssize_t>(dataSize) != recvMsgSize) {
-	// 	throw std::runtime_error("recv");
-	// }
 }
 
 /*
  * Global functions
  */
 void	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
-	ssize_t sendMsgSize = 0;
-
-	while (1) {
-		sendMsgSize = send(fd, buffer, dataSize, MSG_DONTWAIT);
-
-		if (sendMsgSize >= 0) {
-			break;
-		}
-		if (errno != EAGAIN && errno != EWOULDBLOCK) {
-			throw std::runtime_error("send");
-		}
-		std::cout << "No data sent." << std::endl;
-		errno = 0;
-		sendMsgSize = 0;
-	}
-	if (sendMsgSize == 0) {
-		throw std::runtime_error("send");
-	}
-	if (static_cast<ssize_t>(dataSize) != sendMsgSize) {
+	ssize_t	sendMsgSize = send(fd, buffer, dataSize, MSG_DONTWAIT);
+	if (sendMsgSize < 0) {
 		throw std::runtime_error("send");
 	}
 }
@@ -187,13 +153,15 @@ void	Server::handleReceivedData(User* user) {
 		for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
 			int			replyNum = 0;
 			std::string	replyMsg("");
+			// std::vector<SendMsg *>	sendList;
 			Parser		parser;
 
+			// parser.parse(*it, this->info_.getConfig().getCommandList(), &sendList);
 			replyNum = parser.parse(*it, this->info_.getConfig().getCommandList());
 			// parser.getParsedMsg().printParsedMsg();
 			// std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
-			// this->info_.getUser(i - 1).printData();
-			if (replyNum == 0) {
+			// if (sendList.size() == 0) {
+			if (replyNum != -1) {
 				// 登録ユーザか確認
 				if ((user->getRegistered() & kExecAllCmd) != kExecAllCmd) {
 					// ユーザ登録処理
@@ -223,8 +191,6 @@ void	Server::handleReceivedData(User* user) {
 			// send
 			sendNonBlocking(user->getFd(), replyMsg.c_str(), replyMsg.size());
 		}
-	// } catch (std::out_of_range& e) {
-	// 	throw;
 	} catch (std::exception& e) {
 		// TODO(hnoguchi): メッセージ受信に失敗したことをユーザに通知（メッセージを送信）する？
 		// this->info_.eraseUser(this->info_.findUser(user->getFd()));
