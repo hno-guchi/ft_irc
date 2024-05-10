@@ -6,11 +6,12 @@
 #include "../reply/Reply.hpp"
 #include "../error/error.hpp"
 #include "../parser/Parser.hpp"
+#include "../parser/ParsedMsg.hpp"
 
 Execute::Execute() {}
 Execute::~Execute() {}
 
-std::string	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::registerUser(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	if (!(user->getRegistered() & kPassCommand) && parsedMsg.getCommand() == "PASS") {
 		std::string	reply = this->cmdPass(user, parsedMsg, info);
 		if (reply.empty()) {
@@ -42,7 +43,7 @@ std::string	Execute::registerUser(User* user, const ParsedMessage& parsedMsg, In
 }
 
 // TODO(hnoguchi): exec();関数では、実行結果によるエラーを扱う。（例えば存在しないチャンネル名へのメッセージ送信など）
-std::string	Execute::exec(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::exec(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	if (parsedMsg.getCommand() == "PING") {
 		return (cmdPong(user, parsedMsg, info));
 	} else if (parsedMsg.getCommand() == "PASS") {

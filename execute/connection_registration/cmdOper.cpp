@@ -21,7 +21,7 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdOper(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdOper(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	(void)info;
 	try {
 		if (parsedMsg.getParams().size() < 2) {

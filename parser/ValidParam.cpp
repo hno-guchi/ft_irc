@@ -3,7 +3,7 @@
 #include <sstream>
 #include "./ValidParam.hpp"
 #include "./IsChar.hpp"
-#include "../../color.hpp"
+#include "../color.hpp"
 
 // middle		=	nospcrlfcl *( ":" / nospcrlfcl )
 // nospcrlfcl	=	%x01-09 / %x0B-0C / %x0E-1F / %x21-39 / %x3B-FF
@@ -16,7 +16,6 @@ bool	ValidParam::isMiddle(const std::string &middle) {
 		return (false);
 	}
 	for (size_t i = 1; i < middle.size(); i++) {
-		// if (this->isNullCrLfSpaceChar(middle[i])) {
 		if (this->isNullCrLfSpace(middle[i])) {
 			return (false);
 		}
@@ -36,7 +35,6 @@ bool	ValidParam::isTrailing(const std::string &trailing) {
 		return (false);
 	}
 	for (size_t i = 1; i < trailing.size(); i++) {
-		// if (this->isNullCrLfSpaceChar(trailing[i]) && trailing[i] != ' ') {
 		if (this->isNullCrLfSpace(trailing[i]) && trailing[i] != ' ') {
 			return (false);
 		}
@@ -74,7 +72,6 @@ bool	ValidParam::isNickName(const std::string& nickName) {
 		return (false);
 	}
 	std::locale	l = std::locale::classic();
-	// if (!std::isalpha(nickName[0], l) && !this->isSpecialChar(nickName[0])) {
 	if (!std::isalpha(nickName[0], l) && !this->isSpecial(nickName[0])) {
 		return (false);
 	}
@@ -85,7 +82,6 @@ bool	ValidParam::isNickName(const std::string& nickName) {
 		if (std::isdigit(nickName[i], l)) {
 			continue;
 		}
-		// if (this->isSpecialChar(nickName[i]) || nickName[i] == '-') {
 		if (this->isSpecial(nickName[i]) || nickName[i] == '-') {
 			continue;
 		}
@@ -101,7 +97,6 @@ bool	ValidParam::isUser(const std::string& user) {
 		return (false);
 	}
 	for (size_t i = 0; i < user.size(); i++) {
-		// if (this->isNullCrLfSpaceChar(user[i]) || user[i] == '@') {
 		if (this->isNullCrLfSpace(user[i]) || user[i] == '@') {
 			return (false);
 		}
@@ -155,9 +150,6 @@ bool	ValidParam::isHostName(const std::string& hostName) {
 	if (std::cin.fail()) {
 		return (false);
 	}
-	// if (shortName.empty()) {
-	// 	return (false);
-	// }
 	return (true);
 }
 
@@ -218,7 +210,6 @@ bool	ValidParam::isKey(const std::string& key) {
 		if (key[i] == 6 || key[i] == 9 || key[i] == 11) {
 			return (false);
 		}
-		// if (isNullCrLfSpaceChar(key[i])) {
 		if (this->isNullCrLfSpace(key[i])) {
 			return (false);
 		}

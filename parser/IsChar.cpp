@@ -2,7 +2,7 @@
 // #include <iomanip>
 // #include <sstream>
 #include "./IsChar.hpp"
-#include "../../color.hpp"
+#include "../color.hpp"
 
 // bool	IsChar::isNotAlpha(const char c) {
 // 	std::locale	l = std::locale::classic();

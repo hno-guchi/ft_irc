@@ -25,7 +25,7 @@
 #include "../../server/Server.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdInvite(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdInvite(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		// validation
 		if (parsedMsg.getParams().size() < 2) {

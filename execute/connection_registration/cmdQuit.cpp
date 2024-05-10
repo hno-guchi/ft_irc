@@ -22,7 +22,7 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdQuit(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdQuit(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	std::string	message = ":" + user->getNickName() + " ERROR :";
 	if (parsedMsg.getParams().size() > 0) {
 		message += parsedMsg.getParams()[0].getValue();

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "./Token.hpp"
 #include "./Param.hpp"
 
 class ParsedMsg {
@@ -16,7 +17,7 @@ class ParsedMsg {
 
 	// SETTER
 	void						setCommand(const std::string& command);
-	void						setParam(kParamType type, const std::string& value);
+	void						setParam(kTokenType tType, kParamType pType, const std::string& value);
 	// GETTER
 	const std::string&			getCommand() const;
 	const std::vector<Param>&	getParams() const;

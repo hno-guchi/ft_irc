@@ -593,7 +593,7 @@ std::string	Reply::errUsersDontMatch(int num, const std::string& toName) {
 	}
 }
 
-std::string	Reply::createMessage(int num, const User& user, const Info& info, const ParsedMessage& parsedMsg) {
+std::string	Reply::createMessage(int num, const User& user, const Info& info, const ParsedMsg& parsedMsg) {
 	if (num <= 0) {
 		return ("");
 	}

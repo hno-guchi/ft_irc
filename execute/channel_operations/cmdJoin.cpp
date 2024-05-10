@@ -36,7 +36,7 @@
 #include "../../server/Server.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdJoin(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		// Check 461 ERR_NEEDMOREPARAMS  "<command> :Not enough parameters"
 		if (parsedMsg.getParams().size() < 1) {

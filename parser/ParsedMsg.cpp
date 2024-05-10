@@ -18,16 +18,11 @@ void	ParsedMsg::setCommand(const std::string& command) {
 
 // middle     =  nospcrlfcl *( ":" / nospcrlfcl )
 // trailing   =  *( ":" / " " / nospcrlfcl )
-void	ParsedMsg::setParam(kParamType type, const std::string& value) {
-// void	ParsedMsg::setParam(const Token& token) {
-	// kTrailing typeでは、空文字列がくる場合がある。
-	// if (token.getValue().empty()) {
-	// 	printErrorMessage("Empty param.");
-	// 	return;
-	// }
+void	ParsedMsg::setParam(kTokenType tType, kParamType pType, const std::string& value) {
 	try {
 		Param	p;
-		p.setType(type);
+		p.setTokenType(tType);
+		p.setParamType(pType);
 		p.setValue(value);
 		this->params_.push_back(p);
 	} catch (std::exception& e) {
@@ -47,7 +42,7 @@ void	ParsedMsg::printParsedMsg() const {
 	if (this->command_.empty()) {
 		return;
 	}
-	std::cout << "[Parsed]    ____________________" << std::endl;
+	// std::cout << "[Parsed]    ____________________" << std::endl;
 	// std::cout << "Type   : " << this->type_ << " | " << std::flush;
 	std::cout << "Command: [" << this->command_ << "]" << std::endl;
 	if (this->params_.empty()) {

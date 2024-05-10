@@ -18,7 +18,7 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdPass(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdPass(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	(void)info;
 	if (parsedMsg.getParams().size() < 1) {
 		return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));

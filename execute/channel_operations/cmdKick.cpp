@@ -27,7 +27,7 @@
 #include "../../server/Server.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdKick(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdKick(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		if (parsedMsg.getParams().size() < 2) {
 			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));

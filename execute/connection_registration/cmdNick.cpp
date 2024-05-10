@@ -24,7 +24,7 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdNick(User* user, const ParsedMessage& parsedMsg, Info* info) {
+std::string	Execute::cmdNick(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		// TODO(hnoguchi): Parser classでバリデーションを行う？
 		if (parsedMsg.getParams().size() == 0) {

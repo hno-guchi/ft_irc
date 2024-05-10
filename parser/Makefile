@@ -2,22 +2,90 @@
 # General #
 ###########
 
+NAME = parser
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
-DEBUGFLAGS = -g -fsanitize=undefined -fsanitize=integer -fsanitize=address
+DEBUGFLAGS = -g -fsanitize=address
+# DEBUGFLAGS = -g -fsanitize=undefined, integer, address
+LEAKSFLAG = -DSERVER_LEAKS
 RM = rm -r -f
+SRCS = main.cpp Parser.cpp ParsedMsg.cpp Param.cpp Token.cpp ValidParam.cpp IsChar.cpp
+OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
+OBJS_DIR = ./objs
+DEPENDS = $(addprefix $(OBJS_DIR)/, $(OBJS:%.o=%.d))
 
 #################
 # General Rules #
 #################
 
 .PHONY: all
-all: parser
+all: $(NAME)
 
-.PHONY: parser
-parser:
-	$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) -DDEBUG -o ./parser ./Parser.cpp ../error/error.cpp
-	./parser
-	$(CXX) $(CXXFLAGS) -DDEBUG -DLEAKS -o ./parser ./Parser.cpp ../error/error.cpp
-	./parser
-	$(RM) ./parser ./*.d ./*.dSYM
+$(NAME): $(OBJS_DIR) $(OBJS)
+	$(CXX) -o $@ $(OBJS)
+
+$(OBJS_DIR):
+	mkdir -p $(OBJS_DIR)
+
+$(OBJS_DIR)/%.o: ./%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.PHONY: clean
+clean:
+	$(RM) *.dSYM
+	$(RM) $(OBJS_DIR)
+
+.PHONY: fclean
+fclean: clean
+	$(RM) $(NAME)
+
+.PHONY: re
+re: fclean all
+
+.PHONY: debug
+debug: fclean
+debug: CXXFLAGS = $(DEBUGFLAGS)
+debug: $(OBJS_DIR)
+debug: $(OBJS)
+debug:
+	$(CXX) $(DEBUGFLAGS) -o $(NAME) $(OBJS)
+
+.PHONY: leaks
+leaks: re
+leaks:
+	leaks -q --atExit -- ./$(NAME)
+
+.PHONY: tokenize
+tokenize: fclean
+tokenize: CXXFLAGS = $(DEBUGFLAGS) -DUTEST_TOKENIZE
+tokenize: $(OBJS_DIR)
+tokenize: $(OBJS)
+tokenize:
+	$(CXX) $(DEBUGFLAGS) -o $(NAME) $(OBJS)
+	./$(NAME)
+
+.PHONY: parse
+parse: fclean
+parse: CXXFLAGS = $(DEBUGFLAGS) -DUTEST_PARSE
+parse: $(OBJS_DIR)
+parse: $(OBJS)
+parse:
+	$(CXX) $(DEBUGFLAGS) -o $(NAME) $(OBJS)
+	./$(NAME)
+
+.PHONY: validparam
+validparam:
+	$(CXX) $(CXXFLAGS) -DUTEST_VALIDPARAM -DLEAKS -o ./validparam ./ValidParam.cpp ./IsChar.cpp
+	# ./validparam
+	# $(CXX) $(DEBUGFLAGS) -DUTEST_VALID -o ./validparam ./ValidParam.cpp ./IsChar.cpp
+	# ./validparam
+	# $(RM) ./validparam ./*.d ./*.dSYM
+
+.PHONY: ischar
+ischar:
+	$(CXX) $(CXXFLAGS) -DUTEST_ISCHAR -DLEAKS -o ./ischar ./IsChar.cpp
+	./ischar
+	$(CXX) $(DEBUGFLAGS) -DUTEST_ISCHAR -o ./ischar ./IsChar.cpp
+	./ischar
+	$(RM) ./ischar ./*.d ./*.dSYM
+
