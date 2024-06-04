@@ -190,7 +190,7 @@ void	Server::handleReceivedData(User* user) {
 		}
 	} catch (std::exception& e) {
 		// TODO(hnoguchi): メッセージ受信に失敗したことをユーザに通知（メッセージを送信）する？
-		// this->info_.eraseUser(this->info_.findUser(user->getFd()));
+		this->info_.eraseUser(this->info_.findUser(user->getFd()));
 		throw;
 	}
 }
