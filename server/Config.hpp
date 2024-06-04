@@ -23,7 +23,7 @@ class Config {
 	 Config&	operator=(const Config& rhs);
 
  public:
-	 Config();
+	 explicit Config(const std::string& connectPwd = "");
 	 ~Config();
 	 // GETTERS
 	 int				getMaxClient() const;
@@ -41,7 +41,8 @@ class Config {
 	 // void	setMaxChannel(int maxChannel);
 	 // void	setVersion(int version);
 	 // void	setServerName(const std::string& serverName);
-	 // void	setPassword(const std::string& password);
+	 // void	setConnectPwd(const std::string& pwd);
+	 // void	setOperPwd(const std::string& pwd);
 	 // void	setUserModes(const std::string& userModes);
 	 // void	setChannelModes(const std::string& channelModes);
 	 // DEBUG

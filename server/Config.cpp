@@ -2,8 +2,6 @@
 # include "./Config.hpp"
 # include "../color.hpp"
 
-// 	"PONG",
-// 	"ERROR",
 const std::string	Config::commandList_[] = {
 	"PASS",
 	"NICK",
@@ -22,8 +20,8 @@ const std::string	Config::commandList_[] = {
 	""
 };
 
-Config::Config() : \
-	maxClient_(5), maxChannel_(5), createdDate_(std::time(NULL)), version_("1"), serverName_("ft_irc.42tokyo.net"), connectPwd_("connectpwd"), operPwd_("operpwd"), userModes_("o"), channelModes_("iklot") {
+Config::Config(const std::string& connectPwd) : \
+	maxClient_(5), maxChannel_(5), createdDate_(std::time(NULL)), version_("1"), serverName_("ft_irc.42tokyo.net"), connectPwd_(connectPwd), operPwd_("operpwd"), userModes_("o"), channelModes_("iklot") {
 }
 
 // Config&	operator=(const Config& rhs) {
@@ -99,6 +97,9 @@ const std::string*	Config::getCommandList() const {
 // }
 // void	Config::setChannelModes(const std::string& channelModes) {
 // 	this->channelModes_ = channelModes;
+// }
+// void	Config::setConnectPwd(const std::string& pwd) {
+// 	this->connectPwd_ = pwd;
 // }
 
 void	Config::debugPrintConfig() const {

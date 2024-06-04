@@ -6,7 +6,7 @@ NAME = ircserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
 DEBUGFLAGS = -g -fsanitize=address,undefined,integer -DDEBUG
-LEAKSFLAG = -DSERVER_LEAKS
+LEAKSFLAG = -DLEAKS
 RM = rm -r -f
 SRCS = main.cpp \
 	   Server.cpp ServerSocket.cpp Config.cpp Info.cpp split.cpp \
@@ -83,9 +83,8 @@ debug:
 	$(CXX) $(DEBUGFLAGS) -o $(NAME) $(OBJS)
 
 .PHONY: leaks
+leaks: CXXFLAGS += $(LEAKSFLAG)
 leaks: re
-leaks:
-	leaks -q --atExit -- ./$(NAME)
 
 .PHONY: parser
 parser:

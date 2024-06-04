@@ -109,7 +109,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info
 		if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
 			return (Reply::errUnknownMode(kERR_UNKNOWNMODE,user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
 		}
-		unsigned long	pos = info->getConfig().getChannelModes().find(parsedMsg.getParams()[1].getValue()[1]);
+		unsigned long	pos = info->getChannelModes().find(parsedMsg.getParams()[1].getValue()[1]);
 		if (pos == std::string::npos) {
 			return (Reply::errUnknownMode(kERR_UNKNOWNMODE,user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
 		}

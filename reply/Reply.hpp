@@ -85,7 +85,7 @@ class Reply {
 
 	 static std::string	rplYourHost(const std::string& toName, const std::string& serverName, const std::string& version);
 	 static std::string	rplCreated(const std::string& toName, const time_t& createdDate);
-	 static std::string	rplMyInfo(const std::string& toName, const Config& config);
+	 static std::string	rplMyInfo(const std::string& toName, const Info& info);
 	 static std::string	rplWelcome(const Info& info, const User& user);
 
 	 static std::string	rplUModeIs(int num, const std::string& toName, const User& user);

@@ -6,14 +6,10 @@
 #include "../user/User.hpp"
 #include "../channel/Channel.hpp"
 
-Info::Info() : config_() {}
+Info::Info(const std::string& connectPwd) : Config(connectPwd) {}
 Info::~Info() {}
 
 // GETTER
-const Config&	Info::getConfig() const {
-	return (this->config_);
-}
-
 const std::vector<User*>&	Info::getUsers() const {
 	return (this->users_);
 }
@@ -128,27 +124,23 @@ void	Info::eraseChannel(std::vector<Channel*>::iterator it) {
 	}
 }
 
-void	Info::printConfig() const {
-	this->config_.debugPrintConfig();
-	std::cout << std::endl;
-}
-
-void	Info::printUsers() const {
+void	Info::debugPrintUsers() const {
 	for (std::vector<User*>::const_iterator it = this->users_.begin(); it != this->users_.end(); it++) {
 		(*it)->debugPrintUser();
 		std::cout << std::endl;
 	}
 }
 
-void	Info::printChannels() const {
+void	Info::debugPrintChannels() const {
 	for (std::vector<Channel*>::const_iterator it = this->channels_.begin(); it != this->channels_.end(); it++) {
 		(*it)->printData();
 		std::cout << std::endl;
 	}
 }
 
-void	Info::printInfo() const {
-	this->printConfig();
-	this->printUsers();
-	this->printChannels();
+void	Info::debugPrintInfo() const {
+	this->debugPrintConfig();
+	std::cout << std::endl;
+	this->debugPrintUsers();
+	this->debugPrintChannels();
 }
