@@ -125,6 +125,7 @@ void	Info::eraseChannel(std::vector<Channel*>::iterator it) {
 }
 
 void	Info::debugPrintUsers() const {
+	std::cout << "[users_]    Current size (" << this->users_.size() << ")" << std::endl;
 	for (std::vector<User*>::const_iterator it = this->users_.begin(); it != this->users_.end(); it++) {
 		(*it)->debugPrintUser();
 		std::cout << std::endl;
@@ -132,6 +133,7 @@ void	Info::debugPrintUsers() const {
 }
 
 void	Info::debugPrintChannels() const {
+	std::cout << "[channels_] Current size (" << this->users_.size() << ")" << std::endl;
 	for (std::vector<Channel*>::const_iterator it = this->channels_.begin(); it != this->channels_.end(); it++) {
 		(*it)->printData();
 		std::cout << std::endl;
@@ -140,7 +142,6 @@ void	Info::debugPrintChannels() const {
 
 void	Info::debugPrintInfo() const {
 	this->debugPrintConfig();
-	std::cout << std::endl;
 	this->debugPrintUsers();
 	this->debugPrintChannels();
 }
