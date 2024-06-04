@@ -23,7 +23,7 @@ const std::string	Config::commandList_[] = {
 };
 
 Config::Config() : \
-	maxClient_(5), maxChannel_(5), createdDate_(std::time(NULL)), version_("1"), serverName_("ft_irc.42tokyo.net"), password_("password"), userModes_("r"), channelModes_("iklot") {
+	maxClient_(5), maxChannel_(5), createdDate_(std::time(NULL)), version_("1"), serverName_("ft_irc.42tokyo.net"), connectPwd_("connectpwd"), operPwd_("operpwd"), userModes_("o"), channelModes_("iklot") {
 }
 
 // Config&	operator=(const Config& rhs) {
@@ -61,8 +61,12 @@ const std::string&	Config::getServerName() const {
 	return (this->serverName_);
 }
 
-const std::string&	Config::getPassword() const {
-	return (this->password_);
+const std::string&	Config::getConnectPwd() const {
+	return (this->connectPwd_);
+}
+
+const std::string&	Config::getOperPwd() const {
+	return (this->operPwd_);
 }
 
 const std::string&	Config::getUserModes() const {
@@ -97,14 +101,15 @@ const std::string*	Config::getCommandList() const {
 // 	this->channelModes_ = channelModes;
 // }
 
-void	Config::printData() const {
+void	Config::debugPrintConfig() const {
 	std::cout << "[CONFIG INFO] ------------------" << std::endl;
 	std::cout << "[maxClient]    : [" << this->maxClient_ << "]" << std::endl;
 	std::cout << "[maxChannel]   : [" << this->maxChannel_ << "]" << std::endl;
 	std::cout << "[createdDate]  : [" << std::asctime(std::localtime(&(this->createdDate_))) << std::flush;  // << "]" << std::endl;
 	std::cout << "[version]      : [" << this->version_ << "]" << std::endl;
 	std::cout << "[serverName]   : [" << this->serverName_ << "]" << std::endl;
-	std::cout << "[password]     : [" << this->password_ << "]" << std::endl;
+	std::cout << "[connectPwd]   : [" << this->connectPwd_ << "]" << std::endl;
+	std::cout << "[operPwd]      : [" << this->operPwd_ << "]" << std::endl;
 	std::cout << "[userModes]    : [" << this->userModes_ << "]" << std::endl;
 	std::cout << "[channelModes] : [" << this->channelModes_ << "]" << std::endl;
 	std::cout << "[commandList]  : ["<< std::flush;

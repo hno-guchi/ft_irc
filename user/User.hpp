@@ -7,10 +7,7 @@
 #include "../color.hpp"
 
 enum kUserMode {
-	kAway = (1 << 0),
-	kOperator = (1 << 1),
-	kRestrict = (1 << 2),
-	kChannelOperator = (1 << 3)
+	kOperator = (1 << 0)
 };
 
 enum kExecCommand {
@@ -34,12 +31,12 @@ class User {
 	 unsigned int	modes_;
 	 std::string	leftMsg_;
 
+	 explicit User(const User& rhs);
+	 User&	operator=(const User& rhs);
+
  public:
 	 explicit User(int* fd = NULL);
 	 ~User();
-
-	 // OPERATOR
-	 // User&	operator=(const User& rhs);
 
 	 // SETTERS
 	 void	setNickName(const std::string &name);
@@ -71,7 +68,7 @@ class User {
 	 void				disconnect();
 	 void				resetData();
 	 // DEBUG
-	 void	printData() const;
+	 void	debugPrintUser() const;
 };
 
 #endif  // USER_HPP

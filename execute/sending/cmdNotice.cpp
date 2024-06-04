@@ -21,7 +21,7 @@
 #include "../../reply/Reply.hpp"
 #include "../../parser/Parser.hpp"
 #include "../../parser/ParsedMsg.hpp"
-#include "../../error/error.hpp"
+#include "../../debug/debug.hpp"
 
 std::string	Execute::cmdNotice(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
@@ -63,7 +63,7 @@ std::string	Execute::cmdNotice(User* user, const ParsedMsg& parsedMsg, Info* inf
 		}
 		return ("");
 	} catch (std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		// handleClientDisconnect(&it->getFd);
 		throw;
 		// return ("");

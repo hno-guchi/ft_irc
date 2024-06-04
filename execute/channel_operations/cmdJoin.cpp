@@ -29,7 +29,7 @@
 #include <iostream>
 #include <vector>
 #include "../Execute.hpp"
-#include "../../error/error.hpp"
+#include "../../debug/debug.hpp"
 #include "../../user/User.hpp"
 #include "../../parser/Parser.hpp"
 #include "../../server/Info.hpp"
@@ -164,7 +164,7 @@ std::string	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info)
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		return ("");
 	} catch (std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		throw;
 		// return ("");
 	}

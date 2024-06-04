@@ -1,6 +1,6 @@
 #include "./Reply.hpp"
 #include "../parser/Parser.hpp"
-#include "../error/error.hpp"
+#include "../debug/debug.hpp"
 
 const std::string	Reply::delimiter_ = "\r\n";
 
@@ -18,7 +18,7 @@ std::string	Reply::rplFromName(const std::string& from) {
 		std::string	message = ":" + from + " ";
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -31,7 +31,7 @@ std::string	Reply::rplCmdToName(int num, const std::string& toName) {
 		std::string	message = ss.str() + " " + toName + " ";
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -42,7 +42,7 @@ std::string	Reply::rplYourHost(const std::string& toName, const std::string& ser
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -57,7 +57,7 @@ std::string	Reply::rplCreated(const std::string& toName, const time_t& createdDa
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -68,7 +68,7 @@ std::string	Reply::rplMyInfo(const std::string& toName, const Config& config) {
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -88,7 +88,7 @@ std::string	Reply::rplWelcome(const Info& info, const User& user) {
 		message += "NICK :" + user.getNickName() + Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -97,26 +97,16 @@ std::string	Reply::rplUModeIs(int num, const std::string& toName, const User& us
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
-		// message += user.getNickName();
-		if (user.getModes() & kAway) {
-			message += "+a";
-		}
 		if (user.getModes() & kOperator) {
 			if (message.size() > 0) {
 				message += " ";
 			}
 			message += "+o";
 		}
-		if (user.getModes() & kRestrict) {
-			if (message.size() > 0) {
-				message += " ";
-			}
-			message += "+r";
-		}
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -133,7 +123,7 @@ std::string	Reply::rplChannelModeIs(int num, const std::string& toName, const st
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -147,7 +137,7 @@ std::string	Reply::rplNoTopic(int num, const std::string& toName, const std::str
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -161,7 +151,7 @@ std::string	Reply::rplTopic(int num, const std::string& toName, const std::strin
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -175,7 +165,7 @@ std::string	Reply::rplInviting(int num, const std::string& toName, const std::st
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -199,7 +189,7 @@ std::string	Reply::rplNamReply(int num, const std::string& toName, const Channel
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -210,7 +200,7 @@ std::string	Reply::rplEndOfNames(int num, const std::string& toName, const std::
 		std::string	message = Reply::rplCmdToName(num, toName) + channel + " :End of NAMES list" + Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -224,7 +214,7 @@ std::string	Reply::rplYourOper(int num, const std::string& toName, const std::st
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -237,7 +227,7 @@ std::string	Reply::errNoSuchNick(int num, const std::string& toName, const std::
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -250,7 +240,7 @@ std::string	Reply::errNoSuchServer(int num, const std::string& toName, const std
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -263,7 +253,7 @@ std::string	Reply::errNoSuchChannel(int num, const std::string& toName, const st
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -276,7 +266,7 @@ std::string	Reply::errCanNotSendToChan(int num, const std::string& toName, const
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -289,7 +279,7 @@ std::string	Reply::errNoOrigin(int num, const std::string& toName) {
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -302,7 +292,7 @@ std::string	Reply::errNoRecipient(int num, const std::string& toName, const std:
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -315,7 +305,7 @@ std::string	Reply::errNoTextToSend(int num, const std::string& toName) {
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -328,7 +318,7 @@ std::string	Reply::errUnknownCommand(int num, const std::string& toName, const s
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -340,7 +330,7 @@ std::string	Reply::errNoNickNameGiven(int num, const std::string& toName) {
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -353,7 +343,7 @@ std::string	Reply::errOneUsNickName(int num, const std::string& toName, const st
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -366,7 +356,7 @@ std::string	Reply::errNickNameInUse(int num, const std::string& toName, const st
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -379,7 +369,7 @@ std::string	Reply::errUserNotInChannel(int num, const std::string& toName, const
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -392,7 +382,7 @@ std::string	Reply::errNotOnChannel(int num, const std::string& toName, const std
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -405,7 +395,7 @@ std::string	Reply::errUserOnChannel(int num, const std::string& toName, const st
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -418,7 +408,7 @@ std::string	Reply::errNotRegistered(int num, const std::string& toName) {
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -431,7 +421,7 @@ std::string	Reply::errNeedMoreParams(int num, const std::string& toName, const s
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -444,7 +434,7 @@ std::string	Reply::errAlreadyRegistered(int num, const std::string& toName) {
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -457,7 +447,7 @@ std::string	Reply::errPasswordMisMatch(int num, const std::string& toName) {
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -470,7 +460,7 @@ std::string	Reply::errKeySet(int num, const std::string& toName, const std::stri
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -483,7 +473,7 @@ std::string	Reply::errChannelIsFull(int num, const std::string& toName, const st
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -496,7 +486,7 @@ std::string	Reply::errUnknownMode(int num, const std::string& toName, const std:
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -509,7 +499,7 @@ std::string	Reply::errInviteOnlyChan(int num, const std::string& toName, const s
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -522,7 +512,7 @@ std::string	Reply::errBadChannelKey(int num, const std::string& toName, const st
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -536,7 +526,7 @@ std::string	Reply::errNoChanModes(int num, const std::string& toName, const std:
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -549,7 +539,7 @@ std::string	Reply::errChanOprivsNeeded(int num, const std::string& toName, const
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -562,7 +552,7 @@ std::string	Reply::errRestricted(int num, const std::string& toName) {
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -575,7 +565,7 @@ std::string	Reply::errUModeUnknownFlag(int num, const std::string& toName) {
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -588,7 +578,7 @@ std::string	Reply::errUsersDontMatch(int num, const std::string& toName) {
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }
@@ -727,7 +717,7 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 		}
 		return (msg);
 	} catch (const std::exception& e) {
-		printErrorMessage(e.what());
+		debugPrintErrorMessage(e.what());
 		return ("");
 	}
 }

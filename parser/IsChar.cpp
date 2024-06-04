@@ -1,6 +1,4 @@
 #include <iostream>
-// #include <iomanip>
-// #include <sstream>
 #include "./IsChar.hpp"
 #include "../color.hpp"
 

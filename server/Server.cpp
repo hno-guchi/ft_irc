@@ -1,10 +1,9 @@
-#include <signal.h>
 #include "./Server.hpp"
 #include "./ServerSocket.hpp"
 #include "./Config.hpp"
 #include "./Info.hpp"
 #include "../color.hpp"
-#include "../error/error.hpp"
+#include "../debug/debug.hpp"
 #include "../user/User.hpp"
 #include "../parser/Parser.hpp"
 #include "../execute/Execute.hpp"
@@ -29,9 +28,6 @@ void	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
 	}
 }
 
-/*
- * Server class
- */
 // CONSTRUCTOR
 Server::Server(unsigned short port) : socket_(port), info_() {
 	try {
@@ -60,7 +56,6 @@ Server::~Server() {
 
 void	Server::run() {
 	while (1) {
-
 		int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 1, 3 * 10000);
 
 		if (result == -1) {
@@ -77,7 +72,6 @@ void	Server::run() {
 		} catch (std::exception& e) {
 			throw;
 		}
-		this->info_.printInfo();
 		// TODO(hnoguchi): PINGするならここ。
 	}
 }
@@ -125,11 +119,13 @@ void	Server::handleClientSocket() {
 		for (int i = 1; i <= this->info_.getConfig().getMaxClient(); ++i) {
 			if (this->fds_[i].fd != -1 && (this->fds_[i].revents & POLLIN)) {
 				handleReceivedData(*this->info_.findUser(this->fds_[i].fd));
-				// this->printData();
+#ifdef DEBUG
+				this->info_.printInfo();
+#endif  // DEBUG
 			}
 		}
 	} catch (std::exception& e) {
-		std::cerr << RED << e.what() << END << std::endl;
+		debugPrintErrorMessage(e.what());
 		// throw;
 	}
 }
@@ -139,8 +135,9 @@ void	Server::handleReceivedData(User* user) {
 		char	buffer[513] = {0};
 
 		recvNonBlocking(user->getFd(), buffer, sizeof(buffer) - 1);
-		// debug
-		std::cout << GREEN << buffer << END << std::flush;
+#ifdef DEBUG
+		debugPrintRecvMessage(user->getNickName(), buffer);
+#endif  // DEBUG
 		Execute						execute;
 		Reply						reply;
 		// Split message
@@ -185,10 +182,10 @@ void	Server::handleReceivedData(User* user) {
 			if (replyMsg.empty()) {
 				continue;
 			}
-			// debug
+#ifdef DEBUG
 			// user->printData();
-			debugPrintSendMessage("replyMsg", replyMsg);
-			// send
+			debugPrintSendMessage(user->getNickName(), replyMsg);
+#endif  // DEBUG
 			sendNonBlocking(user->getFd(), replyMsg.c_str(), replyMsg.size());
 		}
 	} catch (std::exception& e) {
@@ -208,31 +205,3 @@ void	Server::printData() const {
 	// this->info_.printData();
 	std::cout << "_______________________________" << std::endl;
 }
-
-// TODO(hnoguchi): サーバーの終了処理を実装する。
-// TODO(hnoguchi): Server classにpasswordを追加する。
-// TODO(hnoguchi): <port>, <password>のバリデーションを実装する。
-int	main(int argc, char* argv[]) {
-	if (argc != 3) {
-		std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
-	}
-
-	try {
-		(void)argv;
-		Server	Server(8080);
-
-		Server.run();
-	} catch (std::exception& e) {
-		fatalError(e.what());
-		// std::cerr << RED << e.what() << END << std::endl;
-		// destruct
-		// return (1);
-	}
-	return (0);
-}
-
-// #ifdef SERVER_LEAKS
-// __attribute__((destructor)) static void destructor() {
-//     system("leaks -q ircserv");
-// }
-// #endif  // SERVER_LEAKS

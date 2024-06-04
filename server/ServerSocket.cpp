@@ -1,5 +1,5 @@
 #include "./ServerSocket.hpp"
-#include "../error/error.hpp"
+#include "../debug/debug.hpp"
 
 // CONSTRUCTOR
 ServerSocket::ServerSocket(unsigned short port) :

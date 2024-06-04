@@ -4,7 +4,7 @@
 #include "../user/User.hpp"
 #include "../channel/Channel.hpp"
 #include "../reply/Reply.hpp"
-#include "../error/error.hpp"
+#include "../debug/debug.hpp"
 #include "../parser/Parser.hpp"
 #include "../parser/ParsedMsg.hpp"
 
