@@ -9,16 +9,6 @@
 #include "../execute/Execute.hpp"
 
 /*
- * Helper functions
- */
-static void	recvNonBlocking(int fd, char* buffer, size_t dataSize) {
-	ssize_t	recvMsgSize = recv(fd, buffer, dataSize, MSG_DONTWAIT);
-	if (recvMsgSize < 0) {
-		throw std::runtime_error("recv");
-	}
-}
-
-/*
  * Global functions
  */
 void	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
@@ -28,14 +18,24 @@ void	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
 	}
 }
 
+/*
+ * Helper functions
+ */
+static void	recvNonBlocking(int fd, char* buffer, size_t dataSize) {
+	ssize_t	recvMsgSize = recv(fd, buffer, dataSize, MSG_DONTWAIT);
+	if (recvMsgSize < 0) {
+		throw std::runtime_error("recv");
+	}
+}
+
 // CONSTRUCTOR
-Server::Server(unsigned short port) : socket_(port), info_() {
+Server::Server(unsigned short port, const std::string& connectPwd) : socket_(port), info_(connectPwd) {
 	try {
 		this->fds_[0].fd = this->socket_.getFd();
-		for (int i = 1; i <= this->info_.getConfig().getMaxClient(); i++) {
+		for (int i = 1; i <= this->info_.getMaxClient(); i++) {
 			this->fds_[i].fd = -1;
 		}
-		for (int i = 0; i <= this->info_.getConfig().getMaxClient(); i++) {
+		for (int i = 0; i <= this->info_.getMaxClient(); i++) {
 			this->fds_[i].events = POLLIN;
 			this->fds_[i].revents = 0;
 		}
@@ -45,7 +45,7 @@ Server::Server(unsigned short port) : socket_(port), info_() {
 }
 
 Server::~Server() {
-	for (int i = 0; i <= this->info_.getConfig().getMaxClient(); i++) {
+	for (int i = 0; i <= this->info_.getMaxClient(); i++) {
 		if (this->fds_[i].fd == -1) {
 			continue;
 		}
@@ -56,7 +56,7 @@ Server::~Server() {
 
 void	Server::run() {
 	while (1) {
-		int result = poll(this->fds_, this->info_.getConfig().getMaxClient() + 1, 3 * 10000);
+		int result = poll(this->fds_, this->info_.getMaxClient() + 1, 3 * 10000);
 
 		if (result == -1) {
 			throw std::runtime_error("poll");
@@ -78,7 +78,7 @@ void	Server::run() {
 
 int	Server::setFd(int fd) {
 	try {
-		for (int i = 1; i <= this->info_.getConfig().getMaxClient(); ++i) {
+		for (int i = 1; i <= this->info_.getMaxClient(); ++i) {
 			if (this->fds_[i].fd != -1) {
 				continue;
 			}
@@ -116,11 +116,11 @@ void	Server::handleServerSocket() {
 
 void	Server::handleClientSocket() {
 	try {
-		for (int i = 1; i <= this->info_.getConfig().getMaxClient(); ++i) {
+		for (int i = 1; i <= this->info_.getMaxClient(); ++i) {
 			if (this->fds_[i].fd != -1 && (this->fds_[i].revents & POLLIN)) {
 				handleReceivedData(*this->info_.findUser(this->fds_[i].fd));
 #ifdef DEBUG
-				this->info_.printInfo();
+				this->info_.debugPrintInfo();
 #endif  // DEBUG
 			}
 		}
@@ -153,8 +153,8 @@ void	Server::handleReceivedData(User* user) {
 			// std::vector<SendMsg *>	sendList;
 			Parser		parser;
 
-			// parser.parse(*it, this->info_.getConfig().getCommandList(), &sendList);
-			replyNum = parser.parse(*it, this->info_.getConfig().getCommandList());
+			// parser.parse(*it, this->info_.getCommandList(), &sendList);
+			replyNum = parser.parse(*it, this->info_.getCommandList());
 			// parser.getParsedMsg().printParsedMsg();
 			// std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
 			// if (sendList.size() == 0) {
@@ -172,7 +172,7 @@ void	Server::handleReceivedData(User* user) {
 				}
 				if (!replyMsg.empty()) {
 					std::string	buf = replyMsg;
-					replyMsg = Reply::rplFromName(this->info_.getConfig().getServerName());
+					replyMsg = Reply::rplFromName(this->info_.getServerName());
 					replyMsg += buf;
 				}
 			} else {
@@ -195,7 +195,7 @@ void	Server::handleReceivedData(User* user) {
 	}
 }
 
-void	Server::printData() const {
+void	Server::debugPrintServer() const {
 	std::cout << "[SERVER DATA]__________________" << std::endl;
 	std::cout << "this->fds_[" << MAX_FD << "];" << std::endl;
 	for (int i = 0; i < MAX_FD; i++) {

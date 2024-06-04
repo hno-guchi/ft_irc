@@ -25,7 +25,7 @@ std::string	Execute::cmdPass(User* user, const ParsedMsg& parsedMsg, Info* info)
 	if (user->getRegistered() & kPassCommand) {
 		return (Reply::errAlreadyRegistered(kERR_ALREADYREGISTRED, user->getNickName()));
 	}
-	if (parsedMsg.getParams()[0].getValue() != info->getConfig().getConnectPwd()) {
+	if (parsedMsg.getParams()[0].getValue() != info->getConnectPwd()) {
 		return (Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getNickName()));
 	}
 	return ("");

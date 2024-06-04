@@ -28,20 +28,17 @@ class Server {
 	 void	handleClientSocket();
 	 void	handleReceivedData(User* user);
 
+	 explicit Server(const Server& rhs);
+	 Server& operator=(const Server& rhs);
+
  public:
-	 explicit Server(unsigned short port);
+	 explicit Server(unsigned short port = 8080, const std::string& connectPwd = "");
 	 ~Server();
-	 // void	setPassword(const std::string& password);
+
 	 void	run(void);
 
 	 // debug
-	 void	printData() const;
-	// class GradeTooHighException : public std::out_of_range {
-	// public:
-	// 	GradeTooHighException(const std::string& msg = "Grade is too high.");
-	// };
-	// .cpp
-	// Bureaucrat::GradeTooHighException::GradeTooHighException(const std::string& msg) : std::out_of_range(msg) {}
+	 void	debugPrintServer() const;
 };
 
 void						sendNonBlocking(int fd, const char* buffer, size_t dataSize);

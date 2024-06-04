@@ -79,7 +79,7 @@ std::string	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info)
 				sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 			}
 			// JOINしたuserへchannel情報(RPL_(NO)TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES)を送信
-			msg = Reply::rplFromName(info->getConfig().getServerName());
+			msg = Reply::rplFromName(info->getServerName());
 			if ((*channelIt)->getTopic().size() > 0) {
 				msg += Reply::rplTopic(kRPL_TOPIC, user->getNickName(), (*channelIt)->getName(), (*channelIt)->getTopic());
 			} else {
@@ -88,39 +88,39 @@ std::string	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info)
 			debugPrintSendMessage("SendMsg", msg);
 			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 
-			msg = Reply::rplFromName(info->getConfig().getServerName());
+			msg = Reply::rplFromName(info->getServerName());
 			msg += Reply::rplNamReply(kRPL_NAMREPLY, user->getNickName(), *(*channelIt));
-			msg += Reply::rplFromName(info->getConfig().getServerName());
+			msg += Reply::rplFromName(info->getServerName());
 			msg += Reply::rplEndOfNames(kRPL_ENDOFNAMES, user->getNickName(), (*channelIt)->getName());
 			debugPrintSendMessage("SendMsg", msg);
 			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			// if ((*channelIt)->getTopic().size() > 0) {
-			// 	msg = ":" + info->getConfig().getServerName() + " TOPIC " + (*channelIt)->getName() + " :" + (*channelIt)->getTopic() + "\r\n";
+			// 	msg = ":" + info->getServerName() + " TOPIC " + (*channelIt)->getName() + " :" + (*channelIt)->getTopic() + "\r\n";
 			// 	debugPrintSendMessage("SendMsg", msg);
 			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			// }
 			// if ((*channelIt)->getModes() & kInviteOnly) {
-			// 	msg = ":" + info->getConfig().getServerName() + " MODE " + (*channelIt)->getName() + " :+i\r\n";
+			// 	msg = ":" + info->getServerName() + " MODE " + (*channelIt)->getName() + " :+i\r\n";
 			// 	debugPrintSendMessage("SendMsg", msg);
 			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			// }
 			// if ((*channelIt)->getModes() & kKey) {
-			// 	msg = ":" + info->getConfig().getServerName() + " MODE " + (*channelIt)->getName() + " :+k " + (*channelIt)->getKey() + "\r\n";
+			// 	msg = ":" + info->getServerName() + " MODE " + (*channelIt)->getName() + " :+k " + (*channelIt)->getKey() + "\r\n";
 			// 	debugPrintSendMessage("SendMsg", msg);
 			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			// }
 			// if ((*channelIt)->getModes() & kLimit) {
-			// 	msg += ":" + info->getConfig().getServerName() + " MODE " + (*channelIt)->getName() + " :+l " + std::to_string((*channelIt)->getLimit()) + "\r\n";
+			// 	msg += ":" + info->getServerName() + " MODE " + (*channelIt)->getName() + " :+l " + std::to_string((*channelIt)->getLimit()) + "\r\n";
 			// 	debugPrintSendMessage("SendMsg", msg);
 			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			// }
 			// if ((*channelIt)->getModes() & kRestrictTopicSetting) {
-			// 	msg = ":" + info->getConfig().getServerName() + " MODE " + (*channelIt)->getName() + " :+t\r\n";
+			// 	msg = ":" + info->getServerName() + " MODE " + (*channelIt)->getName() + " :+t\r\n";
 			// 	debugPrintSendMessage("SendMsg", msg);
 			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			// }
 			// for (std::vector<User *>::const_iterator operIt = (*channelIt)->getOperators().begin(); operIt != (*channelIt)->getOperators().end(); operIt++) {
-			// 	msg = ":" + info->getConfig().getServerName() + " MODE " + (*channelIt)->getName() + " +o " + (*operIt)->getNickName() + "\r\n";
+			// 	msg = ":" + info->getServerName() + " MODE " + (*channelIt)->getName() + " +o " + (*operIt)->getNickName() + "\r\n";
 			// 	debugPrintSendMessage("SendMsg", msg);
 			// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			// }
@@ -128,7 +128,7 @@ std::string	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info)
 		}
 		// <channel>が存在しない場合
 		// サーバが管理するchannel数が最大数を超えている場合
-		if (info->getChannels().size() >= static_cast<unsigned long>(info->getConfig().getMaxChannel())) {
+		if (info->getChannels().size() >= static_cast<unsigned long>(info->getMaxChannel())) {
 			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
 		}
 		// <channel>を作成
@@ -140,12 +140,12 @@ std::string	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info)
 		std::string	msg = ":" + user->getNickName() + " JOIN " + (*channelIt)->getName() + "\r\n";
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-		// msg = ":" + info->getConfig().getServerName() + " MODE " + it->getName() + " +o " + user->getNickName() + "\r\n";
+		// msg = ":" + info->getServerName() + " MODE " + it->getName() + " +o " + user->getNickName() + "\r\n";
 		// debugPrintSendMessage("SendMsg", msg);
 		// sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		// TODO(hnoguchi): Send RPL_CHANNELMODEIS
 		// JOINしたuserへchannel情報(RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES)を送信
-		msg = Reply::rplFromName(info->getConfig().getServerName());
+		msg = Reply::rplFromName(info->getServerName());
 		if ((*channelIt)->getTopic().size() > 0) {
 			msg += Reply::rplTopic(kRPL_TOPIC, user->getNickName(), (*channelIt)->getName(), (*channelIt)->getTopic());
 		} else {
@@ -153,12 +153,12 @@ std::string	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info)
 		}
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-		msg = Reply::rplFromName(info->getConfig().getServerName());
+		msg = Reply::rplFromName(info->getServerName());
 		msg += Reply::rplNamReply(kRPL_NAMREPLY, user->getNickName(), *(*channelIt));
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 
-		msg = Reply::rplFromName(info->getConfig().getServerName());
+		msg = Reply::rplFromName(info->getServerName());
 		msg += Reply::rplEndOfNames(kRPL_ENDOFNAMES, user->getNickName(), (*channelIt)->getName());
 		debugPrintSendMessage("SendMsg", msg);
 		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
