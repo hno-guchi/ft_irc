@@ -12,23 +12,27 @@ class Config {
 	 const time_t				createdDate_;
 	 const std::string			version_;
 	 const std::string			serverName_;
-	 const std::string			password_;
+	 const std::string			connectPwd_;
+	 const std::string			operPwd_;
 	 const std::string			userModes_;
 	 const std::string			channelModes_;
 	 static const std::string	commandList_[];
 
+	 Config(const Config& rhs);
+	 // TODO(hnoguchi): constを外すなら、コピーアサインメント演算子をオーバーロードする
+	 Config&	operator=(const Config& rhs);
+
  public:
 	 Config();
 	 ~Config();
-	 // TODO(hnoguchi): constを外すなら、コピーアサインメント演算子をオーバーロードする
-	 // Config&	operator=(const Config& rhs);
 	 // GETTERS
 	 int				getMaxClient() const;
 	 int				getMaxChannel() const;
 	 const time_t&		getCreatedDate() const;
 	 const std::string&	getVersion() const;
 	 const std::string&	getServerName() const;
-	 const std::string&	getPassword() const;
+	 const std::string&	getConnectPwd() const;
+	 const std::string&	getOperPwd() const;
 	 const std::string&	getUserModes() const;
 	 const std::string&	getChannelModes() const;
 	 const std::string*	getCommandList() const;
@@ -41,7 +45,7 @@ class Config {
 	 // void	setUserModes(const std::string& userModes);
 	 // void	setChannelModes(const std::string& channelModes);
 	 // DEBUG
-	 void				printData() const;
+	 void				debugPrintConfig() const;
 };
 
 #endif  // CONFIG_HPP

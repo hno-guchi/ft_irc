@@ -41,14 +41,13 @@
 #include <iostream>
 #include <vector>
 #include "../Execute.hpp"
-#include "../../error/error.hpp"
+#include "../../debug/debug.hpp"
 #include "../../user/User.hpp"
 #include "../../server/Info.hpp"
 #include "../../server/Server.hpp"
 #include "../../reply/Reply.hpp"
 #include "../../parser/Parser.hpp"
 #include "../../parser/ParsedMsg.hpp"
-#include "../../error/error.hpp"
 
 std::string	Execute::cmdPrivmsg(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
@@ -90,7 +89,7 @@ std::string	Execute::cmdPrivmsg(User* user, const ParsedMsg& parsedMsg, Info* in
 		}
 		return ("");
 	} catch (std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		// handleClientDisconnect(&it->getFd);
 		throw;
 		// return ("");

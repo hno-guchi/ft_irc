@@ -49,7 +49,7 @@
 #include <vector>
 #include <cstdlib>
 #include "../Execute.hpp"
-#include "../../error/error.hpp"
+#include "../../debug/debug.hpp"
 #include "../../user/User.hpp"
 #include "../../parser/Parser.hpp"
 #include "../../server/Server.hpp"
@@ -194,7 +194,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info
 		}
 		return ("");
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		throw;
 		// return ("");
 	}

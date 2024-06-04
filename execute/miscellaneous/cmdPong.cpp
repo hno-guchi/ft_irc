@@ -18,7 +18,7 @@
 #include "../../server/Server.hpp"
 #include "../../reply/Reply.hpp"
 #include "../../parser/Parser.hpp"
-#include "../../error/error.hpp"
+#include "../../debug/debug.hpp"
 
 std::string	Execute::cmdPong(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {

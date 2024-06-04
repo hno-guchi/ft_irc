@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include "./Info.hpp"
 #include "./Config.hpp"
-#include "../error/error.hpp"
+#include "../debug/debug.hpp"
 #include "../user/User.hpp"
 #include "../channel/Channel.hpp"
 
@@ -91,9 +91,8 @@ void	Info::pushBackUser(User* user) {
 	try {
 		this->users_.push_back(user);
 	} catch (std::exception& e) {
-		// throw std::invalid_argument("Info::pushBackUser()");
-		fatalError(e.what());
-		throw;
+		debugPrintErrorMessage(e.what());
+		throw std::invalid_argument("Info::pushBackUser()");
 	}
 }
 
@@ -101,9 +100,8 @@ void	Info::pushBackChannel(Channel* channel) {
 	try {
 		this->channels_.push_back(channel);
 	} catch (std::exception& e) {
-		// throw std::invalid_argument("Info::pushBackChannel()");
-		fatalError(e.what());
-		throw;
+		debugPrintErrorMessage(e.what());
+		throw std::invalid_argument("Info::pushBackChannel()");
 	}
 }
 
@@ -113,11 +111,9 @@ void	Info::eraseUser(std::vector<User*>::iterator it) {
 		(*it)->resetData();
 		delete *it;
 		this->users_.erase(it);
-		// *it = NULL;
 	} catch (std::exception& e) {
-		// throw std::invalid_argument("Info::deleteUser()");
-		fatalError(e.what());
-		throw;
+		debugPrintErrorMessage(e.what());
+		throw std::invalid_argument("Info::deleteUser()");
 	}
 }
 
@@ -126,22 +122,20 @@ void	Info::eraseChannel(std::vector<Channel*>::iterator it) {
 		(*it)->resetData();
 		delete *it;
 		this->channels_.erase(it);
-		// *it = NULL;
 	} catch (std::exception& e) {
-		// throw std::invalid_argument("Info::deleteChannel()");
-		fatalError(e.what());
-		throw;
+		debugPrintErrorMessage(e.what());
+		throw std::invalid_argument("Info::deleteChannel()");
 	}
 }
 
 void	Info::printConfig() const {
-	this->config_.printData();
+	this->config_.debugPrintConfig();
 	std::cout << std::endl;
 }
 
 void	Info::printUsers() const {
 	for (std::vector<User*>::const_iterator it = this->users_.begin(); it != this->users_.end(); it++) {
-		(*it)->printData();
+		(*it)->debugPrintUser();
 		std::cout << std::endl;
 	}
 }

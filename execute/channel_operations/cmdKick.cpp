@@ -20,7 +20,7 @@
 
 #include <vector>
 #include "../Execute.hpp"
-#include "../../error/error.hpp"
+#include "../../debug/debug.hpp"
 #include "../../user/User.hpp"
 #include "../../parser/Parser.hpp"
 #include "../../server/Info.hpp"
@@ -78,7 +78,7 @@ std::string	Execute::cmdKick(User* user, const ParsedMsg& parsedMsg, Info* info)
 		}
 		return ("");
 	} catch (const std::exception& e) {
-		fatalError(e.what());
+		debugPrintErrorMessage(e.what());
 		throw;
 		// return ("");
 	}

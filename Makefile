@@ -5,11 +5,11 @@
 NAME = ircserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
-DEBUGFLAGS = -g -fsanitize=address
-# DEBUGFLAGS = -g -fsanitize=address -fsanitize=undefined -fsanitize=integer
+DEBUGFLAGS = -g -fsanitize=address,undefined,integer -DDEBUG
 LEAKSFLAG = -DSERVER_LEAKS
 RM = rm -r -f
-SRCS = Server.cpp ServerSocket.cpp Config.cpp Info.cpp split.cpp \
+SRCS = main.cpp \
+	   Server.cpp ServerSocket.cpp Config.cpp Info.cpp split.cpp \
 	   User.cpp \
 	   Channel.cpp \
 	   Parser.cpp ParsedMsg.cpp Param.cpp ValidParam.cpp Token.cpp IsChar.cpp \
@@ -19,7 +19,7 @@ SRCS = Server.cpp ServerSocket.cpp Config.cpp Info.cpp split.cpp \
 	   cmdPass.cpp cmdNick.cpp cmdUser.cpp cmdUserMode.cpp cmdOper.cpp cmdQuit.cpp \
 	   cmdPong.cpp \
 	   cmdNotice.cpp cmdPrivmsg.cpp \
-	   error.cpp
+	   debug.cpp
 OBJS = $(addprefix $(OBJS_DIR)/, $(SRCS:%.cpp=%.o))
 OBJS_DIR = ./objs
 DEPENDS = $(addprefix $(OBJS_DIR)/, $(OBJS:%.o=%.d))
@@ -37,6 +37,8 @@ $(NAME): $(OBJS_DIR) $(OBJS)
 $(OBJS_DIR):
 	mkdir -p $(OBJS_DIR)
 
+$(OBJS_DIR)/%.o: ./%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./server/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./user/%.cpp
@@ -57,7 +59,7 @@ $(OBJS_DIR)/%.o: ./execute/sending/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OBJS_DIR)/%.o: ./reply/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-$(OBJS_DIR)/%.o: ./error/%.cpp
+$(OBJS_DIR)/%.o: ./debug/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .PHONY: clean

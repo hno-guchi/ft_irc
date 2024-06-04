@@ -14,7 +14,7 @@
 
 #include <vector>
 #include "../Execute.hpp"
-#include "../../error/error.hpp"
+#include "../../debug/debug.hpp"
 #include "../../user/User.hpp"
 #include "../../parser/Parser.hpp"
 #include "../../server/Server.hpp"
@@ -30,7 +30,7 @@ std::string	Execute::cmdOper(User* user, const ParsedMsg& parsedMsg, Info* info)
 		if (user->getNickName() != parsedMsg.getParams()[0].getValue()) {
 			return (Reply::errUsersDontMatch(kERR_USERSDONTMATCH, user->getNickName()));
 		}
-		if (info->getConfig().getPassword() != parsedMsg.getParams()[1].getValue()) {
+		if (info->getConfig().getOperPwd() != parsedMsg.getParams()[1].getValue()) {
 			return (Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getNickName()));
 		}
 		user->setMode(kOperator);

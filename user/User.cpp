@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include "./User.hpp"
-#include "../error/error.hpp"
+#include "../debug/debug.hpp"
 
 // CONSTRUCTORS and DESTRUCTORS
 User::User(int* fd) : index_(-1), fd_(fd), registered_(0), modes_(0) {
@@ -35,8 +35,8 @@ User::~User() {
 // 		this->modes_ = rhs.getModes();
 // 		return (*this);
 // 	} catch (std::exception &e) {
-// 		fatalError(e.what());
-// 		throw;
+// 		debugPrintErrorMessage(e.what());
+// 		throw std::invalid_argument("User::operator=()");
 // 	}
 // }
 
@@ -153,8 +153,8 @@ void	User::disconnect() {
 		*(this->fd_) = -1;
 		this->fd_ = NULL;
 	} catch (std::exception &e) {
-		fatalError(e.what());
-		throw;
+		debugPrintErrorMessage(e.what());
+		throw std::invalid_argument("User::disconnect()");
 	}
 }
 
@@ -170,13 +170,13 @@ void	User::resetData() {
 		this->registered_ = 0;
 		this->modes_ = 0;
 	} catch (std::exception &e) {
-		fatalError(e.what());
-		throw;
+		debugPrintErrorMessage(e.what());
+		throw std::invalid_argument("User::resetData()");
 	}
 }
 
 // DEBUG
-void	User::printData() const {
+void	User::debugPrintUser() const {
 	std::cout << MAGENTA << "[USER INFO] --------------------" << END << std::endl;
 	std::cout << "[index]        : [" << this->index_ << "]" << std::endl;
 	std::cout << "[fd]           : [(" << this->fd_ << ")" << std::flush;

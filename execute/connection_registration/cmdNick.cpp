@@ -18,7 +18,7 @@
 #include <vector>
 #include "../Execute.hpp"
 #include "../../user/User.hpp"
-#include "../../error/error.hpp"
+#include "../../debug/debug.hpp"
 #include "../../parser/Parser.hpp"
 #include "../../server/Server.hpp"
 #include "../../server/Info.hpp"

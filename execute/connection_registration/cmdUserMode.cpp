@@ -21,7 +21,7 @@
 
 #include <vector>
 #include "../Execute.hpp"
-#include "../../error/error.hpp"
+#include "../../debug/debug.hpp"
 #include "../../user/User.hpp"
 #include "../../parser/Parser.hpp"
 #include "../../server/Server.hpp"
@@ -43,10 +43,9 @@ std::string	Execute::cmdUserMode(User* user, const ParsedMsg& parsedMsg, Info* i
 		if (parsedMsg.getParams()[1].getValue().size() != 2) {
 			return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
 		}
-		if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
-			return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
-		}
-		// TODO(hnoguchi): "+oOr"のような文字列はParser classで"+o", "+O", "+r"に分割する。
+		// if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
+		// 	return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
+		// }
 		if (parsedMsg.getParams()[1].getValue()[0] == '-') {
 			if (parsedMsg.getParams()[1].getValue()[1] != 'o') {
 				return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
@@ -57,20 +56,21 @@ std::string	Execute::cmdUserMode(User* user, const ParsedMsg& parsedMsg, Info* i
 			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			return ("");
 		}
-		if (parsedMsg.getParams()[1].getValue()[0] == '+') {
-			if (parsedMsg.getParams()[1].getValue()[1] != 'r') {
-				return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
-			}
-			user->unsetMode(kOperator);
-			user->setMode(kRestrict);
-			std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :+r\r\n";
-			if (user->getModes() & kOperator) {
-				msg += ":" + user->getNickName() + " MODE " + user->getNickName() + " :-o\r\n";
-			}
-			debugPrintSendMessage("SendMsg", msg);
-			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-			return ("");
-		}
+		// if (parsedMsg.getParams()[1].getValue()[0] == '+') {
+		// 	if (parsedMsg.getParams()[1].getValue()[1] != 'r') {
+		// 		return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
+		// 	}
+		// 	std::string	msg;
+		// 	if (user->getModes() & kOperator) {
+		// 		user->unsetMode(kOperator);
+		// 		msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :-o\r\n";
+		// 	}
+		// 	user->setMode(kRestrict);
+		// 	msg += ":" + user->getNickName() + " MODE " + user->getNickName() + " :+r\r\n";
+		// 	debugPrintSendMessage("SendMsg", msg);
+		// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		// 	return ("");
+		// }
 		return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
