@@ -55,10 +55,8 @@ std::string	Execute::cmdInvite(User* user, const ParsedMsg& parsedMsg, Info* inf
 		}
 		(*channelIt)->pushBackInvited(*info->findUser((*targetUserIt)->getNickName()));
 		std::string	msg = ":" + user->getNickName() + " INVITE " + (*targetUserIt)->getNickName() + " " + (*channelIt)->getName() + "\r\n";
-		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
-		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		Server::sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		return (Reply::rplInviting(kRPL_INVITING, user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;

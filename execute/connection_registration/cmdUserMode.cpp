@@ -52,8 +52,7 @@ std::string	Execute::cmdUserMode(User* user, const ParsedMsg& parsedMsg, Info* i
 			}
 			user->unsetMode(kOperator);
 			std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :-o\r\n";
-			debugPrintSendMessage("SendMsg", msg);
-			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			return ("");
 		}
 		// if (parsedMsg.getParams()[1].getValue()[0] == '+') {
@@ -68,7 +67,7 @@ std::string	Execute::cmdUserMode(User* user, const ParsedMsg& parsedMsg, Info* i
 		// 	user->setMode(kRestrict);
 		// 	msg += ":" + user->getNickName() + " MODE " + user->getNickName() + " :+r\r\n";
 		// 	debugPrintSendMessage("SendMsg", msg);
-		// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		// 	Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		// 	return ("");
 		// }
 		return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));

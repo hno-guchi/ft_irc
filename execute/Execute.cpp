@@ -20,7 +20,7 @@ std::string	Execute::registerUser(User* user, const ParsedMsg& parsedMsg, Info* 
 				user->setRegistered(kPassCommand);
 				return ("");
 			}
-			sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			throw std::invalid_argument("registerUser");
 		}
 		if (!(user->getRegistered() & kNickCommand) && parsedMsg.getCommand() == "NICK") {
@@ -30,9 +30,11 @@ std::string	Execute::registerUser(User* user, const ParsedMsg& parsedMsg, Info* 
 					user->setRegistered(kNickCommand);
 					return ("");
 				}
-				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
-				throw std::invalid_argument("registerUser");
+			} else {
+				reply = Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getNickName());
 			}
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			throw std::invalid_argument("registerUser");
 		}
 		if (!(user->getRegistered() & kUserCommand) && parsedMsg.getCommand() == "USER") {
 			if ((user->getRegistered() & kPassCommand) && (user->getRegistered() & kNickCommand)) {
@@ -41,9 +43,13 @@ std::string	Execute::registerUser(User* user, const ParsedMsg& parsedMsg, Info* 
 					user->setRegistered(kUserCommand);
 					return (Reply::rplWelcome(*info, *user));
 				}
-				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
-				throw std::invalid_argument("registerUser");
+			} else if (!(user->getRegistered() & kPassCommand)) {
+				reply = Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getNickName());
+			} else if (!(user->getRegistered() & kNickCommand)) {
+				reply = Reply::errNoNickNameGiven(kERR_NONICKNAMEGIVEN, user->getNickName());
 			}
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			throw std::invalid_argument("registerUser");
 		}
 		return (Reply::errNotRegistered(kERR_NOTREGISTERED, user->getNickName()));
 	} catch (std::exception& e) {

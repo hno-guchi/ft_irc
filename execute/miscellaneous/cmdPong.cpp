@@ -27,8 +27,7 @@ std::string	Execute::cmdPong(User* user, const ParsedMsg& parsedMsg, Info* info)
 			return (Reply::errNoOrigin(kERR_NOORIGIN, user->getNickName()));
 		}
 		std::string	message = ":" + info->getServerName() + " PONG " + info->getServerName() + "\r\n";
-		debugPrintSendMessage("SendMessage", message);
-		sendNonBlocking(user->getFd(), message.c_str(), message.size());
+		Server::sendNonBlocking(user->getFd(), message.c_str(), message.size());
 		return ("");
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;

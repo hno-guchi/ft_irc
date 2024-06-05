@@ -78,7 +78,7 @@ class Reply {
  public:
 	 Reply();
 	 ~Reply();
-	 const std::string&	getDelimiter() const;
+	 static const std::string&	getDelimiter();
 	 std::string		createMessage(int num, const User& user, const Info& info, const ParsedMsg& parsedMsg);
 	 static std::string	rplFromName(const std::string& from);
 	 static std::string	rplCmdToName(int num, const std::string& toName);

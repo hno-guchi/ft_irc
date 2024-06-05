@@ -13,35 +13,40 @@
 
 class Parser {
  private:
-	ParsedMsg	parsed_;
+	 ParsedMsg	parsed_;
 
-	void	tokenize(std::string *message, std::vector<Token> *tokens);
-	int		validPing(std::vector<Token> *tokens);
-	int		validPass(std::vector<Token> *tokens);
-	int		validNick(std::vector<Token> *tokens);
-	int		validUser(std::vector<Token> *tokens);
-	int		validOper(std::vector<Token> *tokens);
-	int		validQuit(std::vector<Token> *tokens);
-	int		validJoin(std::vector<Token> *tokens);
-	int		validPart(std::vector<Token> *tokens);
-	int		validKick(std::vector<Token> *tokens);
-	int		validInvite(std::vector<Token> *tokens);
-	int		validTopic(std::vector<Token> *tokens);
-	int		validMode(std::vector<Token> *tokens);
-	int		validUserMode(std::vector<Token> *tokens);
-	int		validChannelMode(std::vector<Token> *tokens);
-	int		validPrivmsg(std::vector<Token> *tokens);
-	int		validNotice(std::vector<Token> *tokens);
+	 std::string	toUpperString(const std::string& str);
+	 std::string	toLowerString(const std::string& str);
+	 void			tokenize(std::string *message, std::vector<Token> *tokens);
+	 int			validTokens(const User& user, const std::vector<Token>& tokens, const std::string* cmdList);
+	 int			validPing(const User& user, const std::vector<Token>& tokens);
+	 int			validPass(const User& user, const std::vector<Token>& tokens);
+	 int			validNick(const User& user, const std::vector<Token>& tokens);
+	 int			validUser(const User& user, const std::vector<Token>& tokens);
+	 int			validOper(const User& user, const std::vector<Token>& tokens);
+	 int			validQuit(const User& user, const std::vector<Token>& tokens);
+	 int			validJoin(const User& user, const std::vector<Token>& tokens);
+	 int			validPart(const User& user, const std::vector<Token>& tokens);
+	 int			validKick(const User& user, const std::vector<Token>& tokens);
+	 int			validInvite(const User& user, const std::vector<Token>& tokens);
+	 int			validTopic(const User& user, const std::vector<Token>& tokens);
+	 int			validMode(const User& user, const std::vector<Token>& tokens);
+	 int			validUserMode(const User& user, const std::vector<Token>& tokens);
+	 int			validChannelMode(const User& user, const std::vector<Token>& tokens);
+	 int			validPrivmsg(const User& user, const std::vector<Token>& tokens);
+	 int			validNotice(const User& user, const std::vector<Token>& tokens);
+
+	 Parser(const Parser &rhs);
+	 Parser& operator=(const Parser &rhs);
+
  public:
+	// CONSTRUCTOR & DESTRUCTOR
 	Parser();
 	~Parser();
-
 	// SETTER
-	int					parse(std::string message, const std::string* cmdList);
+	int					parse(const User& user, std::string message, const std::string* cmdList);
 	// GETTER
 	const ParsedMsg&	getParsedMsg() const;
-
-	// void				tokenize(std::string *message, std::vector<Token> *tokens);
 	bool				isCommand(const std::string& command, const std::string* cmdList);
 	// DEBUG
 	void				printTokens(const std::vector<Token>& tokens);

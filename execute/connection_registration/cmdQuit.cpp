@@ -30,7 +30,7 @@ std::string	Execute::cmdQuit(User* user, const ParsedMsg& parsedMsg, Info* info)
 		message += "Client Quit";
 	}
 	message += "\r\n";
-	sendNonBlocking(user->getFd(), message.c_str(), message.size());
+	Server::sendNonBlocking(user->getFd(), message.c_str(), message.size());
 	info->eraseUser(info->findUser(user->getFd()));
 	return ("");
 }

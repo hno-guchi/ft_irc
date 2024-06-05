@@ -133,7 +133,7 @@ void	Info::debugPrintUsers() const {
 }
 
 void	Info::debugPrintChannels() const {
-	std::cout << "[channels_] Current size (" << this->users_.size() << ")" << std::endl;
+	std::cout << "[channels_] Current size (" << this->channels_.size() << ")" << std::endl;
 	for (std::vector<Channel*>::const_iterator it = this->channels_.begin(); it != this->channels_.end(); it++) {
 		(*it)->printData();
 		std::cout << std::endl;

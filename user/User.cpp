@@ -3,8 +3,7 @@
 #include "../debug/debug.hpp"
 
 // CONSTRUCTORS and DESTRUCTORS
-User::User(int* fd) : index_(-1), fd_(fd), registered_(0), modes_(0) {
-}
+User::User(int* fd) : index_(-1), fd_(fd), registered_(0), modes_(0) {}
 
 User::~User() {
 	std::cerr << "User destructor called" << std::endl;
@@ -28,7 +27,7 @@ User::~User() {
 // 		this->hostName_ = rhs.getHostName();
 // 		this->serverName_ = rhs.getServerName();
 // 		this->realName_ = rhs.getRealName();
-// 		this->replyName_ = rhs.getReplyName();
+// 		this->prefixName_ = rhs.getPrefixName();
 // 		this->index_ = rhs.getIndex();
 // 		this->fd_ = rhs.getFdAddr();
 // 		this->registered_ = rhs.getRegistered();
@@ -60,10 +59,6 @@ void	User::setServerName(const std::string &name) {
 
 void	User::setRealName(const std::string &name) {
 	this->realName_ = name;
-}
-
-void	User::setReplyName(const std::string &name) {
-	this->replyName_ = name;
 }
 
 void	User::setIndex(int i) {
@@ -111,8 +106,8 @@ const std::string&	User::getRealName() const {
 	return (this->realName_);
 }
 
-const std::string&	User::getReplyName() const {
-	return (this->replyName_);
+const std::string	User::getPrefixName() const {
+	return (this->nickName_ + "!" + this->userName_ + "@" + this->serverName_);
 }
 
 int	User::getIndex() const {
@@ -165,7 +160,6 @@ void	User::resetData() {
 		this->hostName_ = "";
 		this->serverName_ = "";
 		this->realName_ = "";
-		this->replyName_ = "";
 		this->index_ = -1;
 		this->registered_ = 0;
 		this->modes_ = 0;
@@ -192,6 +186,6 @@ void	User::debugPrintUser() const {
 	std::cout << "[userName]     : [" << this->userName_ << "]" << std::endl;
 	std::cout << "[serverName]   : [" << this->serverName_ << "]" << std::endl;
 	std::cout << "[realName]     : [" << this->realName_ << "]" << std::endl;
-	std::cout << "[replyName]    : [" << this->replyName_ << "]" << std::endl;
+	std::cout << "[prefixName]   : [" << this->getPrefixName() << "]" << std::endl;
 	std::cout << MAGENTA << "--------------------------------\n" << END << std::endl;
 }

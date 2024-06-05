@@ -72,28 +72,24 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info
 			if ((*channelIt)->getModes() & kInviteOnly) {
 				std::string	reply = Reply::rplFromName(user->getNickName());
 				reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'i', "");
-				debugPrintSendMessage("SendMsg", reply);
-				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+				Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			}
 			if ((*channelIt)->getModes() & kKeySet) {
 				std::string	reply = Reply::rplFromName(user->getNickName());
 				reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'k', (*channelIt)->getKey());
-				debugPrintSendMessage("SendMsg", reply);
-				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+				Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			}
 			if ((*channelIt)->getModes() & kLimit) {
 				std::string			reply = Reply::rplFromName(user->getNickName());
 				std::stringstream	ss;
 				ss << (*channelIt)->getLimit();
 				reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 'l', ss.str());
-				debugPrintSendMessage("SendMsg", reply);
-				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+				Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			}
 			if ((*channelIt)->getModes() & kRestrictTopicSetting) {
 				std::string	reply = Reply::rplFromName(user->getNickName());
 				reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getNickName(), parsedMsg.getParams()[0].getValue(), 't', "");
-				debugPrintSendMessage("SendMsg", reply);
-				sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+				Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			}
 			std::string	reply = Reply::rplFromName(user->getNickName());
 			reply += Reply::errNoChanModes(kERR_NOCHANMODES, user->getNickName(), user->getNickName(), parsedMsg.getParams()[0].getValue());
@@ -150,8 +146,7 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info
 				}
 				(*channelIt)->pushBackOperator(*info->findUser(parsedMsg.getParams()[2].getValue()));
 				msg += " " + parsedMsg.getParams()[2].getValue() + "\r\n";
-				// debugPrintSendMessage("SendMsg", msg);
-				// sendNonBlocking(*((*targetUserIt)->getFd()), msg.c_str(), msg.size());
+				// Server::sendNonBlocking(*((*targetUserIt)->getFd()), msg.c_str(), msg.size());
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
 				(*channelIt)->setMode(kRestrictTopicSetting);
 				msg += "\r\n";
@@ -181,16 +176,14 @@ std::string	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info
 				}
 				(*channelIt)->eraseOperator(*info->findUser(parsedMsg.getParams()[2].getValue()));
 				msg += parsedMsg.getParams()[2].getValue() + "\r\n";
-				debugPrintSendMessage("SendMsg", msg);
-				sendNonBlocking((*info->findUser(parsedMsg.getParams()[2].getValue()))->getFd(), msg.c_str(), msg.size());
+				Server::sendNonBlocking((*info->findUser(parsedMsg.getParams()[2].getValue()))->getFd(), msg.c_str(), msg.size());
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
 				(*channelIt)->unsetMode(kRestrictTopicSetting);
 				msg += "\r\n";
 			}
 		}
-		debugPrintSendMessage("SendMsg", msg);
 		for (std::vector<User*>::const_iterator it = (*channelIt)->getMembers().begin(); it != (*channelIt)->getMembers().end(); it++) {
-			sendNonBlocking((*it)->getFd(), msg.c_str(), msg.size());
+			Server::sendNonBlocking((*it)->getFd(), msg.c_str(), msg.size());
 		}
 		return ("");
 	} catch (const std::exception& e) {

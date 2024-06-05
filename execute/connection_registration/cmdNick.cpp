@@ -49,12 +49,11 @@ std::string	Execute::cmdNick(User* user, const ParsedMsg& parsedMsg, Info* info)
 		} else {
 			// 既存ユーザのニックネーム変更処理
 			if (info->findUser(nick) != info->getUsers().end()) {
-				return (Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getReplyName(), nick));
+				return (Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getPrefixName(), nick));
 			}
+			std::string	msg = ":" + user->getPrefixName() + " NICK :" + nick + "\r\n";
 			user->setNickName(nick);
-			std::string	msg = ":" + user->getReplyName() + " NICK :" + nick + "\r\n";
-			debugPrintSendMessage("SendMsg", msg);
-			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		}
 		return ("");
 	} catch (std::exception& e) {

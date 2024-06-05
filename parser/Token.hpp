@@ -14,6 +14,10 @@ class Token {
  private:
 	 kTokenType		type_;
 	 std::string	value_;
+
+	 Token(const Token &rhs);
+	 Token& operator=(const Token &rhs);
+
  public:
 	 Token();
 	 ~Token();
@@ -27,6 +31,5 @@ class Token {
 	// debug
 	void	printToken() const;
 };
-
 
 #endif  // TOKEN_HPP

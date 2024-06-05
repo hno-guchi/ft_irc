@@ -35,8 +35,7 @@ std::string	Execute::cmdOper(User* user, const ParsedMsg& parsedMsg, Info* info)
 		}
 		user->setMode(kOperator);
 		std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :+o\r\n";
-		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		return (Reply::rplYourOper(kRPL_YOUREOPER, user->getNickName(), user->getNickName()));
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;

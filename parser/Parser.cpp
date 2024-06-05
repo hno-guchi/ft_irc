@@ -3,10 +3,15 @@
 #include "./Token.hpp"
 #include "./Param.hpp"
 #include "./ValidParam.hpp"
-#include "../server/Info.hpp"
 #include "../color.hpp"
+#include "../server/Info.hpp"
+#include "../reply/Reply.hpp"
+#include "../debug/debug.hpp"
 
-static std::string	toUpperString(const std::string& str) {
+Parser::Parser() {}
+Parser::~Parser() {}
+
+std::string	Parser::toUpperString(const std::string& str) {
 	std::string	ret = str;
 	std::locale	l = std::locale::classic();
 
@@ -16,7 +21,7 @@ static std::string	toUpperString(const std::string& str) {
 	return (ret);
 }
 
-static std::string	toLowerString(const std::string& str) {
+std::string	Parser::toLowerString(const std::string& str) {
 	std::string	ret = str;
 	std::locale	l = std::locale::classic();
 
@@ -26,13 +31,9 @@ static std::string	toLowerString(const std::string& str) {
 	return (ret);
 }
 
-Parser::Parser() {}
-Parser::~Parser() {}
-
 void	Parser::tokenize(std::string *message, std::vector<Token> *tokens) {
 	try {
 		if (message->empty()) {
-			// throw std::invalid_argument("Message is empty.");
 			return;
 		}
 		std::string				word("");
@@ -43,7 +44,6 @@ void	Parser::tokenize(std::string *message, std::vector<Token> *tokens) {
 			startPos++;
 		}
 		if (startPos == message->size()) {
-			// throw std::invalid_argument("Message is empty.");
 			return;
 		}
 		std::string::size_type	delimPos = message->find(' ', startPos);
@@ -89,17 +89,48 @@ void	Parser::tokenize(std::string *message, std::vector<Token> *tokens) {
 	}
 }
 
-// PING <server1> [ <server2> ]
-int	Parser::validPing(std::vector<Token> *tokens) {
+int	Parser::validTokens(const User& user, const std::vector<Token>& tokens, const std::string* cmdList) {
 	try {
-		if (tokens->size() < 2 || tokens->size() > 3) {
-			// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
-			std::cerr << RED << "Need More Params." << END << std::endl;
+		ValidParam	validParam;
+
+		for (std::vector<Token>::const_iterator it = tokens.begin(); it != tokens.end(); it++) {
+			if (it->getType() == kCmdString) {
+				if (!validParam.isCommand(it->getValue(), cmdList)) {
+					std::string reply = reply::errUnknownCommand(kERR_UNKNOWNCOMMAND, user.getPrefixName(), it->getValue());
+					Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+					return (-1);
+				}
+			} else if (it->getType() == kParamMiddle) {
+				if (!validParam.isMiddle(it->getValue())) {
+					// std::string reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), it->getValue());
+					// Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+					return (-1);
+				}
+			} else if (it->getType() == kParamTrailing) {
+				if (!validParam.isTrailing(it->getValue())) {
+					// std::string reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), it->getValue());
+					// Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+					return (-1);
+				}
+			}
+		}
+		return (0);
+	} catch (std::exception& e) {
+		throw;
+	}
+}
+
+// PING <server1> [ <server2> ]
+int	Parser::validPing(const User& user, const std::vector<Token>& tokens) {
+	try {
+		if (tokens.size() < 2 || tokens.size() > 3) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "PING");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kServer, (*tokens)[1].getValue());
-		if (tokens->size() == 3) {
-			this->parsed_.setParam((*tokens)[2].getType(), kServer, (*tokens)[2].getValue());
+		this->parsed_.setParam(tokens[1].getType(), kServer, tokens[1].getValue());
+		if (tokens.size() == 3) {
+			this->parsed_.setParam(tokens[2].getType(), kServer, tokens[2].getValue());
 		}
 		return (0);
 	} catch (std::exception& e) {
@@ -108,14 +139,14 @@ int	Parser::validPing(std::vector<Token> *tokens) {
 }
 
 // PASS <password>
-int	Parser::validPass(std::vector<Token> *tokens) {
+int	Parser::validPass(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() != 2) {
-			// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
-			std::cerr << RED << "Need More Params." << END << std::endl;
+		if (tokens.size() != 2) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "PASS");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kPassword, (*tokens)[1].getValue());
+		this->parsed_.setParam(tokens[1].getType(), kPassword, tokens[1].getValue());
 		return (0);
 	} catch (std::exception& e) {
 		throw;
@@ -123,14 +154,14 @@ int	Parser::validPass(std::vector<Token> *tokens) {
 }
 
 // NICK <nickname>
-int	Parser::validNick(std::vector<Token> *tokens) {
+int	Parser::validNick(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() != 2) {
-			// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
-			std::cerr << RED << "Need More Params." << END << std::endl;
+		if (tokens.size() != 2) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "NICK");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kNickName, (*tokens)[1].getValue());
+		this->parsed_.setParam(tokens[1].getType(), kNickName, tokens[1].getValue());
 		return (0);
 	} catch (std::exception& e) {
 		throw;
@@ -138,17 +169,17 @@ int	Parser::validNick(std::vector<Token> *tokens) {
 }
 
 // USER <username> <hostname> <servername> <realname>
-int	Parser::validUser(std::vector<Token> *tokens) {
+int	Parser::validUser(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() != 5) {
-			// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
-			std::cerr << RED << "Need More Params." << END << std::endl;
+		if (tokens.size() != 5) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "USER");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kUserName, (*tokens)[1].getValue());
-		this->parsed_.setParam((*tokens)[2].getType(), kHostName, (*tokens)[2].getValue());
-		this->parsed_.setParam((*tokens)[3].getType(), kHostName, (*tokens)[3].getValue());
-		this->parsed_.setParam((*tokens)[4].getType(), kRealName, (*tokens)[4].getValue());
+		this->parsed_.setParam(tokens[1].getType(), kUserName, tokens[1].getValue());
+		this->parsed_.setParam(tokens[2].getType(), kHostName, tokens[2].getValue());
+		this->parsed_.setParam(tokens[3].getType(), kHostName, tokens[3].getValue());
+		this->parsed_.setParam(tokens[4].getType(), kRealName, tokens[4].getValue());
 		return (0);
 	} catch (std::exception& e) {
 		throw;
@@ -156,15 +187,15 @@ int	Parser::validUser(std::vector<Token> *tokens) {
 }
 
 // OPER <name> <password>
-int	Parser::validOper(std::vector<Token> *tokens) {
+int	Parser::validOper(const User& user, const std::vector<Token>& tokens) {
 	try {
 		if (tokens->size() != 3) {
-			// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-			std::cerr << RED << "Need More Params." << END << std::endl;
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "OPER");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kNickName, (*tokens)[1].getValue());
-		this->parsed_.setParam((*tokens)[2].getType(), kPassword, (*tokens)[2].getValue());
+		this->parsed_.setParam(tokens[1].getType(), kNickName, tokens[1].getValue());
+		this->parsed_.setParam(tokens[2].getType(), kPassword, tokens[2].getValue());
 		return (0);
 	} catch (std::exception& e) {
 		throw;
@@ -172,10 +203,10 @@ int	Parser::validOper(std::vector<Token> *tokens) {
 }
 
 // QUIT [ <Quit Message> ]
-int	Parser::validQuit(std::vector<Token> *tokens) {
+int	Parser::validQuit(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() == 2) {
-			this->parsed_.setParam((*tokens)[1].getType(), kMessage, (*tokens)[1].getValue());
+		if (tokens.size() == 2) {
+			this->parsed_.setParam(tokens[1].getType(), kMessage, tokens[1].getValue());
 		}
 		return (0);
 	} catch (std::exception& e) {
@@ -184,16 +215,16 @@ int	Parser::validQuit(std::vector<Token> *tokens) {
 }
 
 // JOIN <channel> [ <key> ]
-int	Parser::validJoin(std::vector<Token> *tokens) {
+int	Parser::validJoin(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() < 2 || tokens->size() > 3) {
-			// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-			std::cerr << RED << "Need More Params." << END << std::endl;
+		if (tokens.size() < 2 || tokens.size() > 3) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "JOIN");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kChannel, toLowerString((*tokens)[1].getValue()));
+		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
 		if (tokens->size() == 3) {
-			this->parsed_.setParam((*tokens)[2].getType(), kKey, (*tokens)[2].getValue());
+			this->parsed_.setParam(tokens[2].getType(), kKey, tokens[2].getValue());
 		}
 		return (0);
 	} catch (std::exception& e) {
@@ -202,16 +233,16 @@ int	Parser::validJoin(std::vector<Token> *tokens) {
 }
 
 // PART <channel> [ <Part Message> ]
-int	Parser::validPart(std::vector<Token> *tokens) {
+int	Parser::validPart(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() < 2 || tokens->size() > 3) {
-			// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-			std::cerr << RED << "Need More Params." << END << std::endl;
+		if (tokens.size() < 2 || tokens.size() > 3) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "PART");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kChannel, toLowerString((*tokens)[1].getValue()));
+		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
 		if (tokens->size() == 3) {
-			this->parsed_.setParam((*tokens)[2].getType(), kMessage, (*tokens)[2].getValue());
+			this->parsed_.setParam(tokens[2].getType(), kMessage, tokens[2].getValue());
 		}
 		return (0);
 	} catch (std::exception& e) {
@@ -220,17 +251,17 @@ int	Parser::validPart(std::vector<Token> *tokens) {
 }
 
 // KICK <channel> <user> [<comment>]
-int	Parser::validKick(std::vector<Token> *tokens) {
+int	Parser::validKick(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() != 3 && tokens->size() != 4) {
-			// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-			std::cerr << RED << "Need More Params." << END << std::endl;
+		if (tokens.size() != 3 && tokens.size() != 4) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "KICK");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kChannel, toLowerString((*tokens)[1].getValue()));
-		this->parsed_.setParam((*tokens)[2].getType(), kNickName, (*tokens)[2].getValue());
-		if (tokens->size() == 4) {
-			this->parsed_.setParam((*tokens)[3].getType(), kMessage, (*tokens)[3].getValue());
+		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
+		this->parsed_.setParam(tokens[2].getType(), kNickName, tokens[2].getValue());
+		if (tokens.size() == 4) {
+			this->parsed_.setParam(tokens[3].getType(), kMessage, tokens[3].getValue());
 		}
 		return (0);
 	} catch (std::exception& e) {
@@ -239,15 +270,15 @@ int	Parser::validKick(std::vector<Token> *tokens) {
 }
 
 // INVITE <nickname> <channel>
-int	Parser::validInvite(std::vector<Token> *tokens) {
+int	Parser::validInvite(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() != 3) {
-			// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-			std::cerr << RED << "Need More Params." << END << std::endl;
+		if (tokens.size() != 3) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "INVITE");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kNickName, (*tokens)[1].getValue());
-		this->parsed_.setParam((*tokens)[2].getType(), kChannel, toLowerString((*tokens)[2].getValue()));
+		this->parsed_.setParam(tokens[1].getType(), kNickName, tokens[1].getValue());
+		this->parsed_.setParam(tokens[2].getType(), kChannel, this->toLowerString(tokens[2].getValue()));
 		return (0);
 	} catch (std::exception& e) {
 		throw;
@@ -255,16 +286,16 @@ int	Parser::validInvite(std::vector<Token> *tokens) {
 }
 
 // TOPIC <channel> [ <topic> ]
-int	Parser::validTopic(std::vector<Token> *tokens) {
+int	Parser::validTopic(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() != 2 && tokens->size() != 3) {
-			// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-			std::cerr << RED << "Need More Params." << END << std::endl;
+		if (tokens.size() != 2 && tokens.size() != 3) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "TOPIC");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kChannel, toLowerString((*tokens)[1].getValue()));
+		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
 		if (tokens->size() == 3) {
-			this->parsed_.setParam((*tokens)[2].getType(), kTopic, (*tokens)[2].getValue());
+			this->parsed_.setParam(tokens[2].getType(), kTopic, tokens[2].getValue());
 		}
 		return (0);
 	} catch (std::exception& e) {
@@ -273,15 +304,16 @@ int	Parser::validTopic(std::vector<Token> *tokens) {
 }
 
 // MODE <nickname> [ ( "+" ) ( "r" ) ]
-int	Parser::validUserMode(std::vector<Token> *tokens) {
+int	Parser::validUserMode(const User& user, const std::vector<Token>& tokens) {
 	try {
-		this->parsed_.setParam((*tokens)[1].getType(), kNickName, (*tokens)[1].getValue());
-		if (tokens->size() == 3) {
-			if ((*tokens)[2].getValue().size() != 2) {
-			std::cerr << RED << "wrong size." << END << std::endl;
+		this->parsed_.setParam(tokens[1].getType(), kNickName, tokens[1].getValue());
+		if (tokens.size() == 3) {
+			if (tokens[2].getValue().size() != 2) {
+				std::string reply = Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user.getPrefixName());
+				Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 				return (-1);
 			}
-			this->parsed_.setParam((*tokens)[2].getType(), kMode, (*tokens)[2].getValue());
+			this->parsed_.setParam(tokens[2].getType(), kMode, tokens[2].getValue());
 		}
 		return (0);
 	} catch (std::exception& e) {
@@ -290,23 +322,25 @@ int	Parser::validUserMode(std::vector<Token> *tokens) {
 }
 
 // MODE <channel>  [ ( "-" / "+" ) ( "i" / "k" / "l" / "o" / "t" ) [ <modeparam> ] ]
-int	Parser::validChannelMode(std::vector<Token> *tokens) {
+int	Parser::validChannelMode(const User& user, const std::vector<Token>& tokens) {
 	try {
-		this->parsed_.setParam((*tokens)[1].getType(), kChannel, toLowerString((*tokens)[1].getValue()));
-		if (tokens->size() > 2) {
-			if ((*tokens)[2].getValue().size() != 2) {
-			std::cerr << RED << "wrong size." << END << std::endl;
+		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
+		if (tokens.size() > 2) {
+			if (tokens[2].getValue().size() != 2) {
+				std::string	reply = reply::errUnknownMode(kERR_UNKNOWNMODE, user.getPrefixName(), tokens[2].getValue(), tokens[1].getValue());
+				Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 				return (-1);
 			}
-			if ((*tokens)[2].getValue()[0] != '+' && (*tokens)[2].getValue()[0] != '-') {
-			std::cerr << RED << "wrong flag." << END << std::endl;
+			if (tokens[2].getValue()[0] != '+' && tokens[2].getValue()[0] != '-') {
+				std::string	reply = reply::errUnknownMode(kERR_UNKNOWNMODE, user.getPrefixName(), tokens[2].getValue(), tokens[1].getValue());
+				Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 				return (-1);
 			}
-			this->parsed_.setParam((*tokens)[2].getType(), kMode, (*tokens)[2].getValue());
+			this->parsed_.setParam(tokens[2].getType(), kMode, tokens[2].getValue());
 		}
 		// Check <modeparam>
-		if (tokens->size() == 4) {
-			this->parsed_.setParam((*tokens)[3].getType(), kModeParam, (*tokens)[3].getValue());
+		if (tokens.size() == 4) {
+			this->parsed_.setParam(tokens[3].getType(), kModeParam, tokens[3].getValue());
 		}
 		return (0);
 	} catch (std::exception& e) {
@@ -314,14 +348,14 @@ int	Parser::validChannelMode(std::vector<Token> *tokens) {
 	}
 }
 
-int	Parser::validMode(std::vector<Token> *tokens) {
+int	Parser::validMode(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() < 2 || tokens->size() > 4) {
-			// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-			std::cerr << RED << "Need more paran." << END << std::endl;
+		if (tokens.size() < 2 || tokens.size() > 4) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "MODE");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		if ((*tokens)[1].getValue()[0] != '#') {
+		if (tokens[1].getValue()[0] != '#') {
 			return (this->validUserMode(tokens));
 		}
 		return (this->validChannelMode(tokens));
@@ -331,15 +365,16 @@ int	Parser::validMode(std::vector<Token> *tokens) {
 }
 
 // PRIVMSG <msgtarget> <text>
-int	Parser::validPrivmsg(std::vector<Token> *tokens) {
+int	Parser::validPrivmsg(const User& user, const std::vector<Token>& tokens) {
 	try {
-		if (tokens->size() != 3) {
-			// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-			std::cerr << RED << "Need more paran." << END << std::endl;
+		if (tokens.size() != 3) {
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "PRIVMSG");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kMsgTarget, (*tokens)[1].getValue());
-		if ((*tokens)[2].getValue().size() > 400) {
+		this->parsed_.setParam(tokens[1].getType(), kMsgTarget, tokens[1].getValue());
+		if (tokens[2].getValue().size() > 400) {
+			std::string	reply = reply::errNoTextToSend(kERR_NOTEXTTOSEND, user.getPrefixName(), "PRIVMSG");
 			// 412 ERR_NOMOTD ":No message of the day is available"
 			std::cerr << RED << "Too long text." << END << std::endl;
 			return (-1);
@@ -352,11 +387,11 @@ int	Parser::validPrivmsg(std::vector<Token> *tokens) {
 }
 
 // NOTICE <msgtarget> <text>
-int	Parser::validNotice(std::vector<Token> *tokens) {
+int	Parser::validNotice(const User& user, const std::vector<Token>& tokens) {
 	try {
 		if (tokens->size() != 3) {
-			// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-			std::cerr << RED << "Need more paran." << END << std::endl;
+			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "NOTICE");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
 		this->parsed_.setParam((*tokens)[1].getType(), kMsgTarget, (*tokens)[1].getValue());
@@ -372,14 +407,11 @@ int	Parser::validNotice(std::vector<Token> *tokens) {
 	}
 }
 
-int	Parser::parse(std::string message, const std::string* cmdList) {
-	ValidParam	validParam;
+int	Parser::parse(const User& user, std::string message, const std::string* cmdList) {
 	if (message.empty()) {
-		// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
 		return (-1);
 	}
 	if (message.size() > 510) {
-		// 412 ERR_NOMOTD ":No message of the day is available"
 		return (-1);
 	}
 	try {
@@ -387,31 +419,14 @@ int	Parser::parse(std::string message, const std::string* cmdList) {
 
 		this->tokenize(&message, &tokens);
 		if (tokens.empty()) {
-			// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
 			return (-1);
 		}
-		for (std::vector<Token>::const_iterator it = tokens.begin(); it != tokens.end(); it++) {
-			if (it->getType() == kCmdString) {
-				if (!validParam.isCommand(it->getValue(), cmdList)) {
-					// 421 ERR_UNKNOWNCOMMAND "<command> :Unknown command"
-					return (-1);
-				}
-			} else if (it->getType() == kParamMiddle) {
-				if (!validParam.isMiddle(it->getValue())) {
-					// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-					return (-1);
-				}
-			} else if (it->getType() == kParamTrailing) {
-				if (!validParam.isTrailing(it->getValue())) {
-					// 461 ERR_NEEDMOREPARAMS "<command> :Not enough parameters"
-					return (-1);
-				}
-			}
+		if (this->validTokens(user, tokens, cmdList) == -1) {
+			return (-1);
 		}
-		this->parsed_.setCommand(toUpperString(tokens[0].getValue()));
-		// command毎にパラメータのバリデーションを行う。
+		this->parsed_.setCommand(this->toUpperString(tokens[0].getValue()));
 		if (this->parsed_.getCommand() == "PING") {
-			return (this->validPing(&tokens));
+			return (this->validPing(user, tokens));
 		} else if (this->parsed_.getCommand() == "PASS") {
 			return (this->validPass(&tokens));
 		} else if (this->parsed_.getCommand() == "NICK") {
@@ -438,15 +453,11 @@ int	Parser::parse(std::string message, const std::string* cmdList) {
 			return (this->validPrivmsg(&tokens));
 		} else if (this->parsed_.getCommand() == "NOTICE") {
 			return (this->validNotice(&tokens));
-		// } else if (this->parsed_.getCommand() == "PONG") {
-		// } else if (this->parsed_.getCommand() == "ERROR") {
 		}
 		return (0);
 	} catch (std::exception& e) {
-		std::cerr << RED << e.what() << END << std::endl;
-		// TODO(hnoguchi): 適切なエラーリプライナンバーを返す。
-		return (-1);
-		// throw;
+		debugPrintErrorMessage(e.what());
+		throw;
 	}
 }
 

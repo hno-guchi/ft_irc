@@ -4,12 +4,11 @@
 
 const std::string	Reply::delimiter_ = "\r\n";
 
-// CONSTRUCTOR
-// DESTRUCTOR
+// CONSTRUCTOR & DESTRUCTOR
 Reply::Reply() {}
 Reply::~Reply() {}
 
-const std::string&	Reply::getDelimiter() const {
+const std::string&	Reply::getDelimiter() {
 	return (this->delimiter_);
 }
 
@@ -76,15 +75,15 @@ std::string	Reply::rplMyInfo(const std::string& toName, const Info& info) {
 
 std::string	Reply::rplWelcome(const Info& info, const User& user) {
 	try {
-		std::string	message = "001 " + user.getNickName() + " :Welcome to the Internet Relay Network " + user.getReplyName();
+		std::string	message = "001 " + user.getNickName() + " :Welcome to the Internet Relay Network " + user.getPrefixName();
 		message += Reply::delimiter_;
 		message += Reply::rplFromName(info.getServerName());
-		message += Reply::rplYourHost(user.getReplyName(), info.getServerName(), info.getVersion());
+		message += Reply::rplYourHost(user.getPrefixName(), info.getServerName(), info.getVersion());
 		message += Reply::rplFromName(info.getServerName());
-		message += Reply::rplCreated(user.getReplyName(), info.getCreatedDate());
+		message += Reply::rplCreated(user.getPrefixName(), info.getCreatedDate());
 		message += Reply::rplFromName(info.getServerName());
-		message += Reply::rplMyInfo(user.getReplyName(), info);
-		message += Reply::rplFromName(user.getReplyName());
+		message += Reply::rplMyInfo(user.getPrefixName(), info);
+		message += Reply::rplFromName(user.getPrefixName());
 		message += "NICK :" + user.getNickName() + Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
@@ -114,7 +113,6 @@ std::string	Reply::rplUModeIs(int num, const std::string& toName, const User& us
 // 324	RPL_CHANNELMODEIS	<channel> <mode> <mode params>
 std::string	Reply::rplChannelModeIs(int num, const std::string& toName, const std::string& channel, const char mode, const std::string& param) {
 	try {
-		std::string	message = Reply::rplCmdToName(num, toName);
 
 		message += channel + " " + mode;
 		if (!param.empty()) {
@@ -662,6 +660,7 @@ std::string	Reply::createMessage(int num, const User& user, const Info& info, co
 			} else if (num == kERR_NOTONCHANNEL) {
 				msg += this->rplFromName(info.getServerName());
 				// TODO(hnoguchi): INVITEコマンドの場合、parsedMsg.getParams()[1].getValue()がchannel名
+				// msg += "442 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :You're not on that channel";
 				// msg += "442 " + user.getNickName() + " :" + parsedMsg.getParams()[0].getValue() + " :You're not on that channel";
 				msg += this->errNotOnChannel(kERR_NOTONCHANNEL, user.getNickName(), parsedMsg.getParams()[0].getValue());
 			} else if (num == kERR_USERONCHANNEL) {

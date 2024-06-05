@@ -27,7 +27,7 @@ std::string	Execute::cmdNotice(User* user, const ParsedMsg& parsedMsg, Info* inf
 	try {
 		// TODO(hnoguchi): Parser classで処理する。
 		if (parsedMsg.getParams().size() == 0) {
-			return(Reply::errNoRecipient(kERR_NORECIPIENT, user->getNickName(), parsedMsg.getCommand()));
+			return(Reply::errNoRecipient(kERR_NORECIPIENT, user->getPrefixName(), parsedMsg.getCommand()));
 		}
 		if (parsedMsg.getParams().size() < 2) {
 			if (parsedMsg.getParams()[0].getParamType() == kText) {
@@ -38,11 +38,11 @@ std::string	Execute::cmdNotice(User* user, const ParsedMsg& parsedMsg, Info* inf
 		}
 		std::vector<User*>::const_iterator	userIt = info->findUser(parsedMsg.getParams()[0].getValue());
 		// メッセージの作成
-		std::string	message = ":" + user->getNickName() + " NOTICE " + parsedMsg.getParams()[0].getValue() + " :" + parsedMsg.getParams()[1].getValue() + "\r\n";
+		std::string	message = ":" + user->getPrefixName() + " NOTICE " + parsedMsg.getParams()[0].getValue() + parsedMsg.getParams()[1].getValue() + "\r\n";
 		debugPrintSendMessage("cmdNotice", message);
 		// メッセージの送信先がuserの場合
 		if (userIt != info->getUsers().end()) {
-			sendNonBlocking((*userIt)->getFd(), message.c_str(), message.size());
+			Server::sendNonBlocking((*userIt)->getFd(), message.c_str(), message.size());
 			return ("");
 		}
 		// メッセージの送信先がchannelの場合
@@ -59,7 +59,7 @@ std::string	Execute::cmdNotice(User* user, const ParsedMsg& parsedMsg, Info* inf
 			if (user->getNickName() == (*memberIt)->getNickName()) {
 				continue;
 			}
-			sendNonBlocking((*memberIt)->getFd(), message.c_str(), message.size());
+			Server::sendNonBlocking((*memberIt)->getFd(), message.c_str(), message.size());
 		}
 		return ("");
 	} catch (std::exception& e) {

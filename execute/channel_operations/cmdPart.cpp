@@ -45,10 +45,9 @@ std::string	Execute::cmdPart(User* user, const ParsedMsg& parsedMsg, Info* info)
 		} else {
 			msg += user->getNickName() + "\r\n";
 		}
-		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		for (std::vector<User *>::const_iterator memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
-			sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
+			Server::sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 		}
 		if ((*channelIt)->getMembers().size() == 0) {
 			info->eraseChannel(channelIt);

@@ -62,9 +62,8 @@ std::string	Execute::cmdTopic(User* user, const ParsedMsg& parsedMsg, Info* info
 		(*channelIt)->setTopic(parsedMsg.getParams()[1].getValue());
 		// <channel>のメンバにtopicの変更を通知
 		std::string	msg = ":" + user->getNickName() + " TOPIC " + (*channelIt)->getName() + " :" + (*channelIt)->getTopic() + "\r\n";
-		debugPrintSendMessage("SendMsg", msg);
 		for (std::vector<User*>::const_iterator	memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
-			sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
+			Server::sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 		}
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
