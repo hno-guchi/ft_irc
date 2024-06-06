@@ -41,15 +41,14 @@ void	Execute::cmdPart(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		}
 		(*channelIt)->eraseMember(user);
 		(*channelIt)->eraseOperator(user);
-		std::string	msg = ":" + user->getNickName() + " PART " + (*channelIt)->getName() + " :";
+		std::string	message = ":" + user->getPrefixName() + " PART " + (*channelIt)->getName();
 		if (parsedMsg.getParams().size() > 1) {
-			msg += parsedMsg.getParams()[1].getValue() + Reply::getDelimiter();
-		} else {
-			msg += user->getNickName() + Reply::getDelimiter();
+			message += " " + parsedMsg.getParams()[1].getValue();
 		}
-		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		message += Reply::getDelimiter();
+		Server::sendNonBlocking(user->getFd(), message.c_str(), message.size());
 		for (std::vector<User *>::const_iterator memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
-			Server::sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
+			Server::sendNonBlocking((*memberIt)->getFd(), message.c_str(), message.size());
 		}
 		if ((*channelIt)->getMembers().size() == 0) {
 			info->eraseChannel(channelIt);
