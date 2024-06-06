@@ -19,29 +19,28 @@
 #include "../Execute.hpp"
 #include "../../user/User.hpp"
 #include "../../parser/Parser.hpp"
+#include "../../server/Server.hpp"
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
+#include "../../debug/debug.hpp"
 
-std::string	Execute::cmdUser(User* user, const ParsedMsg& parsedMsg, Info* info) {
-	(void)info;
+void	Execute::cmdUser(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
-		// TODO(hnoguchi): Parser classでバリデーションを行う。
-		if (parsedMsg.getParams().size() < 4) {
-			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, "*", parsedMsg.getCommand()));
-		}
+		std::string	reply = Reply::rplFromName(info->getServerName());
+
 		if (user->getRegistered() & kUserCommand) {
-			return (Reply::errAlreadyRegistered(kERR_ALREADYREGISTRED, user->getNickName()));
+			reply += Reply::errAlreadyRegistered(kERR_ALREADYREGISTRED, user->getPrefixName());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			throw std::invalid_argument("cmdUser");
 		}
 		user->setUserName(parsedMsg.getParams()[0].getValue());
 		user->setHostName(parsedMsg.getParams()[1].getValue());
 		user->setServerName(parsedMsg.getParams()[2].getValue());
 		user->setRealName(parsedMsg.getParams()[3].getValue());
-		std::string replyName = user->getNickName() + "!" + user->getUserName() + "@" + user->getServerName();
-		user->setReplyName(replyName);
 	} catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		// TODO(hnoguchi): 適切なエラーナンバーを返す。
-		return ("");
+#ifdef DEBUG
+		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
+		throw;
 	}
-	return ("");
 }

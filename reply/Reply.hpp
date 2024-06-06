@@ -75,11 +75,14 @@ class Reply {
  private:
 	 static const std::string	delimiter_;
 
- public:
 	 Reply();
 	 ~Reply();
-	 const std::string&	getDelimiter() const;
-	 std::string		createMessage(int num, const User& user, const Info& info, const ParsedMsg& parsedMsg);
+	 Reply(const Reply& src);
+	 Reply&	operator=(const Reply& src);
+
+ public:
+	 static const std::string&	getDelimiter();
+	 // std::string		createMessage(int num, const User& user, const Info& info, const ParsedMsg& parsedMsg);
 	 static std::string	rplFromName(const std::string& from);
 	 static std::string	rplCmdToName(int num, const std::string& toName);
 

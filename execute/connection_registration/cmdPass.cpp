@@ -18,15 +18,23 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdPass(User* user, const ParsedMsg& parsedMsg, Info* info) {
-	if (parsedMsg.getParams().size() < 1) {
-		return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
+void	Execute::cmdPass(User* user, const ParsedMsg& parsedMsg, Info* info) {
+	try {
+		std::string	reply = Reply::rplFromName(info->getServerName());
+		if (user->getRegistered() & kPassCommand) {
+			reply += Reply::errAlreadyRegistered(kERR_ALREADYREGISTRED, user->getNickName());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			throw std::invalid_argument("cmdPass");
+		}
+		if (parsedMsg.getParams()[0].getValue() != info->getConnectPwd()) {
+			reply += Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getNickName());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			throw std::invalid_argument("cmdPass");
+		}
+	} catch (std::exception& e) {
+#ifdef DEBUG
+		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
+		throw;
 	}
-	if (user->getRegistered() & kPassCommand) {
-		return (Reply::errAlreadyRegistered(kERR_ALREADYREGISTRED, user->getNickName()));
-	}
-	if (parsedMsg.getParams()[0].getValue() != info->getConnectPwd()) {
-		return (Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getNickName()));
-	}
-	return ("");
 }

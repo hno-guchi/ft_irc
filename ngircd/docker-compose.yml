@@ -1,0 +1,14 @@
+version: "2.1"
+services:
+  server:
+    image: lscr.io/linuxserver/ngircd:latest
+    container_name: server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Tokyo
+    volumes:
+      - ./my_ngircd.conf:/config/ngircd.conf
+    ports:
+      - 6667:6667
+    restart: unless-stopped

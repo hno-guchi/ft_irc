@@ -1,8 +1,24 @@
 #include <iostream>
 #include "./Token.hpp"
 
+// CONSTRUCTOR & DESTRUCTOR
 Token::Token() {}
+
+Token::Token(const Token &src) {
+	this->operator=(src);
+}
+
 Token::~Token() {}
+
+// OPERATOR
+Token& Token::operator=(const Token &rhs) {
+	if (this == &rhs) {
+		return (*this);
+	}
+	this->type_ = rhs.getType();
+	this->value_ = rhs.getValue();
+	return (*this);
+}
 
 void	Token::setType(const kTokenType type) {
 	this->type_ = type;

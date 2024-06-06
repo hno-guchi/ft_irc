@@ -19,14 +19,15 @@
 
 class Server {
  private:
-	 const ServerSocket		socket_;
-	 Info					info_;
-	 struct pollfd			fds_[MAX_FD];
+	 const ServerSocket			socket_;
+	 Info						info_;
+	 struct pollfd				fds_[MAX_FD];
 
-	 int	setFd(int fd);
-	 void	handleServerSocket();
-	 void	handleClientSocket();
-	 void	handleReceivedData(User* user);
+	 int						setFd(int fd);
+	 void						handleServerSocket();
+	 void						handleClientSocket();
+	 void						handleReceivedData(User* user);
+	 std::vector<std::string>	split(const std::string& message, User* user);
 
 	 explicit Server(const Server& rhs);
 	 Server& operator=(const Server& rhs);
@@ -35,13 +36,11 @@ class Server {
 	 explicit Server(unsigned short port = 8080, const std::string& connectPwd = "");
 	 ~Server();
 
-	 void	run(void);
+	 void			run(void);
+	 static void	sendNonBlocking(int fd, const char* buffer, size_t dataSize);
 
 	 // debug
 	 void	debugPrintServer() const;
 };
-
-void						sendNonBlocking(int fd, const char* buffer, size_t dataSize);
-std::vector<std::string>	split(const std::string& message, const std::string delim, User* user);
 
 #endif  // SERVER_HPP

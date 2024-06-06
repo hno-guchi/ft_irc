@@ -21,25 +21,29 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdOper(User* user, const ParsedMsg& parsedMsg, Info* info) {
-	(void)info;
+void	Execute::cmdOper(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
-		if (parsedMsg.getParams().size() < 2) {
-			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
-		}
+		std::string	reply = Reply::rplFromName(info->getServerName());
+
 		if (user->getNickName() != parsedMsg.getParams()[0].getValue()) {
-			return (Reply::errUsersDontMatch(kERR_USERSDONTMATCH, user->getNickName()));
+			reply += Reply::errUsersDontMatch(kERR_USERSDONTMATCH, user->getPrefixName());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		if (info->getOperPwd() != parsedMsg.getParams()[1].getValue()) {
-			return (Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getNickName()));
+			reply += Reply::errPasswordMisMatch(kERR_PASSWDMISMATCH, user->getPrefixName());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		user->setMode(kOperator);
-		std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :+o\r\n";
-		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-		return (Reply::rplYourOper(kRPL_YOUREOPER, user->getNickName(), user->getNickName()));
+		std::string	msg = ":" + user->getPrefixName() + " MODE " + user->getNickName() + " :+o\r\n";
+		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		reply += Reply::rplYourOper(kRPL_YOUREOPER, user->getPrefixName(), user->getNickName());
+		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return ("");
+#ifdef DEBUG
+		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
+		throw;
 	}
 }

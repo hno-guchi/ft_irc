@@ -20,22 +20,20 @@
 #include "../../parser/Parser.hpp"
 #include "../../debug/debug.hpp"
 
-std::string	Execute::cmdPong(User* user, const ParsedMsg& parsedMsg, Info* info) {
+void	Execute::cmdPong(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
-		// TODO(hnoguchi): Parser classでバリデーションを行う。
-		if (parsedMsg.getParams().size() < 1) {
-			return (Reply::errNoOrigin(kERR_NOORIGIN, user->getNickName()));
+		if (parsedMsg.getParams()[0].getValue() != info->getServerName()) {
+			std::string reply = Reply::rplFromName(info->getServerName());
+			reply += Reply::errNoOrigin(kERR_NOORIGIN, info->getServerName());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
-		std::string	message = ":" + info->getServerName() + " PONG " + info->getServerName() + "\r\n";
-		debugPrintSendMessage("SendMessage", message);
-		sendNonBlocking(user->getFd(), message.c_str(), message.size());
-		return ("");
+		std::string	message = ":" + info->getServerName() + " PONG " + info->getServerName() + Reply::getDelimiter();
+		Server::sendNonBlocking(user->getFd(), message.c_str(), message.size());
 	} catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		// handleClientDisconnect(&user->getFd());
-		// TODO(hnoguchi): usetも削除する。
-		// TODO(hnoguchi): 適切なエラーナンバーを返す。
-		return ("");
+#ifdef DEBUG
+		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
+		throw;
 	}
-	// TODO(hnoguchi): 成功用のenumを作成するかも。。。
 }

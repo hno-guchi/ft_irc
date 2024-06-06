@@ -24,20 +24,11 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdNick(User* user, const ParsedMsg& parsedMsg, Info* info) {
+void	Execute::cmdNick(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
-		// TODO(hnoguchi): Parser classでバリデーションを行う？
-		if (parsedMsg.getParams().size() == 0) {
-			return (Reply::errNoNickNameGiven(kERR_NONICKNAMEGIVEN, user->getNickName()));
-		}
-		// if (parsedMsg.getParams().size() > 1) {
-		// 	return ("");
-		// }
-		// TODO(hnoguchi): Parser classでバリデーションを行う。
-		if (parsedMsg.getParams()[0].getValue().size() > 9) {
-			return (Reply::errOneUsNickName(kERR_ERRONEUSNICKNAME, user->getNickName(), parsedMsg.getParams()[0].getValue()));
-		}
+		std::string	reply = Reply::rplFromName(info->getServerName());
 		std::string	nick = parsedMsg.getParams()[0].getValue();
+
 		if (!(user->getRegistered() & kNickCommand)) {
 			// ユーザ登録処理
 			char	sufix = '0';
@@ -49,16 +40,18 @@ std::string	Execute::cmdNick(User* user, const ParsedMsg& parsedMsg, Info* info)
 		} else {
 			// 既存ユーザのニックネーム変更処理
 			if (info->findUser(nick) != info->getUsers().end()) {
-				return (Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getReplyName(), nick));
+				reply += Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getPrefixName(), nick);
+				Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+				return ;
 			}
+			std::string	msg = ":" + user->getPrefixName() + " NICK :" + nick + "\r\n";
 			user->setNickName(nick);
-			std::string	msg = ":" + user->getReplyName() + " NICK :" + nick + "\r\n";
-			debugPrintSendMessage("SendMsg", msg);
-			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		}
-		return ("");
 	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return ("");
+#ifdef DEBUG
+		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
+		throw;
 	}
 }

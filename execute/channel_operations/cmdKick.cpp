@@ -27,32 +27,40 @@
 #include "../../server/Server.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdKick(User* user, const ParsedMsg& parsedMsg, Info* info) {
+void	Execute::cmdKick(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
-		if (parsedMsg.getParams().size() < 2) {
-			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
-		}
+		std::string	reply = Reply::rplFromName(info->getServerName());
 		// <channel>が存在するか確認
 		std::vector<Channel*>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
-			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+			reply += Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		// <user>が存在するか確認
 		std::vector<User*>::iterator	targetUserIt = info->findUser(parsedMsg.getParams()[1].getValue());
 		if (targetUserIt == info->getUsers().end()) {
-			return (Reply::errNoSuchNick(kERR_NOSUCHNICK, user->getNickName(), parsedMsg.getParams()[1].getValue()));
+			reply += Reply::errNoSuchNick(kERR_NOSUCHNICK, user->getPrefixName(), parsedMsg.getParams()[1].getValue());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		// userがchannel operatorか確認
 		if (!(*channelIt)->isOperator(user->getNickName())) {
-			return (Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getNickName(), user->getNickName(), parsedMsg.getParams()[0].getValue()));
+			reply += Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getPrefixName(), user->getNickName(), parsedMsg.getParams()[0].getValue());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		// <user>が<channel>にいるか確認
 		if (!(*channelIt)->isMember(parsedMsg.getParams()[1].getValue())) {
-			return (Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getNickName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue()));
+			reply += Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getPrefixName(), parsedMsg.getParams()[1].getValue(), parsedMsg.getParams()[0].getValue());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		// userが<channel>にいるか確認
 		if (!(*channelIt)->isMember(user->getNickName())) {
-			return (Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+			reply += Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		// 実行処理
 		// <channel>から<user>を削除
@@ -61,25 +69,23 @@ std::string	Execute::cmdKick(User* user, const ParsedMsg& parsedMsg, Info* info)
 		// <user>にPARTメッセージを送信
 		std::string	msg = ":" + (*targetUserIt)->getNickName() + " PART " + (*channelIt)->getName();
 		if (parsedMsg.getParams().size() > 2) {
-			msg += " :" + parsedMsg.getParams()[2].getValue() + "\r\n";
+			msg += " :" + parsedMsg.getParams()[2].getValue() + Reply::getDelimiter();
 		} else {
-			msg += " :" + parsedMsg.getParams()[1].getValue() + "\r\n";
+			msg += " :" + parsedMsg.getParams()[1].getValue() + Reply::getDelimiter();
 		}
-		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
-		msg = ":" + user->getNickName() + " KICK " + (*channelIt)->getName() + " " + parsedMsg.getParams()[1].getValue();
+		Server::sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+		msg = ":" + user->getPrefixName() + " KICK " + (*channelIt)->getName() + " " + parsedMsg.getParams()[1].getValue();
 		if (parsedMsg.getParams().size() > 2) {
 			msg += " :" + parsedMsg.getParams()[2].getValue();
 		}
-		msg += "\r\n";
-		debugPrintSendMessage("SendMsg", msg);
+		msg += Reply::getDelimiter();
 		for (std::vector<User*>::const_iterator memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
-			sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
+			Server::sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 		}
-		return ("");
 	} catch (const std::exception& e) {
+#ifdef DEBUG
 		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
 		throw;
-		// return ("");
 	}
 }

@@ -28,52 +28,42 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdUserMode(User* user, const ParsedMsg& parsedMsg, Info* info) {
-	(void)info;
+void	Execute::cmdUserMode(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
-		if (parsedMsg.getParams().size() < 1) {
-			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
-		}
+		std::string	reply = Reply::rplFromName(info->getServerName());
+
 		if (user->getNickName() != parsedMsg.getParams()[0].getValue()) {
-			return (Reply::errUsersDontMatch(kERR_USERSDONTMATCH, user->getNickName()));
+			reply += Reply::errUsersDontMatch(kERR_USERSDONTMATCH, user->getPrefixName());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		if (parsedMsg.getParams().size() == 1) {
-			return (Reply::rplUModeIs(kRPL_UMODEIS, user->getNickName(), *user));
+			reply += Reply::rplUModeIs(kRPL_UMODEIS, user->getPrefixName(), *user);
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		if (parsedMsg.getParams()[1].getValue().size() != 2) {
-			return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
+			reply += Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getPrefixName());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
-		// if (parsedMsg.getParams()[1].getValue()[0] != '+' && parsedMsg.getParams()[1].getValue()[0] != '-') {
-		// 	return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
-		// }
 		if (parsedMsg.getParams()[1].getValue()[0] == '-') {
 			if (parsedMsg.getParams()[1].getValue()[1] != 'o') {
-				return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
+				reply += Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getPrefixName());
+				Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+				return;
 			}
 			user->unsetMode(kOperator);
-			std::string	msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :-o\r\n";
-			debugPrintSendMessage("SendMsg", msg);
-			sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-			return ("");
+			std::string	msg = ":" + user->getPrefixName() + " MODE " + user->getNickName() + " :-o" + Reply::getDelimiter();
+			Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+			return;
 		}
-		// if (parsedMsg.getParams()[1].getValue()[0] == '+') {
-		// 	if (parsedMsg.getParams()[1].getValue()[1] != 'r') {
-		// 		return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
-		// 	}
-		// 	std::string	msg;
-		// 	if (user->getModes() & kOperator) {
-		// 		user->unsetMode(kOperator);
-		// 		msg = ":" + user->getNickName() + " MODE " + user->getNickName() + " :-o\r\n";
-		// 	}
-		// 	user->setMode(kRestrict);
-		// 	msg += ":" + user->getNickName() + " MODE " + user->getNickName() + " :+r\r\n";
-		// 	debugPrintSendMessage("SendMsg", msg);
-		// 	sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-		// 	return ("");
-		// }
-		return (Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getNickName()));
+		reply += Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user->getPrefixName());
+		Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return ("");
+#ifdef DEBUG
+		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
+		throw;
 	}
 }

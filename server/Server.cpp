@@ -9,22 +9,25 @@
 #include "../execute/Execute.hpp"
 
 /*
- * Global functions
- */
-void	sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
-	ssize_t	sendMsgSize = send(fd, buffer, dataSize, MSG_DONTWAIT);
-	if (sendMsgSize < 0) {
-		throw std::runtime_error("send");
-	}
-}
-
-/*
  * Helper functions
  */
 static void	recvNonBlocking(int fd, char* buffer, size_t dataSize) {
 	ssize_t	recvMsgSize = recv(fd, buffer, dataSize, MSG_DONTWAIT);
 	if (recvMsgSize < 0) {
 		throw std::runtime_error("recv");
+	}
+#ifdef DEBUG
+	std::cout << "FROM: " << fd << " [" << GREEN << buffer << END << "]" << std::endl;
+#endif  // DEBUG
+}
+
+void	Server::sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
+#ifdef DEBUG
+	std::cout << "TO  : " << fd << " [" << YELLOW << buffer << END << "]" << std::endl;
+#endif  // DEBUG
+	ssize_t	sendMsgSize = send(fd, buffer, dataSize, MSG_DONTWAIT);
+	if (sendMsgSize < 0) {
+		throw std::runtime_error("send");
 	}
 }
 
@@ -109,9 +112,8 @@ void	Server::handleServerSocket() {
 		std::cout << "New client connected. Socket: " << this->fds_[i].fd << std::endl;
 	} catch (std::exception& e) {
 		this->info_.eraseUser(this->info_.findUser(this->fds_[i].fd));
-		throw;
+		// throw;
 	}
-	// this->info_.printUsers();
 }
 
 void	Server::handleClientSocket() {
@@ -125,7 +127,9 @@ void	Server::handleClientSocket() {
 			}
 		}
 	} catch (std::exception& e) {
+#ifdef DEBUG
 		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
 		// throw;
 	}
 }
@@ -135,58 +139,30 @@ void	Server::handleReceivedData(User* user) {
 		char	buffer[513] = {0};
 
 		recvNonBlocking(user->getFd(), buffer, sizeof(buffer) - 1);
-#ifdef DEBUG
-		debugPrintRecvMessage(user->getNickName(), buffer);
-#endif  // DEBUG
-		Execute						execute;
-		Reply						reply;
-		// Split message
 		std::string					bufferStr(buffer);
 		if (user->getLeftMsg().size() != 0) {
 			bufferStr = user->getLeftMsg() + bufferStr;
 			user->setLeftMsg("");
 		}
-		std::vector<std::string>	messages = split(buffer, reply.getDelimiter(), user);
+		std::vector<std::string>	messages = this->split(buffer, user);
 		for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
-			int			replyNum = 0;
-			std::string	replyMsg("");
-			// std::vector<SendMsg *>	sendList;
 			Parser		parser;
+			Execute		execute;
 
-			// parser.parse(*it, this->info_.getCommandList(), &sendList);
-			replyNum = parser.parse(*it, this->info_.getCommandList());
-			// parser.getParsedMsg().printParsedMsg();
-			// std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<< std::endl;
-			// if (sendList.size() == 0) {
-			if (replyNum != -1) {
-				// 登録ユーザか確認
-				if ((user->getRegistered() & kExecAllCmd) != kExecAllCmd) {
-					// ユーザ登録処理
-					replyMsg = execute.registerUser(user, parser.getParsedMsg(), &this->info_);
-				} else {
-					// コマンド実行処理
-					replyMsg = execute.exec(user, parser.getParsedMsg(), &this->info_);
-					// if (this->info_.getChannels().size() != 0) {
-					// 	this->info_.getChannels()[0].printData();
-					// }
+			// 登録ユーザか確認
+			if ((user->getRegistered() & kExecAllCmd) != kExecAllCmd) {
+				// ユーザ登録処理
+				if (parser.registerParse(*user, *it, this->info_) == -1) {
+					continue;
 				}
-				if (!replyMsg.empty()) {
-					std::string	buf = replyMsg;
-					replyMsg = Reply::rplFromName(this->info_.getServerName());
-					replyMsg += buf;
-				}
+				execute.registerUser(user, parser.getParsedMsg(), &this->info_);
 			} else {
-				// リプライメッセージの作成
-				replyMsg = reply.createMessage(replyNum, *user, this->info_, parser.getParsedMsg());
+				// 登録済みユーザのコマンド実行処理
+				if (parser.parse(*user, *it, this->info_) == -1) {
+					continue;
+				}
+				execute.exec(user, parser.getParsedMsg(), &this->info_);
 			}
-			if (replyMsg.empty()) {
-				continue;
-			}
-#ifdef DEBUG
-			// user->printData();
-			debugPrintSendMessage(user->getNickName(), replyMsg);
-#endif  // DEBUG
-			sendNonBlocking(user->getFd(), replyMsg.c_str(), replyMsg.size());
 		}
 	} catch (std::exception& e) {
 		// TODO(hnoguchi): メッセージ受信に失敗したことをユーザに通知（メッセージを送信）する？

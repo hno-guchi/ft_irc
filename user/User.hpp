@@ -24,7 +24,6 @@ class User {
 	 std::string	hostName_;
 	 std::string	serverName_;
 	 std::string	realName_;
-	 std::string	replyName_;
 	 int			index_;
 	 int*			fd_;
 	 unsigned int	registered_;
@@ -44,7 +43,6 @@ class User {
 	 void	setHostName(const std::string &name);
 	 void	setServerName(const std::string &name);
 	 void	setRealName(const std::string &name);
-	 void	setReplyName(const std::string &name);
 	 void	setIndex(int i);
 	 void	setFd(int* fd);
 	 void	setRegistered(kExecCommand flag);
@@ -57,7 +55,7 @@ class User {
 	 const std::string&	getHostName() const;
 	 const std::string&	getServerName() const;
 	 const std::string&	getRealName() const;
-	 const std::string&	getReplyName() const;
+	 const std::string	getPrefixName() const;
 	 int				getIndex() const;
 	 // int*				getFdAddr() const;
 	 int				getFd() const;

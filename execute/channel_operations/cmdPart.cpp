@@ -23,38 +23,41 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdPart(User* user, const ParsedMsg& parsedMsg, Info* info) {
+void	Execute::cmdPart(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
-		if (parsedMsg.getParams().size() == 0) {
-			return (Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getNickName(), parsedMsg.getCommand()));
-		}
+		std::string	reply = Reply::rplFromName(info->getServerName());
 		// <channel>が存在するか確認
 		std::vector<Channel*>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
-			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+			reply += Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		// userが<channel>にいるか確認
 		if (!(*channelIt)->isMember(user->getNickName())) {
-			return (Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+			reply += Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		(*channelIt)->eraseMember(user);
 		(*channelIt)->eraseOperator(user);
 		std::string	msg = ":" + user->getNickName() + " PART " + (*channelIt)->getName() + " :";
 		if (parsedMsg.getParams().size() > 1) {
-			msg += parsedMsg.getParams()[1].getValue() + "\r\n";
+			msg += parsedMsg.getParams()[1].getValue() + Reply::getDelimiter();
 		} else {
-			msg += user->getNickName() + "\r\n";
+			msg += user->getNickName() + Reply::getDelimiter();
 		}
-		debugPrintSendMessage("SendMsg", msg);
-		sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		for (std::vector<User *>::const_iterator memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
-			sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
+			Server::sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 		}
 		if ((*channelIt)->getMembers().size() == 0) {
 			info->eraseChannel(channelIt);
 		}
-		return ("");
 	} catch (std::exception& e) {
+#ifdef DEBUG
+		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
 		throw;
 	}
 }

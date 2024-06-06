@@ -197,7 +197,7 @@ bool	Channel::isOperator(const std::string& name) const {
 	return (false);
 }
 
-void	Channel::printData() const {
+void	Channel::debugPrintChannel() const {
 	std::cout << CYAN << "[CHANNEL INFO] -----------------" << END << std::endl;
 	std::cout << "[name]      | [" << this->getName() << "]" << std::endl;
 	std::cout << "[topic]     | [" << this->getName() << "]" << std::endl;
