@@ -31,8 +31,8 @@
 *.out
 *.app
 
+logs
 ./objs
 ircserv
 a.out
 ./*.dSYM
-./logs
