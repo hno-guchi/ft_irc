@@ -35,3 +35,4 @@
 ircserv
 a.out
 ./*.dSYM
+./logs

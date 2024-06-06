@@ -27,7 +27,7 @@ void	Execute::cmdNotice(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		std::vector<User*>::const_iterator	userIt = info->findUser(parsedMsg.getParams()[0].getValue());
 		// メッセージの作成
-		std::string	message = ":" + user->getPrefixName() + " NOTICE " + parsedMsg.getParams()[0].getValue() + parsedMsg.getParams()[1].getValue() + Reply::getDelimiter();
+		std::string	message = ":" + user->getPrefixName() + " NOTICE " + parsedMsg.getParams()[0].getValue() + " " + parsedMsg.getParams()[1].getValue() + Reply::getDelimiter();
 		// メッセージの送信先がuserの場合
 		if (userIt != info->getUsers().end()) {
 			Server::sendNonBlocking((*userIt)->getFd(), message.c_str(), message.size());
