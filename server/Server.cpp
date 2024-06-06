@@ -12,18 +12,18 @@
  * Helper functions
  */
 static void	recvNonBlocking(int fd, char* buffer, size_t dataSize) {
-#ifdef DEBUG
-	std::cout << "FROM: " << fd << " : " << GREEN << buffer << END << std::flush;
-#endif  // DEBUG
 	ssize_t	recvMsgSize = recv(fd, buffer, dataSize, MSG_DONTWAIT);
 	if (recvMsgSize < 0) {
 		throw std::runtime_error("recv");
 	}
+#ifdef DEBUG
+	std::cout << "FROM: " << fd << " [" << GREEN << buffer << END << "]" << std::endl;
+#endif  // DEBUG
 }
 
 void	Server::sendNonBlocking(int fd, const char* buffer, size_t dataSize) {
 #ifdef DEBUG
-	std::cout << "TO  : " << fd << " : " << YELLOW << buffer << END << std::flush;
+	std::cout << "TO  : " << fd << " [" << YELLOW << buffer << END << "]" << std::endl;
 #endif  // DEBUG
 	ssize_t	sendMsgSize = send(fd, buffer, dataSize, MSG_DONTWAIT);
 	if (sendMsgSize < 0) {
@@ -127,7 +127,9 @@ void	Server::handleClientSocket() {
 			}
 		}
 	} catch (std::exception& e) {
+#ifdef DEBUG
 		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
 		// throw;
 	}
 }
@@ -137,10 +139,6 @@ void	Server::handleReceivedData(User* user) {
 		char	buffer[513] = {0};
 
 		recvNonBlocking(user->getFd(), buffer, sizeof(buffer) - 1);
-		Execute						execute;
-		// TODO(hnoguchi): Reply classは、static classにする。
-		Reply						reply;
-		// Split message
 		std::string					bufferStr(buffer);
 		if (user->getLeftMsg().size() != 0) {
 			bufferStr = user->getLeftMsg() + bufferStr;
@@ -148,35 +146,23 @@ void	Server::handleReceivedData(User* user) {
 		}
 		std::vector<std::string>	messages = this->split(buffer, user);
 		for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
-			int			replyNum = 0;
-			std::string	replyMsg("");
 			Parser		parser;
+			Execute		execute;
 
-			// TODO(hnoguchi): 引数の変更
-			// if (parser.parse(*user, *it, this->info_) == -1) {
-			if (parser.parse(*user, *it, this->info_.getCommandList()) == -1) {
-				continue;
-			}
 			// 登録ユーザか確認
 			if ((user->getRegistered() & kExecAllCmd) != kExecAllCmd) {
 				// ユーザ登録処理
-				replyMsg = execute.registerUser(user, parser.getParsedMsg(), &this->info_);
+				if (parser.registerParse(*user, *it, this->info_) == -1) {
+					continue;
+				}
+				execute.registerUser(user, parser.getParsedMsg(), &this->info_);
 			} else {
-				// コマンド実行処理
-				replyMsg = execute.exec(user, parser.getParsedMsg(), &this->info_);
-				// if (this->info_.getChannels().size() != 0) {
-				// 	this->info_.getChannels()[0].printData();
-				// }
+				// 登録済みユーザのコマンド実行処理
+				if (parser.parse(*user, *it, this->info_) == -1) {
+					continue;
+				}
+				execute.exec(user, parser.getParsedMsg(), &this->info_);
 			}
-			if (!replyMsg.empty()) {
-				std::string	buf = replyMsg;
-				replyMsg = Reply::rplFromName(this->info_.getServerName());
-				replyMsg += buf;
-			}
-			if (replyMsg.empty()) {
-				continue;
-			}
-			sendNonBlocking(user->getFd(), replyMsg.c_str(), replyMsg.size());
 		}
 	} catch (std::exception& e) {
 		// TODO(hnoguchi): メッセージ受信に失敗したことをユーザに通知（メッセージを送信）する？

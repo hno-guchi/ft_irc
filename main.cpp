@@ -43,7 +43,6 @@ static void	setSignals() {
 	signalHandler(SIGQUIT, SIG_DFL);
 
 	signalHandler(SIGHUP, SIG_IGN);
-	signalHandler(SIGINT, SIG_IGN);
 	signalHandler(SIGPIPE, SIG_IGN);
 	signalHandler(SIGUSR1, SIG_IGN);
 	signalHandler(SIGUSR2, SIG_IGN);

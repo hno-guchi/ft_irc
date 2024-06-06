@@ -15,21 +15,21 @@ class Token {
 	 kTokenType		type_;
 	 std::string	value_;
 
-	 Token(const Token &rhs);
-	 Token& operator=(const Token &rhs);
-
  public:
+	 // CONSTRUCTOR & DESTRUCTOR
 	 Token();
+	 Token(const Token &src);
 	 ~Token();
-
-	// SETTER
-	void	setType(const kTokenType type);
-	void	setValue(const std::string &value);
-	// GETTER
-	kTokenType			getType() const;
-	const std::string&	getValue() const;
-	// debug
-	void	printToken() const;
+	 // OPERATOR
+	 Token& operator=(const Token &rhs);
+	 // SETTER
+	 void	setType(const kTokenType type);
+	 void	setValue(const std::string &value);
+	 // GETTER
+	 kTokenType			getType() const;
+	 const std::string&	getValue() const;
+	 // debug
+	 void	printToken() const;
 };
 
 #endif  // TOKEN_HPP

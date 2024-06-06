@@ -15,7 +15,6 @@ enum kChannelMode {
 
 class Channel {
  private:
-	 // std::string		prefix_;
 	 std::string		name_;
 	 std::string		topic_;
 	 std::string		key_;
@@ -24,6 +23,9 @@ class Channel {
 	 std::vector<User*>	members_;
 	 std::vector<User*>	invited_;
 	 std::vector<User*>	operators_;
+
+	 Channel(const Channel& src);
+	 Channel& operator=(const Channel& src);
 
  public:
 	 explicit Channel(const std::string& name);
@@ -58,7 +60,7 @@ class Channel {
 	bool						isOperator(const std::string& name) const;
 	void						resetData();
 	// debug
-	void						printData() const;
+	void						debugPrintChannel() const;
 };
 
 #endif  // CHANNEL_HPP

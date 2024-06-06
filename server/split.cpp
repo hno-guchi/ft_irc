@@ -11,7 +11,7 @@ std::vector<std::string>	Server::split(const std::string& message, User* user) {
 		std::string::size_type		startPos(0);
 
 		while (startPos < message.size()) {
-			std::string::size_type	delimPos = message.find(reply::getDelimiter(), startPos);
+			std::string::size_type	delimPos = message.find(Reply::getDelimiter(), startPos);
 			if (delimPos == message.npos && startPos < message.size()) {
 				user->setLeftMsg(message.substr(startPos));
 				break;
@@ -21,7 +21,7 @@ std::vector<std::string>	Server::split(const std::string& message, User* user) {
 				std::string	buf = message.substr(startPos, delimPos - startPos);
 				messages.push_back(buf);
 			}
-			startPos = delimPos + reply::getDelimiter().size();
+			startPos = delimPos + Reply::getDelimiter().size();
 		}
 		return (messages);
 	} catch (std::exception& e) {

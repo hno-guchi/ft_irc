@@ -49,37 +49,30 @@
 #include "../../parser/Parser.hpp"
 #include "../../parser/ParsedMsg.hpp"
 
-std::string	Execute::cmdPrivmsg(User* user, const ParsedMsg& parsedMsg, Info* info) {
+void	Execute::cmdPrivmsg(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
-		// TODO(hnoguchi): Parser classで処理する。
-		if (parsedMsg.getParams().size() == 0) {
-			return(Reply::errNoRecipient(kERR_NORECIPIENT, user->getPrefixName(), parsedMsg.getCommand()));
-		}
-		if (parsedMsg.getParams().size() < 2) {
-			if (parsedMsg.getParams()[0].getParamType() == kText) {
-				return(Reply::errNoRecipient(kERR_NORECIPIENT, user->getNickName(), parsedMsg.getCommand()));
-			} else if (parsedMsg.getParams()[0].getParamType() == kMsgTarget) {
-				return(Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user->getNickName()));
-			}
-		}
 		std::vector<User*>::const_iterator	userIt = info->findUser(parsedMsg.getParams()[0].getValue());
 		// メッセージの作成
-		std::string	message = ":" + user->getPrefixName() + " PRIVMSG " + parsedMsg.getParams()[0].getValue() + parsedMsg.getParams()[1].getValue() + "\r\n";
-		debugPrintSendMessage("cmdPrivmsg", message);
+		std::string	message = ":" + user->getPrefixName() + " PRIVMSG " + parsedMsg.getParams()[0].getValue() + parsedMsg.getParams()[1].getValue() + Reply::getDelimiter();
 		// メッセージの送信先がuserの場合
 		if (userIt != info->getUsers().end()) {
 			Server::sendNonBlocking((*userIt)->getFd(), message.c_str(), message.size());
-			return ("");
+			return;
 		}
 		// メッセージの送信先がchannelの場合
 		// <channel>が存在するか確認
+		std::string	reply = Reply::rplFromName(info->getServerName());
 		std::vector<Channel*>::const_iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
-			return (Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getNickName(), parsedMsg.getParams()[0].getValue()));
+			reply += Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		// userが<channel>にいるか確認
 		if (!(*channelIt)->isMember(user->getNickName())) {
-			return (Reply::errCanNotSendToChan(kERR_CANNOTSENDTOCHAN, user->getNickName(), (*channelIt)->getName()));
+			reply += Reply::errCanNotSendToChan(kERR_CANNOTSENDTOCHAN, user->getPrefixName(), (*channelIt)->getName());
+			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+			return;
 		}
 		for (std::vector<User*>::const_iterator memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
 			if (user->getNickName() == (*memberIt)->getNickName()) {
@@ -87,11 +80,11 @@ std::string	Execute::cmdPrivmsg(User* user, const ParsedMsg& parsedMsg, Info* in
 			}
 			Server::sendNonBlocking((*memberIt)->getFd(), message.c_str(), message.size());
 		}
-		return ("");
+		return;
 	} catch (std::exception& e) {
+#ifdef DEBUG
 		debugPrintErrorMessage(e.what());
-		// handleClientDisconnect(&it->getFd);
+#endif  // DEBUG
 		throw;
-		// return ("");
 	}
 }

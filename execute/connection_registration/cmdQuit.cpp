@@ -22,15 +22,21 @@
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
 
-std::string	Execute::cmdQuit(User* user, const ParsedMsg& parsedMsg, Info* info) {
-	std::string	message = ":" + user->getNickName() + " ERROR :";
-	if (parsedMsg.getParams().size() > 0) {
-		message += parsedMsg.getParams()[0].getValue();
-	} else {
-		message += "Client Quit";
+void	Execute::cmdQuit(User* user, const ParsedMsg& parsedMsg, Info* info) {
+	try {
+		std::string	message = ":" + user->getPrefixName() + " ERROR :";
+		if (parsedMsg.getParams().size() > 0) {
+			message += parsedMsg.getParams()[0].getValue();
+		} else {
+			message += "Client Quit";
+		}
+		message += Reply::getDelimiter();
+		Server::sendNonBlocking(user->getFd(), message.c_str(), message.size());
+		info->eraseUser(info->findUser(user->getFd()));
+	} catch (const std::exception& e) {
+#ifdef DEBUG
+		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
+		throw;
 	}
-	message += "\r\n";
-	Server::sendNonBlocking(user->getFd(), message.c_str(), message.size());
-	info->eraseUser(info->findUser(user->getFd()));
-	return ("");
 }

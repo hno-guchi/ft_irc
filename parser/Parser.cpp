@@ -5,6 +5,7 @@
 #include "./ValidParam.hpp"
 #include "../color.hpp"
 #include "../server/Info.hpp"
+#include "../server/Server.hpp"
 #include "../reply/Reply.hpp"
 #include "../debug/debug.hpp"
 
@@ -89,27 +90,56 @@ void	Parser::tokenize(std::string *message, std::vector<Token> *tokens) {
 	}
 }
 
-int	Parser::validTokens(const User& user, const std::vector<Token>& tokens, const std::string* cmdList) {
+int	Parser::validRegisterTokens(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
 		ValidParam	validParam;
 
 		for (std::vector<Token>::const_iterator it = tokens.begin(); it != tokens.end(); it++) {
 			if (it->getType() == kCmdString) {
-				if (!validParam.isCommand(it->getValue(), cmdList)) {
-					std::string reply = reply::errUnknownCommand(kERR_UNKNOWNCOMMAND, user.getPrefixName(), it->getValue());
+				if (!validParam.isCommand(it->getValue(), info.getCommandList())) {
+					reply += Reply::errUnknownCommand(kERR_UNKNOWNCOMMAND, "*", it->getValue());
 					Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 					return (-1);
 				}
 			} else if (it->getType() == kParamMiddle) {
 				if (!validParam.isMiddle(it->getValue())) {
-					// std::string reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), it->getValue());
-					// Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 					return (-1);
 				}
 			} else if (it->getType() == kParamTrailing) {
 				if (!validParam.isTrailing(it->getValue())) {
-					// std::string reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), it->getValue());
-					// Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+					return (-1);
+				}
+			}
+		}
+		return (0);
+	} catch (std::exception& e) {
+		throw;
+	}
+}
+
+int	Parser::validTokens(const User& user, const std::vector<Token>& tokens, const Info& info) {
+	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+		ValidParam	validParam;
+
+		for (std::vector<Token>::const_iterator it = tokens.begin(); it != tokens.end(); it++) {
+			if (it->getType() == kCmdString) {
+				if (!validParam.isCommand(it->getValue(), info.getCommandList())) {
+					reply += Reply::errUnknownCommand(kERR_UNKNOWNCOMMAND, user.getPrefixName(), it->getValue());
+					Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+					return (-1);
+				}
+			} else if (it->getType() == kParamMiddle) {
+				if (!validParam.isMiddle(it->getValue())) {
+					reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), it->getValue());
+					Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+					return (-1);
+				}
+			} else if (it->getType() == kParamTrailing) {
+				if (!validParam.isTrailing(it->getValue())) {
+					reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), it->getValue());
+					Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 					return (-1);
 				}
 			}
@@ -121,10 +151,17 @@ int	Parser::validTokens(const User& user, const std::vector<Token>& tokens, cons
 }
 
 // PING <server1> [ <server2> ]
-int	Parser::validPing(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validPing(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
-		if (tokens.size() < 2 || tokens.size() > 3) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "PING");
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
+		if (tokens.size() < 2) {
+			reply += Reply::errNoOrigin(kERR_NOORIGIN, user.getPrefixName());
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+			return (-1);
+		}
+		if (tokens.size() > 3) {
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "PING");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
@@ -139,12 +176,14 @@ int	Parser::validPing(const User& user, const std::vector<Token>& tokens) {
 }
 
 // PASS <password>
-int	Parser::validPass(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validPass(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
 		if (tokens.size() != 2) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "PASS");
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, "*", "PASS");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
-			return (-1);
+			throw std::invalid_argument("validPass");
 		}
 		this->parsed_.setParam(tokens[1].getType(), kPassword, tokens[1].getValue());
 		return (0);
@@ -154,10 +193,48 @@ int	Parser::validPass(const User& user, const std::vector<Token>& tokens) {
 }
 
 // NICK <nickname>
-int	Parser::validNick(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validRegisterNick(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
+		if (tokens.size() == 0) {
+			reply += Reply::errNoNickNameGiven(kERR_NONICKNAMEGIVEN, "*");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+			throw std::invalid_argument("validRegisterNick");
+		}
 		if (tokens.size() != 2) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "NICK");
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, "*", "NICK");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+			throw std::invalid_argument("validRegisterNick");
+		}
+		if (tokens[1].getValue().size() > 9) {
+			reply += Reply::errOneUsNickName(kERR_ERRONEUSNICKNAME, "*", tokens[1].getValue());
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+			throw std::invalid_argument("cmdNick");
+		}
+		this->parsed_.setParam(tokens[1].getType(), kNickName, tokens[1].getValue());
+		return (0);
+	} catch (std::exception& e) {
+		throw;
+	}
+}
+
+int	Parser::validNick(const User& user, const std::vector<Token>& tokens, const Info& info) {
+	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
+		if (tokens.size() == 0) {
+			reply += Reply::errNoNickNameGiven(kERR_NONICKNAMEGIVEN, user.getPrefixName());
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+			return (-1);
+		}
+		if (tokens.size() != 2) {
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "NICK");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+			return (-1);
+		}
+		if (tokens[1].getValue().size() > 9) {
+			reply += Reply::errOneUsNickName(kERR_ERRONEUSNICKNAME, user.getPrefixName(), tokens[1].getValue());
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
@@ -169,12 +246,14 @@ int	Parser::validNick(const User& user, const std::vector<Token>& tokens) {
 }
 
 // USER <username> <hostname> <servername> <realname>
-int	Parser::validUser(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validUser(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
 		if (tokens.size() != 5) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "USER");
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, "*", "USER");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
-			return (-1);
+			throw std::invalid_argument("validUser");
 		}
 		this->parsed_.setParam(tokens[1].getType(), kUserName, tokens[1].getValue());
 		this->parsed_.setParam(tokens[2].getType(), kHostName, tokens[2].getValue());
@@ -187,10 +266,12 @@ int	Parser::validUser(const User& user, const std::vector<Token>& tokens) {
 }
 
 // OPER <name> <password>
-int	Parser::validOper(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validOper(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
-		if (tokens->size() != 3) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "OPER");
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
+		if (tokens.size() != 3) {
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "OPER");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
@@ -203,7 +284,7 @@ int	Parser::validOper(const User& user, const std::vector<Token>& tokens) {
 }
 
 // QUIT [ <Quit Message> ]
-int	Parser::validQuit(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validQuit(const std::vector<Token>& tokens) {
 	try {
 		if (tokens.size() == 2) {
 			this->parsed_.setParam(tokens[1].getType(), kMessage, tokens[1].getValue());
@@ -215,15 +296,17 @@ int	Parser::validQuit(const User& user, const std::vector<Token>& tokens) {
 }
 
 // JOIN <channel> [ <key> ]
-int	Parser::validJoin(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validJoin(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
 		if (tokens.size() < 2 || tokens.size() > 3) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "JOIN");
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "JOIN");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
 		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
-		if (tokens->size() == 3) {
+		if (tokens.size() == 3) {
 			this->parsed_.setParam(tokens[2].getType(), kKey, tokens[2].getValue());
 		}
 		return (0);
@@ -233,15 +316,17 @@ int	Parser::validJoin(const User& user, const std::vector<Token>& tokens) {
 }
 
 // PART <channel> [ <Part Message> ]
-int	Parser::validPart(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validPart(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
 		if (tokens.size() < 2 || tokens.size() > 3) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "PART");
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "PART");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
 		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
-		if (tokens->size() == 3) {
+		if (tokens.size() == 3) {
 			this->parsed_.setParam(tokens[2].getType(), kMessage, tokens[2].getValue());
 		}
 		return (0);
@@ -251,10 +336,12 @@ int	Parser::validPart(const User& user, const std::vector<Token>& tokens) {
 }
 
 // KICK <channel> <user> [<comment>]
-int	Parser::validKick(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validKick(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
 		if (tokens.size() != 3 && tokens.size() != 4) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "KICK");
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "KICK");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
@@ -270,10 +357,12 @@ int	Parser::validKick(const User& user, const std::vector<Token>& tokens) {
 }
 
 // INVITE <nickname> <channel>
-int	Parser::validInvite(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validInvite(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
 		if (tokens.size() != 3) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "INVITE");
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "INVITE");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
@@ -286,15 +375,17 @@ int	Parser::validInvite(const User& user, const std::vector<Token>& tokens) {
 }
 
 // TOPIC <channel> [ <topic> ]
-int	Parser::validTopic(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validTopic(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
 		if (tokens.size() != 2 && tokens.size() != 3) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "TOPIC");
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "TOPIC");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
 		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
-		if (tokens->size() == 3) {
+		if (tokens.size() == 3) {
 			this->parsed_.setParam(tokens[2].getType(), kTopic, tokens[2].getValue());
 		}
 		return (0);
@@ -303,13 +394,15 @@ int	Parser::validTopic(const User& user, const std::vector<Token>& tokens) {
 	}
 }
 
-// MODE <nickname> [ ( "+" ) ( "r" ) ]
-int	Parser::validUserMode(const User& user, const std::vector<Token>& tokens) {
+// MODE <nickname> [ ( "-" ) ( "o" ) ]
+int	Parser::validUserMode(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
 		this->parsed_.setParam(tokens[1].getType(), kNickName, tokens[1].getValue());
 		if (tokens.size() == 3) {
 			if (tokens[2].getValue().size() != 2) {
-				std::string reply = Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user.getPrefixName());
+				reply += Reply::errUModeUnknownFlag(kERR_UMODEUNKNOWNFLAG, user.getPrefixName());
 				Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 				return (-1);
 			}
@@ -322,17 +415,19 @@ int	Parser::validUserMode(const User& user, const std::vector<Token>& tokens) {
 }
 
 // MODE <channel>  [ ( "-" / "+" ) ( "i" / "k" / "l" / "o" / "t" ) [ <modeparam> ] ]
-int	Parser::validChannelMode(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validChannelMode(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
 		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
 		if (tokens.size() > 2) {
 			if (tokens[2].getValue().size() != 2) {
-				std::string	reply = reply::errUnknownMode(kERR_UNKNOWNMODE, user.getPrefixName(), tokens[2].getValue(), tokens[1].getValue());
+				reply += Reply::errUnknownMode(kERR_UNKNOWNMODE, user.getPrefixName(), tokens[2].getValue(), tokens[1].getValue());
 				Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 				return (-1);
 			}
 			if (tokens[2].getValue()[0] != '+' && tokens[2].getValue()[0] != '-') {
-				std::string	reply = reply::errUnknownMode(kERR_UNKNOWNMODE, user.getPrefixName(), tokens[2].getValue(), tokens[1].getValue());
+				reply += Reply::errUnknownMode(kERR_UNKNOWNMODE, user.getPrefixName(), tokens[2].getValue(), tokens[1].getValue());
 				Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 				return (-1);
 			}
@@ -348,38 +443,46 @@ int	Parser::validChannelMode(const User& user, const std::vector<Token>& tokens)
 	}
 }
 
-int	Parser::validMode(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validMode(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
 		if (tokens.size() < 2 || tokens.size() > 4) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "MODE");
+			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "MODE");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
 		if (tokens[1].getValue()[0] != '#') {
-			return (this->validUserMode(tokens));
+			return (this->validUserMode(user, tokens, info));
 		}
-		return (this->validChannelMode(tokens));
+		return (this->validChannelMode(user, tokens, info));
 	} catch (std::exception& e) {
 		throw;
 	}
 }
 
 // PRIVMSG <msgtarget> <text>
-int	Parser::validPrivmsg(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validPrivmsg(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
-		if (tokens.size() != 3) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "PRIVMSG");
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
+		if (tokens.size() == 1) {
+			reply += Reply::errNoRecipient(kERR_NORECIPIENT, user.getPrefixName(), "PRIVMSG");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+			return (-1);
+		}
+		if (tokens.size() == 2) {
+			reply += Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user.getPrefixName());
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
 		this->parsed_.setParam(tokens[1].getType(), kMsgTarget, tokens[1].getValue());
 		if (tokens[2].getValue().size() > 400) {
-			std::string	reply = reply::errNoTextToSend(kERR_NOTEXTTOSEND, user.getPrefixName(), "PRIVMSG");
-			// 412 ERR_NOMOTD ":No message of the day is available"
-			std::cerr << RED << "Too long text." << END << std::endl;
+			reply += Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user.getPrefixName());
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[2].getType(), kText, (*tokens)[2].getValue());
+		this->parsed_.setParam(tokens[2].getType(), kText, tokens[2].getValue());
 		return (0);
 	} catch (std::exception& e) {
 		throw;
@@ -387,27 +490,34 @@ int	Parser::validPrivmsg(const User& user, const std::vector<Token>& tokens) {
 }
 
 // NOTICE <msgtarget> <text>
-int	Parser::validNotice(const User& user, const std::vector<Token>& tokens) {
+int	Parser::validNotice(const User& user, const std::vector<Token>& tokens, const Info& info) {
 	try {
-		if (tokens->size() != 3) {
-			std::string	reply = reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "NOTICE");
+		std::string	reply = Reply::rplFromName(info.getServerName());
+
+		if (tokens.size() == 1) {
+			reply += Reply::errNoRecipient(kERR_NORECIPIENT, user.getPrefixName(), "NOTICE");
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[1].getType(), kMsgTarget, (*tokens)[1].getValue());
-		if ((*tokens)[2].getValue().size() > 400) {
-			// 412 ERR_NOMOTD ":No message of the day is available"
-			std::cerr << RED << "Too long text." << END << std::endl;
+		if (tokens.size() == 2) {
+			reply += Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user.getPrefixName());
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		this->parsed_.setParam((*tokens)[2].getType(), kText, (*tokens)[2].getValue());
+		this->parsed_.setParam(tokens[1].getType(), kMsgTarget, tokens[1].getValue());
+		if (tokens[2].getValue().size() > 400) {
+			reply += Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user.getPrefixName());
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+			return (-1);
+		}
+		this->parsed_.setParam(tokens[2].getType(), kText, tokens[2].getValue());
 		return (0);
 	} catch (std::exception& e) {
 		throw;
 	}
 }
 
-int	Parser::parse(const User& user, std::string message, const std::string* cmdList) {
+int	Parser::registerParse(const User& user, std::string message, const Info& info) {
 	if (message.empty()) {
 		return (-1);
 	}
@@ -421,38 +531,72 @@ int	Parser::parse(const User& user, std::string message, const std::string* cmdL
 		if (tokens.empty()) {
 			return (-1);
 		}
-		if (this->validTokens(user, tokens, cmdList) == -1) {
+		if (this->validRegisterTokens(user, tokens, info) != -1) {
+			this->parsed_.setCommand(this->toUpperString(tokens[0].getValue()));
+			if (this->parsed_.getCommand() == "PASS") {
+				return (this->validPass(user, tokens, info));
+			} else if (this->parsed_.getCommand() == "NICK") {
+				return (this->validRegisterNick(user, tokens, info));
+			} else if (this->parsed_.getCommand() == "USER") {
+				return (this->validUser(user, tokens, info));
+			}
+		}
+		std::string	reply = Reply::rplFromName(info.getServerName());
+		reply += Reply::errNotRegistered(kERR_NOTREGISTERED, "*");
+		Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+		return (-1);
+	} catch (std::exception& e) {
+		debugPrintErrorMessage(e.what());
+		throw;
+	}
+}
+
+int	Parser::parse(const User& user, std::string message, const Info& info) {
+	if (message.empty()) {
+		return (-1);
+	}
+	if (message.size() > 510) {
+		return (-1);
+	}
+	try {
+		std::vector<Token>	tokens;
+
+		this->tokenize(&message, &tokens);
+		if (tokens.empty()) {
+			return (-1);
+		}
+		if (this->validTokens(user, tokens, info) == -1) {
 			return (-1);
 		}
 		this->parsed_.setCommand(this->toUpperString(tokens[0].getValue()));
 		if (this->parsed_.getCommand() == "PING") {
-			return (this->validPing(user, tokens));
+			return (this->validPing(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "PASS") {
-			return (this->validPass(&tokens));
+			return (this->validPass(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "NICK") {
-			return (this->validNick(&tokens));
+			return (this->validNick(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "USER") {
-			return (this->validUser(&tokens));
+			return (this->validUser(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "OPER") {
-			return (this->validOper(&tokens));
+			return (this->validOper(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "QUIT") {
-			return (this->validQuit(&tokens));
+			return (this->validQuit(tokens));
 		} else if (this->parsed_.getCommand() == "JOIN") {
-			return (this->validJoin(&tokens));
+			return (this->validJoin(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "PART") {
-			return (this->validPart(&tokens));
+			return (this->validPart(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "KICK") {
-			return (this->validKick(&tokens));
+			return (this->validKick(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "INVITE") {
-			return (this->validInvite(&tokens));
+			return (this->validInvite(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "TOPIC") {
-			return (this->validTopic(&tokens));
+			return (this->validTopic(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "MODE") {
-			return (this->validMode(&tokens));
+			return (this->validMode(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "PRIVMSG") {
-			return (this->validPrivmsg(&tokens));
+			return (this->validPrivmsg(user, tokens, info));
 		} else if (this->parsed_.getCommand() == "NOTICE") {
-			return (this->validNotice(&tokens));
+			return (this->validNotice(user, tokens, info));
 		}
 		return (0);
 	} catch (std::exception& e) {
