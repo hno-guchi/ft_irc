@@ -38,7 +38,7 @@ void	Execute::cmdNotice(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		std::string	reply = Reply::rplFromName(info->getServerName());
 		std::vector<Channel*>::const_iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		if (channelIt == info->getChannels().end()) {
-			reply += Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
+			reply += Reply::errNoSuchNick(kERR_NOSUCHNICK, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}

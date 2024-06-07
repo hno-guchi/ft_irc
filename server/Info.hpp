@@ -32,6 +32,8 @@ class Info : public Config {
 	 void									pushBackUser(User* user);
 	 void									pushBackChannel(Channel* channel);
 	 void									eraseUser(std::vector<User*>::iterator it);
+	 void									eraseUserInChannel(User* user, Channel* channel);
+	 void									eraseUserInChannels(User* user);
 	 void									eraseChannel(std::vector<Channel*>::iterator it);
 
 	 // debug
