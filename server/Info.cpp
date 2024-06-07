@@ -117,12 +117,15 @@ void	Info::eraseUser(std::vector<User*>::iterator it) {
 
 void	Info::eraseUserInChannel(User* user, Channel* channel) {
 	try {
-		if (!channel->isMember(user->getNickName())) {
-			return;
+		if (channel->isMember(user)) {
+			channel->eraseMember(user);
 		}
-		channel->eraseMember(user);
-		channel->eraseInvited(user);
-		channel->eraseOperator(user);
+		if (channel->isInvited(user)) {
+			channel->eraseInvited(user);
+		}
+		if (channel->isOperator(user)) {
+			channel->eraseOperator(user);
+		}
 	} catch (std::exception& e) {
 #ifdef DEBUG
 		debugPrintErrorMessage(e.what());

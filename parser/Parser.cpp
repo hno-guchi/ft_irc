@@ -356,6 +356,12 @@ int	Parser::validKick(const User& user, const std::vector<Token>& tokens, const 
 		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
 		this->parsed_.setParam(tokens[2].getType(), kNickName, tokens[2].getValue());
 		if (tokens.size() == 4) {
+			ValidParam	validParam;
+			if (validParam.isTopic(tokens[3].getValue()) == false) {
+				reply += Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user.getPrefixName());
+				Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+				return (-1);
+			}
 			this->parsed_.setParam(tokens[3].getType(), kMessage, tokens[3].getValue());
 		}
 		return (0);

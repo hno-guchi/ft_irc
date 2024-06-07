@@ -64,19 +64,17 @@ void	Execute::cmdKick(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		}
 		// 実行処理
 		// <channel>から<user>を削除
-		(*channelIt)->eraseMember(*targetUserIt);
-		(*channelIt)->eraseOperator(*targetUserIt);
+		info->eraseUserInChannel(*targetUserIt, *channelIt);
 		// <user>にPARTメッセージを送信
-		std::string	msg = ":" + (*targetUserIt)->getNickName() + " PART " + (*channelIt)->getName();
+		std::string	msg = ":" + (*targetUserIt)->getPrefixName() + " PART " + (*channelIt)->getName();
 		if (parsedMsg.getParams().size() > 2) {
-			msg += " :" + parsedMsg.getParams()[2].getValue() + Reply::getDelimiter();
-		} else {
-			msg += " :" + parsedMsg.getParams()[1].getValue() + Reply::getDelimiter();
+			msg += " " + parsedMsg.getParams()[2].getValue();
 		}
+		msg += Reply::getDelimiter();
 		Server::sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
 		msg = ":" + user->getPrefixName() + " KICK " + (*channelIt)->getName() + " " + parsedMsg.getParams()[1].getValue();
 		if (parsedMsg.getParams().size() > 2) {
-			msg += " :" + parsedMsg.getParams()[2].getValue();
+			msg += " " + parsedMsg.getParams()[2].getValue();
 		}
 		msg += Reply::getDelimiter();
 		for (std::vector<User*>::const_iterator memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
