@@ -89,8 +89,12 @@ int	Server::setFd(int fd) {
 			return (i);
 		}
 		// TODO(hnoguchi): messageを送る。
-		// sendNonBlocking(fd, "Max clients reached.", sizeof("Max clients reached."));
-		std::cerr << "Max clients reached." << std::endl;
+		std::string	reply = Reply::rplFromName(this->info_.getServerName());
+		reply += Reply::errNoSuchServer(kERR_NOSUCHSERVER, "*", "*");
+		sendNonBlocking(fd, reply.c_str(), reply.size());
+#ifdef DEBUG
+		debugPrintErrorMessage("Max clients reached.");
+#endif  // DEBUG
 		close(fd);
 		return(-1);
 	} catch (std::exception& e) {

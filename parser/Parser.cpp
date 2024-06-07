@@ -207,10 +207,11 @@ int	Parser::validRegisterNick(const User& user, const std::vector<Token>& tokens
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			throw std::invalid_argument("validRegisterNick");
 		}
-		if (tokens[1].getValue().size() > 9) {
-			reply += Reply::errOneUsNickName(kERR_ERRONEUSNICKNAME, "*", tokens[1].getValue());
+		ValidParam	validParam;
+		if (validParam.isNickName(tokens[1].getValue()) == false) {
+			reply += Reply::errErroneusNickName(kERR_ERRONEUSNICKNAME, "*", tokens[1].getValue());
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
-			throw std::invalid_argument("cmdNick");
+			throw std::invalid_argument("validRegisterNick");
 		}
 		this->parsed_.setParam(tokens[1].getType(), kNickName, tokens[1].getValue());
 		return (0);
@@ -233,8 +234,9 @@ int	Parser::validNick(const User& user, const std::vector<Token>& tokens, const 
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
-		if (tokens[1].getValue().size() > 9) {
-			reply += Reply::errOneUsNickName(kERR_ERRONEUSNICKNAME, user.getPrefixName(), tokens[1].getValue());
+		ValidParam	validParam;
+		if (validParam.isNickName(tokens[1].getValue()) == false) {
+			reply += Reply::errErroneusNickName(kERR_ERRONEUSNICKNAME, user.getPrefixName(), tokens[1].getValue());
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}
@@ -302,6 +304,12 @@ int	Parser::validJoin(const User& user, const std::vector<Token>& tokens, const 
 
 		if (tokens.size() < 2 || tokens.size() > 3) {
 			reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user.getPrefixName(), "JOIN");
+			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+			return (-1);
+		}
+		ValidParam	validParam;
+		if (validParam.isChannel(tokens[1].getValue()) == false) {
+			reply += Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user.getPrefixName(), tokens[1].getValue());
 			Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
 			return (-1);
 		}

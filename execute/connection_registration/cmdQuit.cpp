@@ -42,8 +42,13 @@ void	Execute::cmdQuit(User* user, const ParsedMsg& parsedMsg, Info* info) {
 				}
 				if ((*channelIt)->getMembers().size() == 0) {
 					info->eraseChannel(info->findChannel((*channelIt)->getName()));
+					if (info->getChannels().size() > 0) {
+						it = info->getChannels().begin();
+					} else {
+						break;
+					}
 				}
-				break;
+				// break;
 			}
 		}
 		std::string	reply = ":" + user->getPrefixName() + " ERROR ";

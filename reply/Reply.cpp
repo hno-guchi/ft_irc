@@ -334,7 +334,7 @@ std::string	Reply::errNoNickNameGiven(int num, const std::string& toName) {
 	}
 }
 
-std::string	Reply::errOneUsNickName(int num, const std::string& toName, const std::string& nickName) {
+std::string	Reply::errErroneusNickName(int num, const std::string& toName, const std::string& nickName) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 

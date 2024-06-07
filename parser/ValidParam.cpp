@@ -68,7 +68,7 @@ bool	ValidParam::isPassword(const std::string& password) {
 // digit	=	%x30-39				; 0-9
 // special	=	%x5B-60 / %x7B-7D	; "[", "]", "\", "`", "_", "^", "{", "|", "}"
 bool	ValidParam::isNickName(const std::string& nickName) {
-	if (nickName.size() < 1 || nickName.size() > 8) {
+	if (nickName.size() < 1 || nickName.size() > 9) {
 		return (false);
 	}
 	std::locale	l = std::locale::classic();
