@@ -108,7 +108,7 @@ class Reply {
 	 static std::string	errNoTextToSend(int num, const std::string& toName);
 	 static std::string	errUnknownCommand(int num, const std::string& toName, const std::string& command);
 	 static std::string	errNoNickNameGiven(int num, const std::string& toName);
-	 static std::string	errOneUsNickName(int num, const std::string& toName, const std::string& nickName);
+	 static std::string	errErroneusNickName(int num, const std::string& toName, const std::string& nickName);
 	 static std::string	errNickNameInUse(int num, const std::string& toName, const std::string& nickName);
 	 static std::string	errUserNotInChannel(int num, const std::string& toName, const std::string& nickName, const std::string& channel);
 	 static std::string	errNotOnChannel(int num, const std::string& toName, const std::string& channel);

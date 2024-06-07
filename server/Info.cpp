@@ -108,7 +108,9 @@ void	Info::eraseUser(std::vector<User*>::iterator it) {
 		delete *it;
 		this->users_.erase(it);
 	} catch (std::exception& e) {
+#ifdef DEBUG
 		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
 		throw std::invalid_argument("Info::deleteUser()");
 	}
 }

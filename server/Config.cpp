@@ -21,7 +21,7 @@ const std::string	Config::commandList_[] = {
 };
 
 Config::Config(const std::string& connectPwd) : \
-	maxClient_(5), maxChannel_(5), createdDate_(std::time(NULL)), version_("1"), serverName_("ft_irc.42tokyo.net"), connectPwd_(connectPwd), operPwd_("operpwd"), userModes_("o"), channelModes_("iklot") {
+	maxClient_(5), maxChannel_(3), createdDate_(std::time(NULL)), version_("1"), serverName_("ft_irc.hnoguchi.42tokyo.net"), connectPwd_(connectPwd), operPwd_("operpwd"), userModes_("o"), channelModes_("iklot") {
 }
 
 // Config&	operator=(const Config& rhs) {

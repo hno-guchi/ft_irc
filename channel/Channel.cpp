@@ -8,56 +8,24 @@ Channel::~Channel() {}
 
 // SETTER
 void	Channel::setName(const std::string& name) {
-	// TODO(hnoguchi): バリデーションは別でやる？
-	// if (name.size() == 0 || name.size() > 50) {
-	// 	return;
-	// 	// throw std::invalid_argument("Invalid name");
-	// }
 	this->name_ = name;
 }
 
 void	Channel::setTopic(const std::string& topic) {
-	// TODO(hnoguchi): バリデーションは別でやる？
-	// if (topic.size() == 0 || topic.size() > 100) {
-	// 	return;
-	// 	// throw std::invalid_argument("Invalid topin");
-	// }
 	this->topic_ = topic;
 }
 
 void	Channel::setKey(const std::string& key) {
-	// TODO(hnoguchi): バリデーションは別でやる？
-	// if (key.size() == 0 || key.size() > 30) {
-	// 	return;
-	// 	// throw std::invalid_argument("Invalid key");
-	// }
-	// TODO(hnoguchi): バリデーションは別でやる？
-	// if (!(this->modes_ & kKey)) {
-	// 	return;
-	// 	// throw std::invalid_argument("Channel is not mode key protected.");
-	// }
 	this->key_ = key;
 }
 
 void	Channel::setLimit(int limit) {
-	// TODO(hnoguchi): バリデーションは別でやる？
-	// if (limit < 0 || limit > 5) {
-	// 	return;
-	// 	// throw std::invalid_argument("Invalid limit");
-	// }
-	// TODO(hnoguchi): バリデーションは別でやる？
-	// if ((this->modes_ & kLimit) == 0) {
-	// 	return;
-	// 	// throw std::invalid_argument("Channel is not mode limit protected.");
-	// }
 	this->limit_ = limit;
 }
 
 void	Channel::setMode(kChannelMode mode) {
-	// TODO(hnoguchi): バリデーションは別でやる？
 	if (this->modes_ & mode) {
 		return;
-		// throw std::invalid_argument(Channel is already set to this mode.);
 	}
 	this->modes_ |= mode;
 }
@@ -122,7 +90,7 @@ void	Channel::pushBackOperator(User* user) {
 	}
 }
 
-void	Channel::eraseMember	(User* user) {
+void	Channel::eraseMember(User* user) {
 	for (std::vector<User*>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
 		if (*it == user) {
 			this->members_.erase(it);
@@ -131,7 +99,7 @@ void	Channel::eraseMember	(User* user) {
 	}
 }
 
-void	Channel::eraseInvited	(User* user) {
+void	Channel::eraseInvited(User* user) {
 	for (std::vector<User*>::iterator it = this->invited_.begin(); it != this->invited_.end(); it++) {
 		if (*it == user) {
 			this->invited_.erase(it);
@@ -140,7 +108,7 @@ void	Channel::eraseInvited	(User* user) {
 	}
 }
 
-void	Channel::eraseOperator	(User* user) {
+void	Channel::eraseOperator(User* user) {
 	for (std::vector<User*>::iterator it = this->operators_.begin(); it != this->operators_.end(); it++) {
 		if (*it == user) {
 			this->operators_.erase(it);
