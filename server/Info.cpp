@@ -111,7 +111,43 @@ void	Info::eraseUser(std::vector<User*>::iterator it) {
 #ifdef DEBUG
 		debugPrintErrorMessage(e.what());
 #endif  // DEBUG
-		throw std::invalid_argument("Info::deleteUser()");
+		throw std::invalid_argument("Info::eraseUser()");
+	}
+}
+
+void	Info::eraseUserInChannel(User* user, Channel* channel) {
+	try {
+		if (!channel->isMember(user->getNickName())) {
+			return;
+		}
+		channel->eraseMember(user);
+		channel->eraseInvited(user);
+		channel->eraseOperator(user);
+	} catch (std::exception& e) {
+#ifdef DEBUG
+		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
+		throw std::invalid_argument("Info::eraseUserInChannel()");
+	}
+}
+
+void	Info::eraseUserInChannels(User* user) {
+	try {
+		std::vector<Channel*>::iterator it = this->channels_.begin();
+		while (it != this->channels_.end()) {
+			this->eraseUserInChannel(user, *it);
+			if ((*it)->getMembers().size() == 0) {
+				this->eraseChannel(it);
+				it = this->channels_.begin();
+			} else {
+				it++;
+			}
+		}
+	} catch (std::exception& e) {
+#ifdef DEBUG
+		debugPrintErrorMessage(e.what());
+#endif  // DEBUG
+		throw std::invalid_argument("Info::eraseUserInChannels()");
 	}
 }
 

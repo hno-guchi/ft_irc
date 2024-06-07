@@ -75,8 +75,9 @@ void	Execute::exec(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		} else if (parsedMsg.getCommand() == "MODE") {
 			if (info->findUser(parsedMsg.getParams()[0].getValue()) != info->getUsers().end()) {
 				this->cmdUserMode(user, parsedMsg, info);
+			} else {
+				this->cmdChannelMode(user, parsedMsg, info);
 			}
-			this->cmdChannelMode(user, parsedMsg, info);
 		} else if (parsedMsg.getCommand() == "PRIVMSG") {
 			this->cmdPrivmsg(user, parsedMsg, info);
 		} else if (parsedMsg.getCommand() == "NOTICE") {
