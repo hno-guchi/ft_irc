@@ -40,27 +40,30 @@ class Channel {
 	 void						unsetMode(kChannelMode mode);
 
 	 // GETTER
-	const std::string&			getName() const;
-	const std::string&			getTopic() const;
-	const std::string&			getKey() const;
-	int							getLimit() const;
-	unsigned int				getModes() const;
-	const std::vector<User*>&	getMembers() const;
-	const std::vector<User*>&	getInvited() const;
-	const std::vector<User*>&	getOperators() const;
+	 const std::string&			getName() const;
+	 const std::string&			getTopic() const;
+	 const std::string&			getKey() const;
+	 int							getLimit() const;
+	 unsigned int				getModes() const;
+	 const std::vector<User*>&	getMembers() const;
+	 const std::vector<User*>&	getInvited() const;
+	 const std::vector<User*>&	getOperators() const;
 
-	void						pushBackMember(User* user);
-	void						pushBackInvited(User* user);
-	void						pushBackOperator(User* user);
-	void						eraseMember(User* user);
-	void						eraseInvited(User* user);
-	void						eraseOperator(User* user);
-	bool						isMember(const std::string& name) const;
-	bool						isInvited(const std::string& name) const;
-	bool						isOperator(const std::string& name) const;
-	void						resetData();
-	// debug
-	void						debugPrintChannel() const;
+	 void						pushBackMember(User* user);
+	 void						pushBackInvited(User* user);
+	 void						pushBackOperator(User* user);
+	 void						eraseMember(User* user);
+	 void						eraseInvited(User* user);
+	 void						eraseOperator(User* user);
+	 bool						isMember(User* user) const;
+	 bool						isMember(const std::string& name) const;
+	 bool						isInvited(const std::string& name) const;
+	 bool						isInvited(User* user) const;
+	 bool						isOperator(const std::string& name) const;
+	 bool						isOperator(User* user) const;
+	 void						resetData();
+	 // debug
+	 void						debugPrintChannel() const;
 };
 
 #endif  // CHANNEL_HPP

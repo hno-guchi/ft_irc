@@ -39,8 +39,7 @@ void	Execute::cmdPart(User* user, const ParsedMsg& parsedMsg, Info* info) {
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
-		(*channelIt)->eraseMember(user);
-		(*channelIt)->eraseOperator(user);
+		info->eraseUserInChannel(user, *channelIt);
 		std::string	message = ":" + user->getPrefixName() + " PART " + (*channelIt)->getName();
 		if (parsedMsg.getParams().size() > 1) {
 			message += " " + parsedMsg.getParams()[1].getValue();

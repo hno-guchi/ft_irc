@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "./Channel.hpp"
 #include "../color.hpp"
 #include "../user/User.hpp"
@@ -91,51 +92,46 @@ void	Channel::pushBackOperator(User* user) {
 }
 
 void	Channel::eraseMember(User* user) {
-	for (std::vector<User*>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
-		if (*it == user) {
-			this->members_.erase(it);
-			return;
-		}
+	if (std::find(this->members_.begin(), this->members_.end(), user) == this->members_.end()) {
+		return;
 	}
+	this->members_.erase(std::find(this->members_.begin(), this->members_.end(), user));
 }
 
 void	Channel::eraseInvited(User* user) {
-	for (std::vector<User*>::iterator it = this->invited_.begin(); it != this->invited_.end(); it++) {
-		if (*it == user) {
-			this->invited_.erase(it);
-			return;
-		}
+	if (std::find(this->invited_.begin(), this->invited_.end(), user) == this->invited_.end()) {
+		return;
 	}
+	this->invited_.erase(std::find(this->invited_.begin(), this->invited_.end(), user));
 }
 
 void	Channel::eraseOperator(User* user) {
-	for (std::vector<User*>::iterator it = this->operators_.begin(); it != this->operators_.end(); it++) {
-		if (*it == user) {
-			this->operators_.erase(it);
-			return;
-		}
+	if (std::find(this->operators_.begin(), this->operators_.end(), user) == this->operators_.end()) {
+		return;
 	}
+	this->operators_.erase(std::find(this->operators_.begin(), this->operators_.end(), user));
 }
 
 void	Channel::resetData() {
 	try {
-	 	this->name_ = "";
-	 	this->topic_ = "";
-	 	this->key_ = "";
-	 	this->limit_ = -1;
-	 	this->modes_ = 0;
-		for (std::vector<User*>::iterator it = this->members_.begin(); it != this->members_.end(); it++) {
-			this->members_.erase(it);
-		}
-		for (std::vector<User*>::iterator it = this->invited_.begin(); it != this->invited_.end(); it++) {
-			this->invited_.erase(it);
-		}
-		for (std::vector<User*>::iterator it = this->operators_.begin(); it != this->operators_.end(); it++) {
-			this->operators_.erase(it);
-		}
+		this->name_ = "";
+		this->topic_ = "";
+		this->key_ = "";
+		this->limit_ = -1;
+		this->modes_ = 0;
+		this->members_.clear();
+		this->invited_.clear();
+		this->operators_.clear();
 	} catch (std::exception& e) {
 		throw;
 	}
+}
+
+bool	Channel::isMember(User* user) const {
+	if (std::find(this->members_.begin(), this->members_.end(), user) == this->members_.end()) {
+		return (false);
+	}
+	return (true);
 }
 
 bool	Channel::isMember(const std::string& name) const {
@@ -145,6 +141,13 @@ bool	Channel::isMember(const std::string& name) const {
 		}
 	}
 	return (false);
+}
+
+bool	Channel::isInvited(User* user) const {
+	if (std::find(this->invited_.begin(), this->invited_.end(), user) == this->invited_.end()) {
+		return (false);
+	}
+	return (true);
 }
 
 bool	Channel::isInvited(const std::string& name) const {
@@ -157,12 +160,19 @@ bool	Channel::isInvited(const std::string& name) const {
 }
 
 bool	Channel::isOperator(const std::string& name) const {
-	for (std::vector<User*>::const_iterator it = this->getOperators().begin(); it != this->getOperators().end(); it++) {
+	for (std::vector<User*>::const_iterator it = this->operators_.begin(); it != this->operators_.end(); it++) {
 		if ((*it)->getNickName() == name) {
 			return (true);
 		}
 	}
 	return (false);
+}
+
+bool	Channel::isOperator(User* user) const {
+	if (std::find(this->operators_.begin(), this->operators_.end(), user) == this->operators_.end()) {
+		return (false);
+	}
+	return (true);
 }
 
 void	Channel::debugPrintChannel() const {
