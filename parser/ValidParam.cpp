@@ -175,11 +175,11 @@ bool	ValidParam::isChannel(const std::string& channel) {
 // chanstring	=	%x01-07 / %x08-09 / %x0B-0C / %x0E-1F / %x21-2B / %x2D-39 / %x3B-FF
 // ; any octet except NUL, BELL, CR, LF, " ", "," and ":"
 bool	ValidParam::isMessage(const std::string& message) {
-	if (message.size() > 510) {
+	if (message.size() > 400) {
 		return (false);
 	}
 	for (size_t i = 0; i < message.size(); i++) {
-		if (!this->isChanStringChar(message[i])) {
+		if (!this->isChanStringChar(message[i]) && message[i] != ' ') {
 			return (false);
 		}
 	}
@@ -192,8 +192,8 @@ bool	ValidParam::isTopic(const std::string& topic) {
 	if (topic.size() > 30) {
 		return (false);
 	}
-	for (size_t i = 0; i < topic.size(); i++) {
-		if (!this->isChanStringChar(topic[i])) {
+	for (size_t i = 1; i < topic.size(); i++) {
+		if (!this->isChanStringChar(topic[i]) && topic[i] != ' ') {
 			return (false);
 		}
 	}

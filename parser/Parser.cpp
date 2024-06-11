@@ -400,6 +400,12 @@ int	Parser::validTopic(const User& user, const std::vector<Token>& tokens, const
 		}
 		this->parsed_.setParam(tokens[1].getType(), kChannel, this->toLowerString(tokens[1].getValue()));
 		if (tokens.size() == 3) {
+			ValidParam	validParam;
+			if (validParam.isTopic(tokens[2].getValue()) == false) {
+				reply += Reply::errNoTextToSend(kERR_NOTEXTTOSEND, user.getPrefixName());
+				Server::sendNonBlocking(user.getFd(), reply.c_str(), reply.size());
+				return (-1);
+			}
 			this->parsed_.setParam(tokens[2].getType(), kTopic, tokens[2].getValue());
 		}
 		return (0);

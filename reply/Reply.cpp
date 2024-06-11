@@ -111,13 +111,30 @@ std::string	Reply::rplUModeIs(int num, const std::string& toName, const User& us
 }
 
 // 324	RPL_CHANNELMODEIS	<channel> <mode> <mode params>
-std::string	Reply::rplChannelModeIs(int num, const std::string& toName, const std::string& channel, const char mode, const std::string& param) {
+std::string	Reply::rplChannelModeIs(int num, const std::string& toName, const Channel& channel) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
-		message += channel + " " + mode;
-		if (!param.empty()) {
-			message += " " + param;
+		message += channel.getName() + " +";
+		if (channel.getModes() & kInviteOnly) {
+			message += "i";
+		}
+		if (channel.getModes() & kKeySet) {
+			message += "k";
+		}
+		if (channel.getModes() & kLimit) {
+			message += "l";
+		}
+		if (channel.getModes() & kRestrictTopicSetting) {
+			message += "t";
+		}
+		if (channel.getModes() & kKeySet) {
+			message += " " + channel.getKey();
+		}
+		if (channel.getModes() & kLimit) {
+			std::stringstream	ss;
+			ss << channel.getLimit();
+			message += " " + ss.str();
 		}
 		message += Reply::delimiter_;
 		return (message);
@@ -146,7 +163,7 @@ std::string	Reply::rplTopic(int num, const std::string& toName, const std::strin
 		// std::string	message = "332 " + channel + " :" + topic;
 		std::string	message = Reply::rplCmdToName(num, toName);
 
-		message += channel + " :" + topic;
+		message += channel + " " + topic;
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {
@@ -530,11 +547,11 @@ std::string	Reply::errNoChanModes(int num, const std::string& toName, const std:
 	}
 }
 
-std::string	Reply::errChanOprivsNeeded(int num, const std::string& toName, const std::string& nickName, const std::string& channel) {
+std::string	Reply::errChanOprivsNeeded(int num, const std::string& toName, const std::string& channel) {
 	try {
 		std::string	message = Reply::rplCmdToName(num, toName);
 
-		message += nickName + " " + channel + " :You're not channel operator";
+		message += channel + " :You're not channel operator";
 		message += Reply::delimiter_;
 		return (message);
 	} catch (const std::exception& e) {

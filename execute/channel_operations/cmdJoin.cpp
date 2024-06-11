@@ -43,13 +43,6 @@ void	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		std::vector<Channel*>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
 		// <channel>が存在する場合
 		if (channelIt != info->getChannels().end()) {
-			if ((*channelIt)->getModes() & kLimit) {
-				if ((*channelIt)->getMembers().size() >= static_cast<unsigned long>((*channelIt)->getLimit())) {
-					reply += Reply::errChannelIsFull(kERR_CHANNELISFULL, user->getPrefixName(), (*channelIt)->getName());
-					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
-					return;
-				}
-			}
 			if ((*channelIt)->getModes() & kInviteOnly) {
 				if (!(*channelIt)->isInvited(user->getNickName())) {
 					reply += Reply::errInviteOnlyChan(kERR_INVITEONLYCHAN, user->getPrefixName(), (*channelIt)->getName());
@@ -58,8 +51,7 @@ void	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info) {
 				}
 				(*channelIt)->eraseInvited(*info->findUser(user->getNickName()));
 			}
-			if ((*channelIt)->getModes() & kKey) {
-					// std::cerr << "[" << parsedMsg.getParams()[1].getValue() <<"] | [" << (*channelIt)->getKey() << "]" << std::endl;
+			if ((*channelIt)->getModes() & kKeySet) {
 				if (parsedMsg.getParams().size() < 2) {
 					reply += Reply::errBadChannelKey(kERR_BADCHANNELKEY, user->getPrefixName(), (*channelIt)->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
@@ -67,6 +59,13 @@ void	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info) {
 				}
 				if (parsedMsg.getParams()[1].getValue() != (*channelIt)->getKey()) {
 					reply += Reply::errBadChannelKey(kERR_BADCHANNELKEY, user->getPrefixName(), (*channelIt)->getName());
+					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+					return;
+				}
+			}
+			if ((*channelIt)->getModes() & kLimit) {
+				if ((*channelIt)->getMembers().size() >= static_cast<unsigned long>((*channelIt)->getLimit())) {
+					reply += Reply::errChannelIsFull(kERR_CHANNELISFULL, user->getPrefixName(), (*channelIt)->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}

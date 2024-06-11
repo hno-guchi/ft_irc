@@ -46,7 +46,7 @@ void	Execute::cmdKick(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		}
 		// userがchannel operatorか確認
 		if (!(*channelIt)->isOperator(user->getNickName())) {
-			reply += Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getPrefixName(), user->getNickName(), parsedMsg.getParams()[0].getValue());
+			reply += Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}

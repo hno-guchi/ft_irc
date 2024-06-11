@@ -92,7 +92,7 @@ class Reply {
 	 static std::string	rplWelcome(const Info& info, const User& user);
 
 	 static std::string	rplUModeIs(int num, const std::string& toName, const User& user);
-	 static std::string	rplChannelModeIs(int num, const std::string& toName, const std::string& channel, const char mode, const std::string& param);
+	 static std::string	rplChannelModeIs(int num, const std::string& toName, const Channel& channel);
 	 static std::string	rplNoTopic(int num, const std::string& toName, const std::string& channel);
 	 static std::string	rplTopic(int num, const std::string& toName, const std::string& channel, const std::string& topic);
 	 static std::string	rplInviting(int num, const std::string& toName, const std::string& channel, const std::string& nickName);
@@ -123,7 +123,7 @@ class Reply {
 	 static std::string	errInviteOnlyChan(int num, const std::string& toName, const std::string& channel);
 	 static std::string	errBadChannelKey(int num, const std::string& toName, const std::string& channel);
 	 static std::string	errNoChanModes(int num, const std::string& toName, const std::string& nickName, const std::string& channel);
-	 static std::string	errChanOprivsNeeded(int num, const std::string& toName, const std::string& nickName, const std::string& channel);
+	 static std::string	errChanOprivsNeeded(int num, const std::string& toName, const std::string& channel);
 	 static std::string	errRestricted(int num, const std::string& toName);
 	 static std::string	errUModeUnknownFlag(int num, const std::string& toName);
 	 static std::string	errUsersDontMatch(int num, const std::string& toName);

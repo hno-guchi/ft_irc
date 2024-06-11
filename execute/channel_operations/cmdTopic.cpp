@@ -38,12 +38,6 @@ void	Execute::cmdTopic(User* user, const ParsedMsg& parsedMsg, Info* info) {
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
-		// userがchannel operatorか確認
-		if (!(*channelIt)->isOperator(user->getNickName())) {
-			reply += Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getPrefixName(), user->getNickName(), parsedMsg.getParams()[0].getValue());
-			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
-			return;
-		}
 		// <topic>がない場合、RPL_(NO)TOPICを返す
 		if (parsedMsg.getParams().size() == 1) {
 			if ((*channelIt)->getTopic().empty()) {
@@ -63,14 +57,17 @@ void	Execute::cmdTopic(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		}
 		// <channel>にt modeが設定されているか確認
 		if ((*channelIt)->getModes() & kRestrictTopicSetting) {
-			reply += Reply::errNoChanModes(kERR_NOCHANMODES, user->getPrefixName(), user->getNickName(), parsedMsg.getParams()[0].getValue());
-			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
-			return;
+			// userがchannel operatorか確認
+			if (!(*channelIt)->isOperator(user)) {
+				reply += Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
+				Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+				return;
+			}
 		}
 		// topicの設定を実行
 		(*channelIt)->setTopic(parsedMsg.getParams()[1].getValue());
 		// <channel>のメンバにtopicの変更を通知
-		std::string	msg = ":" + user->getNickName() + " TOPIC " + (*channelIt)->getName() + " :" + (*channelIt)->getTopic() + Reply::getDelimiter();
+		std::string	msg = ":" + user->getPrefixName() + " TOPIC " + (*channelIt)->getName() + " " + (*channelIt)->getTopic() + Reply::getDelimiter();
 		for (std::vector<User*>::const_iterator	memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
 			Server::sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 		}
