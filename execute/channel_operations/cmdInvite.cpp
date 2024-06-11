@@ -38,7 +38,7 @@ void	Execute::cmdInvite(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		}
 		// UserがChannel Operatorか確認
 		if (!(*channelIt)->isOperator(user->getNickName())) {
-			reply += Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getPrefixName(), user->getNickName(), parsedMsg.getParams()[1].getValue());
+			reply += Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getPrefixName(), parsedMsg.getParams()[1].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
@@ -61,7 +61,9 @@ void	Execute::cmdInvite(User* user, const ParsedMsg& parsedMsg, Info* info) {
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
-		(*channelIt)->pushBackInvited(*info->findUser((*targetUserIt)->getNickName()));
+		if (!(*channelIt)->isInvited(*info->findUser((*targetUserIt)->getNickName()))) {
+			(*channelIt)->pushBackInvited(*info->findUser((*targetUserIt)->getNickName()));
+		}
 		std::string	msg = ":" + user->getPrefixName() + " INVITE " + (*targetUserIt)->getNickName() + " " + (*channelIt)->getName() + Reply::getDelimiter();
 		Server::sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
 		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
