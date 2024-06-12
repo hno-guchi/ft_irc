@@ -52,6 +52,7 @@
 #include "../../debug/debug.hpp"
 #include "../../user/User.hpp"
 #include "../../parser/Parser.hpp"
+#include "../../parser/ValidParam.hpp"
 #include "../../server/Server.hpp"
 #include "../../server/Info.hpp"
 #include "../../reply/Reply.hpp"
@@ -88,11 +89,11 @@ void	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info)
 		std::string	msg = ":" + user->getPrefixName() + " MODE " + (*channelIt)->getName() + " " + parsedMsg.getParams()[1].getValue();
 		if (parsedMsg.getParams()[1].getValue()[0] == '+') {
 			if (parsedMsg.getParams()[1].getValue()[1] == 'i') {
-				// TODO(hnoguchi): Change prefix
+				if ((*channelIt)->getModes() & kInviteOnly) {
+					return;
+				}
 				(*channelIt)->setMode(kInviteOnly);
-				msg += Reply::getDelimiter();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'k') {
-				// keyフラグが既に立っているか確認する。
 				if ((*channelIt)->getModes() & kKeySet) {
 					reply += Reply::errKeySet(kERR_KEYSET, user->getPrefixName(), user->getNickName(), (*channelIt)->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
@@ -103,11 +104,15 @@ void	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info)
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
-				// TODO(hnoguchi): Validate string key
+				ValidParam	validParam;
+				if (!validParam.isKey(parsedMsg.getParams()[2].getValue())) {
+					reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getPrefixName(), parsedMsg.getCommand());
+					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
+					return;
+				}
 				(*channelIt)->setKey(parsedMsg.getParams()[2].getValue());
 				(*channelIt)->setMode(kKeySet);
-				msg += " " + parsedMsg.getParams()[2].getValue() + Reply::getDelimiter();
-				// std::cerr << "key: " << (*channelIt)->getKey() << std::endl;
+				msg += " " + parsedMsg.getParams()[2].getValue();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'l') {
 				if (parsedMsg.getParams().size() < 3) {
 					reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getPrefixName(), parsedMsg.getCommand());
@@ -122,7 +127,7 @@ void	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info)
 				}
 				(*channelIt)->setLimit(limit);
 				(*channelIt)->setMode(kLimit);
-				msg += " " + parsedMsg.getParams()[2].getValue() + Reply::getDelimiter();
+				msg += " " + parsedMsg.getParams()[2].getValue();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'o') {
 				if (parsedMsg.getParams().size() < 3) {
 					reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getPrefixName(), parsedMsg.getCommand());
@@ -134,26 +139,37 @@ void	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info)
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
+				if ((*channelIt)->isOperator(*info->findUser(parsedMsg.getParams()[2].getValue()))) {
+					return;
+				}
 				(*channelIt)->pushBackOperator(*info->findUser(parsedMsg.getParams()[2].getValue()));
-				msg += " " + parsedMsg.getParams()[2].getValue() + Reply::getDelimiter();
-				// Server::sendNonBlocking(*((*targetUserIt)->getFd()), msg.c_str(), msg.size());
+				msg += " " + parsedMsg.getParams()[2].getValue();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
+				if ((*channelIt)->getModes() & kRestrictTopicSetting) {
+					return;
+				}
 				(*channelIt)->setMode(kRestrictTopicSetting);
-				msg += Reply::getDelimiter();
 			}
+			msg += Reply::getDelimiter();
 		} else if (parsedMsg.getParams()[1].getValue()[0] == '-') {
 			if (parsedMsg.getParams()[1].getValue()[1] == 'i') {
-				// TODO(hnoguchi): Change prefix
+				if (!((*channelIt)->getModes() & kInviteOnly)) {
+					return;
+				}
 				(*channelIt)->unsetMode(kInviteOnly);
-				msg += Reply::getDelimiter();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'k') {
+				if (!((*channelIt)->getModes() & kKeySet)) {
+					return;
+				}
 				(*channelIt)->setKey("");
 				(*channelIt)->unsetMode(kKeySet);
-				msg += " *" + Reply::getDelimiter();
+				msg += " *";
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'l') {
+				if (!((*channelIt)->getModes() & kLimit)) {
+					return;
+				}
 				(*channelIt)->setLimit(-1);
 				(*channelIt)->unsetMode(kLimit);
-				msg += Reply::getDelimiter();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'o') {
 				if (parsedMsg.getParams().size() < 3) {
 					reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getPrefixName(), parsedMsg.getCommand());
@@ -169,12 +185,14 @@ void	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info)
 					return;
 				}
 				(*channelIt)->eraseOperator(*info->findUser(parsedMsg.getParams()[2].getValue()));
-				msg += " " + parsedMsg.getParams()[2].getValue() + Reply::getDelimiter();
-				// Server::sendNonBlocking((*info->findUser(parsedMsg.getParams()[2].getValue()))->getFd(), msg.c_str(), msg.size());
+				msg += " " + parsedMsg.getParams()[2].getValue();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
+				if (!((*channelIt)->getModes() & kRestrictTopicSetting)) {
+					return;
+				}
 				(*channelIt)->unsetMode(kRestrictTopicSetting);
-				msg += Reply::getDelimiter();
 			}
+			msg += Reply::getDelimiter();
 		}
 		for (std::vector<User*>::const_iterator it = (*channelIt)->getMembers().begin(); it != (*channelIt)->getMembers().end(); it++) {
 			Server::sendNonBlocking((*it)->getFd(), msg.c_str(), msg.size());
