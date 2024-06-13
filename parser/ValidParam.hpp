@@ -5,7 +5,15 @@
 # include "./IsChar.hpp"
 
 class ValidParam : private IsChar {
+ private:
+	 explicit ValidParam(const ValidParam& src);
+	 ValidParam& operator=(const ValidParam& rhs);
+
  public:
+	 // CONSTRUCTOR & DESTRUCTOR
+	 ValidParam();
+	 ~ValidParam();
+
 	 bool	isMiddle(const std::string &middle);
 	 bool	isTrailing(const std::string &trailing);
 

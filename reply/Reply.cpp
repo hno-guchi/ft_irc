@@ -4,10 +4,6 @@
 
 const std::string	Reply::delimiter_ = "\r\n";
 
-// CONSTRUCTOR & DESTRUCTOR
-// Reply::Reply() {}
-// Reply::~Reply() {}
-
 const std::string&	Reply::getDelimiter() {
 	return (Reply::delimiter_);
 }

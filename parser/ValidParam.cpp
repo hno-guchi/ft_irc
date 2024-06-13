@@ -5,6 +5,10 @@
 #include "./IsChar.hpp"
 #include "../color.hpp"
 
+// CONSTRUCTOR & DESTRUCTOR
+ValidParam::ValidParam() {}
+ValidParam::~ValidParam() {}
+
 // middle		=	nospcrlfcl *( ":" / nospcrlfcl )
 // nospcrlfcl	=	%x01-09 / %x0B-0C / %x0E-1F / %x21-39 / %x3B-FF
 // ; any octet except NUL, CR, LF, " " and ":"

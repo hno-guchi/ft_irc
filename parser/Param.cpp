@@ -3,7 +3,22 @@
 #include "./Token.hpp"
 
 Param::Param() {}
+
+Param::Param(const Param& src) {
+	this->operator=(src);
+}
+
 Param::~Param() {}
+
+Param& Param::operator=(const Param& rhs) {
+	if (this == &rhs) {
+		return (*this);
+	}
+	this->tType_ = rhs.getTokenType();
+	this->pType_ = rhs.getParamType();
+	this->value_ = rhs.getValue();
+	return (*this);
+}
 
 void	Param::setTokenType(const kTokenType type) {
 	this->tType_ = type;
