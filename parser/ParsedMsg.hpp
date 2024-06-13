@@ -8,21 +8,24 @@
 
 class ParsedMsg {
  private:
-	std::string			command_;
-	std::vector<Param>	params_;
+	 std::string			command_;
+	 std::vector<Param>	params_;
 
+	 explicit ParsedMsg(const ParsedMsg& src);
+	 ParsedMsg& operator=(const ParsedMsg& rhs);
  public:
-	ParsedMsg();
-	~ParsedMsg();
+	 // CONSTRUCTOR & DESTRUCTOR
+	 ParsedMsg();
+	 ~ParsedMsg();
 
-	// SETTER
-	void						setCommand(const std::string& command);
-	void						setParam(kTokenType tType, kParamType pType, const std::string& value);
-	// GETTER
-	const std::string&			getCommand() const;
-	const std::vector<Param>&	getParams() const;
-	// debug
-	void						printParsedMsg() const;
+	 // SETTER
+	 void						setCommand(const std::string& command);
+	 void						setParam(kTokenType tType, kParamType pType, const std::string& value);
+	 // GETTER
+	 const std::string&			getCommand() const;
+	 const std::vector<Param>&	getParams() const;
+	 // debug
+	 void						printParsedMsg() const;
 };
 
 #endif  // PARSEDMSG_HPP

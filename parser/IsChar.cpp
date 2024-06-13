@@ -11,6 +11,10 @@
 // 	return (!std::isdigit(c, l));
 // }
 
+// CONSTRUCTOR & DESTRUCTOR
+IsChar::IsChar() {}
+IsChar::~IsChar() {}
+
 // special	=	%x5B-60 / %x7B-7D	; "[", "]", "\", "`", "_", "^", "{", "|", "}"
 bool	IsChar::isSpecial(const char c) {
 	if (c >= 91 && c <= 96) {

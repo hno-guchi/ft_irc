@@ -29,7 +29,7 @@ class Server {
 	 void						handleReceivedData(User* user);
 	 std::vector<std::string>	split(const std::string& message, User* user);
 
-	 explicit Server(const Server& rhs);
+	 explicit Server(const Server& src);
 	 Server& operator=(const Server& rhs);
 
  public:

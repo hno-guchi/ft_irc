@@ -4,7 +4,14 @@
 # include <string>
 
 class IsChar {
+ private:
+	 explicit IsChar(const IsChar& src);
+	 IsChar& operator=(const IsChar& rhs);
+
  public:
+	 // CONSTRUCTOR & DESTRUCTOR
+	 IsChar();
+	 ~IsChar();
 	 // static bool	isNotAlpha(const char c);
 	 // static bool	isNotDigit(const char c);
 	 bool	isSpecial(const char c);

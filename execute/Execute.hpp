@@ -27,6 +27,9 @@ class Execute {
 	 void	cmdKick(User* user, const ParsedMsg& parsedMsg, Info* info);
 	 void	cmdTopic(User* user, const ParsedMsg& parsedMsg, Info* info);
 
+	 explicit Execute(const Execute& src);
+	 Execute& operator=(const Execute& rhs);
+
  public:
 	 Execute();
 	 ~Execute();

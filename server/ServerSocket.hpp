@@ -14,6 +14,9 @@ class ServerSocket {
 	 struct sockaddr_in		address_;
 	 // socklen_tはコンパイラによってエラー。intの場合もある。
 	 socklen_t				addressLen_;
+
+	 explicit ServerSocket(const ServerSocket& src);
+	 ServerSocket& operator=(const ServerSocket& rhs);
  public:
 	 explicit ServerSocket(unsigned short port);
 	 ~ServerSocket();
