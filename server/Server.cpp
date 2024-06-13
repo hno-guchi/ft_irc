@@ -127,6 +127,7 @@ void	Server::handleClientSocket() {
 	try {
 		for (int i = 1; i <= this->info_.getMaxClient(); ++i) {
 			if (this->fds_[i].fd != -1 && this->fds_[i].revents & (POLLHUP | POLLERR)) {
+				this->info_.eraseUserInChannels(*this->info_.findUser(this->fds_[i].fd));
 				this->info_.eraseUser(this->info_.findUser(this->fds_[i].fd));
 				continue;
 			}
@@ -177,6 +178,7 @@ void	Server::handleReceivedData(User* user) {
 		}
 	} catch (std::exception& e) {
 		// TODO(hnoguchi): メッセージ受信に失敗したことをユーザに通知（メッセージを送信）する？
+		this->info_.eraseUserInChannels(user);
 		this->info_.eraseUser(this->info_.findUser(user->getFd()));
 		throw;
 	}
