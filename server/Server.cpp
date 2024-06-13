@@ -127,12 +127,12 @@ void	Server::handleClientSocket() {
 	try {
 		for (int i = 1; i <= this->info_.getMaxClient(); ++i) {
 			if (this->fds_[i].fd != -1 && this->fds_[i].revents & (POLLHUP | POLLERR)) {
-				this->info_.eraseUserInChannels(*this->info_.findUser(this->fds_[i].fd));
+				this->info_.eraseUserInChannels(this->info_.findUser(this->fds_[i].fd));
 				this->info_.eraseUser(this->info_.findUser(this->fds_[i].fd));
 				continue;
 			}
 			if (this->fds_[i].fd != -1 && (this->fds_[i].revents & POLLIN)) {
-				handleReceivedData(*this->info_.findUser(this->fds_[i].fd));
+				handleReceivedData(this->info_.findUser(this->fds_[i].fd));
 #ifdef DEBUG
 				this->info_.debugPrintInfo();
 #endif  // DEBUG

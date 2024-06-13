@@ -40,58 +40,58 @@ void	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		std::string	reply = Reply::rplFromName(info->getServerName());
 		// channelを探す
-		std::vector<Channel*>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
+		Channel*	channel = info->findChannel(parsedMsg.getParams()[0].getValue());
 		// <channel>が存在する場合
-		if (channelIt != info->getChannels().end()) {
-			if ((*channelIt)->getModes() & kInviteOnly) {
-				if (!(*channelIt)->isInvited(user->getNickName())) {
-					reply += Reply::errInviteOnlyChan(kERR_INVITEONLYCHAN, user->getPrefixName(), (*channelIt)->getName());
+		if (channel != NULL) {
+			if (channel->getModes() & kInviteOnly) {
+				if (!channel->isInvited(user->getNickName())) {
+					reply += Reply::errInviteOnlyChan(kERR_INVITEONLYCHAN, user->getPrefixName(), channel->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
-				(*channelIt)->eraseInvited(*info->findUser(user->getNickName()));
+				channel->eraseInvited(user);
 			}
-			if ((*channelIt)->getModes() & kKeySet) {
+			if (channel->getModes() & kKeySet) {
 				if (parsedMsg.getParams().size() < 2) {
-					reply += Reply::errBadChannelKey(kERR_BADCHANNELKEY, user->getPrefixName(), (*channelIt)->getName());
+					reply += Reply::errBadChannelKey(kERR_BADCHANNELKEY, user->getPrefixName(), channel->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
-				if (parsedMsg.getParams()[1].getValue() != (*channelIt)->getKey()) {
-					reply += Reply::errBadChannelKey(kERR_BADCHANNELKEY, user->getPrefixName(), (*channelIt)->getName());
+				if (parsedMsg.getParams()[1].getValue() != channel->getKey()) {
+					reply += Reply::errBadChannelKey(kERR_BADCHANNELKEY, user->getPrefixName(), channel->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
 			}
-			if ((*channelIt)->getModes() & kLimit) {
-				if ((*channelIt)->getMembers().size() >= static_cast<unsigned long>((*channelIt)->getLimit())) {
-					reply += Reply::errChannelIsFull(kERR_CHANNELISFULL, user->getPrefixName(), (*channelIt)->getName());
+			if (channel->getModes() & kLimit) {
+				if (channel->getMembers().size() >= static_cast<unsigned long>(channel->getLimit())) {
+					reply += Reply::errChannelIsFull(kERR_CHANNELISFULL, user->getPrefixName(), channel->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
 			}
 			// userを<channel>に追加
-			(*channelIt)->pushBackMember(user);
-			std::string	msg = ":" + user->getPrefixName() + " JOIN " + (*channelIt)->getName() + Reply::getDelimiter();
+			channel->pushBackMember(user);
+			std::string	msg = ":" + user->getPrefixName() + " JOIN " + channel->getName() + Reply::getDelimiter();
 #ifdef DEBUG
-			(*channelIt)->debugPrintChannel();
+			channel->debugPrintChannel();
 #endif  // DEBUG
-			for (std::vector<User*>::const_iterator memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
+			for (std::vector<User*>::const_iterator memberIt = channel->getMembers().begin(); memberIt != channel->getMembers().end(); memberIt++) {
 				Server::sendNonBlocking((*memberIt)->getFd(), msg.c_str(), msg.size());
 			}
 			// JOINしたuserへchannel情報(RPL_(NO)TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES)を送信
 			msg = Reply::rplFromName(info->getServerName());
-			if ((*channelIt)->getTopic().size() > 0) {
-				msg += Reply::rplTopic(kRPL_TOPIC, user->getPrefixName(), (*channelIt)->getName(), (*channelIt)->getTopic());
+			if (channel->getTopic().size() > 0) {
+				msg += Reply::rplTopic(kRPL_TOPIC, user->getPrefixName(), channel->getName(), channel->getTopic());
 			} else {
-				msg += Reply::rplNoTopic(kRPL_NOTOPIC, user->getPrefixName(), (*channelIt)->getName());
+				msg += Reply::rplNoTopic(kRPL_NOTOPIC, user->getPrefixName(), channel->getName());
 			}
 			Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 
 			msg = Reply::rplFromName(info->getServerName());
-			msg += Reply::rplNamReply(kRPL_NAMREPLY, user->getPrefixName(), *(*channelIt));
+			msg += Reply::rplNamReply(kRPL_NAMREPLY, user->getPrefixName(), *channel);
 			msg += Reply::rplFromName(info->getServerName());
-			msg += Reply::rplEndOfNames(kRPL_ENDOFNAMES, user->getPrefixName(), (*channelIt)->getName());
+			msg += Reply::rplEndOfNames(kRPL_ENDOFNAMES, user->getPrefixName(), channel->getName());
 			Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 			return;
 		}
@@ -103,29 +103,31 @@ void	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info) {
 			return;
 		}
 		// <channel>を作成
-		info->pushBackChannel(new Channel(parsedMsg.getParams()[0].getValue()));
-		channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
+		channel = new Channel(parsedMsg.getParams()[0].getValue());
+		info->pushBackChannel(channel);
 		// userを追加してメッセージを送信
-		(*channelIt)->pushBackMember(user);
-		(*channelIt)->pushBackOperator(user);
-		std::string	msg = ":" + user->getPrefixName() + " JOIN " + (*channelIt)->getName() + Reply::getDelimiter();
+		channel->pushBackMember(user);
+		channel->pushBackOperator(user);
+		std::string	msg = ":" + user->getPrefixName() + " JOIN " + channel->getName() + Reply::getDelimiter();
 		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-		// TODO(hnoguchi): Send RPL_CHANNELMODEIS
-		// JOINしたuserへchannel情報(RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES)を送信
 		msg = Reply::rplFromName(info->getServerName());
-		if ((*channelIt)->getTopic().size() > 0) {
-			msg += Reply::rplTopic(kRPL_TOPIC, user->getPrefixName(), (*channelIt)->getName(), (*channelIt)->getTopic());
+		if (channel->getTopic().size() > 0) {
+			msg += Reply::rplTopic(kRPL_TOPIC, user->getPrefixName(), channel->getName(), channel->getTopic());
 		} else {
-			msg += Reply::rplNoTopic(kRPL_NOTOPIC, user->getPrefixName(), (*channelIt)->getName());
+			msg += Reply::rplNoTopic(kRPL_NOTOPIC, user->getPrefixName(), channel->getName());
 		}
 		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 		msg = Reply::rplFromName(info->getServerName());
-		msg += Reply::rplNamReply(kRPL_NAMREPLY, user->getPrefixName(), *(*channelIt));
+		msg += Reply::rplNamReply(kRPL_NAMREPLY, user->getPrefixName(), *channel);
 		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 
 		msg = Reply::rplFromName(info->getServerName());
-		msg += Reply::rplEndOfNames(kRPL_ENDOFNAMES, user->getPrefixName(), (*channelIt)->getName());
+		msg += Reply::rplEndOfNames(kRPL_ENDOFNAMES, user->getPrefixName(), channel->getName());
 		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
+		// TODO(hnoguchi): Send RPL_CHANNELMODEIS
+		// msg = Reply::rplFromName(info->getServerName());
+		// msg += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getPrefixName(), *channel);
+		// Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
 	} catch (std::exception& e) {
 #ifdef DEBUG
 		debugPrintErrorMessage(e.what());
