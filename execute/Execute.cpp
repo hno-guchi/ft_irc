@@ -73,7 +73,8 @@ void	Execute::exec(User* user, const ParsedMsg& parsedMsg, Info* info) {
 			this->cmdTopic(user, parsedMsg, info);
 		// TODO(hnoguchi): Paramsのtypeにchannelやuser
 		} else if (parsedMsg.getCommand() == "MODE") {
-			if (info->findUser(parsedMsg.getParams()[0].getValue()) != info->getUsers().end()) {
+			// if (info->findUser(parsedMsg.getParams()[0].getValue()) != info->getUsers().end()) {
+			if (info->findUser(parsedMsg.getParams()[0].getValue()) != NULL) {
 				this->cmdUserMode(user, parsedMsg, info);
 			} else {
 				this->cmdChannelMode(user, parsedMsg, info);

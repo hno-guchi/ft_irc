@@ -128,6 +128,9 @@ void	Channel::resetData() {
 }
 
 bool	Channel::isMember(User* user) const {
+	if (user == NULL) {
+		return (false);
+	}
 	if (std::find(this->members_.begin(), this->members_.end(), user) == this->members_.end()) {
 		return (false);
 	}
@@ -144,6 +147,9 @@ bool	Channel::isMember(const std::string& name) const {
 }
 
 bool	Channel::isInvited(User* user) const {
+	if (user == NULL) {
+		return (false);
+	}
 	if (std::find(this->invited_.begin(), this->invited_.end(), user) == this->invited_.end()) {
 		return (false);
 	}
@@ -169,6 +175,9 @@ bool	Channel::isOperator(const std::string& name) const {
 }
 
 bool	Channel::isOperator(User* user) const {
+	if (user == NULL) {
+		return (false);
+	}
 	if (std::find(this->operators_.begin(), this->operators_.end(), user) == this->operators_.end()) {
 		return (false);
 	}

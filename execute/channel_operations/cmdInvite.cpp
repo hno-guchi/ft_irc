@@ -30,44 +30,44 @@ void	Execute::cmdInvite(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		std::string	reply = Reply::rplFromName(info->getServerName());
 
 		// Channelが存在するか確認
-		std::vector<Channel*>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[1].getValue());
-		if (channelIt == info->getChannels().end()) {
+		Channel*	channel = info->findChannel(parsedMsg.getParams()[1].getValue());
+		if (channel == NULL) {
 			reply += Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getPrefixName(), parsedMsg.getParams()[1].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
 		// UserがChannel Operatorか確認
-		if (!(*channelIt)->isOperator(user->getNickName())) {
+		if (!channel->isOperator(user->getNickName())) {
 			reply += Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getPrefixName(), parsedMsg.getParams()[1].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
 		// UserがChannelに居るか確認
-		if (!(*channelIt)->isMember(user->getNickName())) {
+		if (!channel->isMember(user)) {
 			reply += Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getPrefixName(), parsedMsg.getParams()[1].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
 		// Target Userが存在するか確認
-		std::vector<User*>::iterator	targetUserIt = info->findUser(parsedMsg.getParams()[0].getValue());
-		if (targetUserIt == info->getUsers().end()) {
+		User*	targetUser = info->findUser(parsedMsg.getParams()[0].getValue());
+		if (targetUser == NULL) {
 			reply += Reply::errNoSuchNick(kERR_NOSUCHNICK, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
 		// Target Userが既にChannelに居るか確認
-		if ((*channelIt)->isMember((*targetUserIt)->getNickName())) {
-			reply += Reply::errUserOnChannel(kERR_USERONCHANNEL, user->getPrefixName(), (*targetUserIt)->getNickName(), parsedMsg.getParams()[1].getValue());
+		if (channel->isMember(targetUser)) {
+			reply += Reply::errUserOnChannel(kERR_USERONCHANNEL, user->getPrefixName(), targetUser->getNickName(), parsedMsg.getParams()[1].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
-		if (!(*channelIt)->isInvited(*info->findUser((*targetUserIt)->getNickName()))) {
-			(*channelIt)->pushBackInvited(*info->findUser((*targetUserIt)->getNickName()));
+		if (!channel->isInvited(targetUser)) {
+			channel->pushBackInvited(targetUser);
 		}
-		std::string	msg = ":" + user->getPrefixName() + " INVITE " + (*targetUserIt)->getNickName() + " " + (*channelIt)->getName() + Reply::getDelimiter();
-		Server::sendNonBlocking((*targetUserIt)->getFd(), msg.c_str(), msg.size());
+		std::string	msg = ":" + user->getPrefixName() + " INVITE " + targetUser->getNickName() + " " + channel->getName() + Reply::getDelimiter();
+		Server::sendNonBlocking(targetUser->getFd(), msg.c_str(), msg.size());
 		Server::sendNonBlocking(user->getFd(), msg.c_str(), msg.size());
-		reply += Reply::rplInviting(kRPL_INVITING, user->getPrefixName(), (*targetUserIt)->getNickName(), (*channelIt)->getName());
+		reply += Reply::rplInviting(kRPL_INVITING, user->getPrefixName(), targetUser->getNickName(), channel->getName());
 		Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 	} catch (std::exception& e) {
 #ifdef DEBUG

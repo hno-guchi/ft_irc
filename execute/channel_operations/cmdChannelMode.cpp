@@ -61,20 +61,20 @@
 void	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		// channelが存在するか確認する。
-		std::vector<Channel*>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
+		Channel*	channel = info->findChannel(parsedMsg.getParams()[0].getValue());
 		std::string	reply = Reply::rplFromName(info->getServerName());
-		if (channelIt == info->getChannels().end()) {
+		if (channel == NULL) {
 			reply += Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
 		if (parsedMsg.getParams().size() == 1) {
-			reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getPrefixName(), *(*channelIt));
+			reply += Reply::rplChannelModeIs(kRPL_CHANNELMODEIS, user->getPrefixName(), *channel);
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
 		// channel operatorか確認する。
-		if (!(*channelIt)->isOperator(user->getNickName())) {
+		if (!channel->isOperator(user)) {
 			reply += Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
@@ -86,16 +86,16 @@ void	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info)
 			return;
 		}
 		// そのチャンネルで使用できるモードか確認する。
-		std::string	msg = ":" + user->getPrefixName() + " MODE " + (*channelIt)->getName() + " " + parsedMsg.getParams()[1].getValue();
+		std::string	msg = ":" + user->getPrefixName() + " MODE " + channel->getName() + " " + parsedMsg.getParams()[1].getValue();
 		if (parsedMsg.getParams()[1].getValue()[0] == '+') {
 			if (parsedMsg.getParams()[1].getValue()[1] == 'i') {
-				if ((*channelIt)->getModes() & kInviteOnly) {
+				if (channel->getModes() & kInviteOnly) {
 					return;
 				}
-				(*channelIt)->setMode(kInviteOnly);
+				channel->setMode(kInviteOnly);
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'k') {
-				if ((*channelIt)->getModes() & kKeySet) {
-					reply += Reply::errKeySet(kERR_KEYSET, user->getPrefixName(), user->getNickName(), (*channelIt)->getName());
+				if (channel->getModes() & kKeySet) {
+					reply += Reply::errKeySet(kERR_KEYSET, user->getPrefixName(), user->getNickName(), channel->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
@@ -110,8 +110,8 @@ void	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info)
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
-				(*channelIt)->setKey(parsedMsg.getParams()[2].getValue());
-				(*channelIt)->setMode(kKeySet);
+				channel->setKey(parsedMsg.getParams()[2].getValue());
+				channel->setMode(kKeySet);
 				msg += " " + parsedMsg.getParams()[2].getValue();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'l') {
 				if (parsedMsg.getParams().size() < 3) {
@@ -125,8 +125,8 @@ void	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info)
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
-				(*channelIt)->setLimit(limit);
-				(*channelIt)->setMode(kLimit);
+				channel->setLimit(limit);
+				channel->setMode(kLimit);
 				msg += " " + parsedMsg.getParams()[2].getValue();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'o') {
 				if (parsedMsg.getParams().size() < 3) {
@@ -134,67 +134,73 @@ void	Execute::cmdChannelMode(User* user, const ParsedMsg& parsedMsg, Info* info)
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
-				if (!(*channelIt)->isMember(parsedMsg.getParams()[2].getValue())) {
-					reply += Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getPrefixName(), parsedMsg.getParams()[2].getValue(), (*channelIt)->getName());
+				User*	targetUser = info->findUser(parsedMsg.getParams()[2].getValue());
+				if (targetUser == NULL) {
+					reply += Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getPrefixName(), parsedMsg.getParams()[2].getValue(), channel->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
-				if ((*channelIt)->isOperator(*info->findUser(parsedMsg.getParams()[2].getValue()))) {
+				if (!channel->isMember(targetUser)) {
+					reply += Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getPrefixName(), parsedMsg.getParams()[2].getValue(), channel->getName());
+					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
-				(*channelIt)->pushBackOperator(*info->findUser(parsedMsg.getParams()[2].getValue()));
+				if (channel->isOperator(targetUser)) {
+					return;
+				}
+				channel->pushBackOperator(targetUser);
 				msg += " " + parsedMsg.getParams()[2].getValue();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
-				if ((*channelIt)->getModes() & kRestrictTopicSetting) {
+				if (channel->getModes() & kRestrictTopicSetting) {
 					return;
 				}
-				(*channelIt)->setMode(kRestrictTopicSetting);
+				channel->setMode(kRestrictTopicSetting);
 			}
 			msg += Reply::getDelimiter();
 		} else if (parsedMsg.getParams()[1].getValue()[0] == '-') {
 			if (parsedMsg.getParams()[1].getValue()[1] == 'i') {
-				if (!((*channelIt)->getModes() & kInviteOnly)) {
+				if (!(channel->getModes() & kInviteOnly)) {
 					return;
 				}
-				(*channelIt)->unsetMode(kInviteOnly);
+				channel->unsetMode(kInviteOnly);
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'k') {
-				if (!((*channelIt)->getModes() & kKeySet)) {
+				if (!(channel->getModes() & kKeySet)) {
 					return;
 				}
-				(*channelIt)->setKey("");
-				(*channelIt)->unsetMode(kKeySet);
+				channel->setKey("");
+				channel->unsetMode(kKeySet);
 				msg += " *";
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'l') {
-				if (!((*channelIt)->getModes() & kLimit)) {
+				if (!(channel->getModes() & kLimit)) {
 					return;
 				}
-				(*channelIt)->setLimit(-1);
-				(*channelIt)->unsetMode(kLimit);
+				channel->setLimit(-1);
+				channel->unsetMode(kLimit);
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 'o') {
 				if (parsedMsg.getParams().size() < 3) {
 					reply += Reply::errNeedMoreParams(kERR_NEEDMOREPARAMS, user->getPrefixName(), parsedMsg.getCommand());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
-				if (!(*channelIt)->isMember(parsedMsg.getParams()[2].getValue())) {
-					reply += Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getPrefixName(), parsedMsg.getParams()[2].getValue(), (*channelIt)->getName());
+				if (!channel->isMember(parsedMsg.getParams()[2].getValue())) {
+					reply += Reply::errUserNotInChannel(kERR_USERNOTINCHANNEL, user->getPrefixName(), parsedMsg.getParams()[2].getValue(), channel->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;
 				}
-				if (!(*channelIt)->isOperator(parsedMsg.getParams()[2].getValue())) {
+				if (!channel->isOperator(parsedMsg.getParams()[2].getValue())) {
 					return;
 				}
-				(*channelIt)->eraseOperator(*info->findUser(parsedMsg.getParams()[2].getValue()));
+				channel->eraseOperator(info->findUser(parsedMsg.getParams()[2].getValue()));
 				msg += " " + parsedMsg.getParams()[2].getValue();
 			} else if (parsedMsg.getParams()[1].getValue()[1] == 't') {
-				if (!((*channelIt)->getModes() & kRestrictTopicSetting)) {
+				if (!(channel->getModes() & kRestrictTopicSetting)) {
 					return;
 				}
-				(*channelIt)->unsetMode(kRestrictTopicSetting);
+				channel->unsetMode(kRestrictTopicSetting);
 			}
 			msg += Reply::getDelimiter();
 		}
-		for (std::vector<User*>::const_iterator it = (*channelIt)->getMembers().begin(); it != (*channelIt)->getMembers().end(); it++) {
+		for (std::vector<User*>::const_iterator it = channel->getMembers().begin(); it != channel->getMembers().end(); it++) {
 			Server::sendNonBlocking((*it)->getFd(), msg.c_str(), msg.size());
 		}
 	} catch (const std::exception& e) {
