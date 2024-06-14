@@ -156,7 +156,11 @@ void	Server::handleReceivedData(User* user) {
 			bufferStr = user->getLeftMsg() + bufferStr;
 			user->setLeftMsg("");
 		}
-		std::vector<std::string>	messages = this->split(buffer, user);
+		// std::vector<std::string>	messages = this->split(buffer, user);
+		std::vector<std::string>	messages = this->split(bufferStr, user);
+		for (std::vector<std::string>::const_iterator it = messages.begin(); it != messages.end(); it++) {
+			std::cout << *it << std::endl;
+		}
 		for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
 			Parser		parser;
 			Execute		execute;
