@@ -25,7 +25,7 @@
 void	Execute::cmdQuit(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		for (std::vector<Channel*>::const_iterator it = info->getChannels().begin(); it != info->getChannels().end(); ++it) {
-			if (!(*it)->isMember(user->getNickName())) {
+			if (!(*it)->isMember(user)) {
 				continue;
 			}
 			std::string	message = ":" + user->getPrefixName() + " QUIT ";
@@ -50,7 +50,7 @@ void	Execute::cmdQuit(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		reply += Reply::getDelimiter();
 		Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 		info->eraseUserInChannels(user);
-		info->eraseUser(info->findUser(user->getFd()));
+		info->eraseUser(user);
 	} catch (const std::exception& e) {
 #ifdef DEBUG
 		debugPrintErrorMessage(e.what());

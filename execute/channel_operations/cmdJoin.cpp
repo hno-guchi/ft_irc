@@ -44,7 +44,7 @@ void	Execute::cmdJoin(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		// <channel>が存在する場合
 		if (channel != NULL) {
 			if (channel->getModes() & kInviteOnly) {
-				if (!channel->isInvited(user->getNickName())) {
+				if (!channel->isInvited(user)) {
 					reply += Reply::errInviteOnlyChan(kERR_INVITEONLYCHAN, user->getPrefixName(), channel->getName());
 					Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 					return;

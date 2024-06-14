@@ -32,14 +32,14 @@ void	Execute::cmdNick(User* user, const ParsedMsg& parsedMsg, Info* info) {
 		if (!(user->getRegistered() & kNickCommand)) {
 			// ユーザ登録処理
 			char	sufix = '0';
-			while (info->findUser(nick) != info->getUsers().end()) {
+			while (info->findUser(nick) != NULL) {
 				sufix += 1;
 				nick = parsedMsg.getParams()[0].getValue() + sufix;
 			}
 			user->setNickName(nick);
 		} else {
 			// 既存ユーザのニックネーム変更処理
-			if (info->findUser(nick) != info->getUsers().end()) {
+			if (info->findUser(nick) != NULL) {
 				reply += Reply::errNickNameInUse(kERR_NICKNAMEINUSE, user->getPrefixName(), nick);
 				Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 				return ;
