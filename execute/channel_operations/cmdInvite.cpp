@@ -37,7 +37,7 @@ void	Execute::cmdInvite(User* user, const ParsedMsg& parsedMsg, Info* info) {
 			return;
 		}
 		// UserがChannel Operatorか確認
-		if (!channel->isOperator(user->getNickName())) {
+		if (!channel->isOperator(user)) {
 			reply += Reply::errChanOprivsNeeded(kERR_CHANOPRIVSNEEDED, user->getPrefixName(), parsedMsg.getParams()[1].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;

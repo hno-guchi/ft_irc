@@ -27,30 +27,30 @@ void	Execute::cmdPart(User* user, const ParsedMsg& parsedMsg, Info* info) {
 	try {
 		std::string	reply = Reply::rplFromName(info->getServerName());
 		// <channel>が存在するか確認
-		std::vector<Channel*>::iterator	channelIt = info->findChannel(parsedMsg.getParams()[0].getValue());
-		if (channelIt == info->getChannels().end()) {
+		Channel*	channel = info->findChannel(parsedMsg.getParams()[0].getValue());
+		if (channel == NULL) {
 			reply += Reply::errNoSuchChannel(kERR_NOSUCHCHANNEL, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
 		// userが<channel>にいるか確認
-		if (!(*channelIt)->isMember(user->getNickName())) {
+		if (!channel->isMember(user)) {
 			reply += Reply::errNotOnChannel(kERR_NOTONCHANNEL, user->getPrefixName(), parsedMsg.getParams()[0].getValue());
 			Server::sendNonBlocking(user->getFd(), reply.c_str(), reply.size());
 			return;
 		}
-		info->eraseUserInChannel(user, *channelIt);
-		std::string	message = ":" + user->getPrefixName() + " PART " + (*channelIt)->getName();
+		info->eraseUserInChannel(user, channel);
+		std::string	message = ":" + user->getPrefixName() + " PART " + channel->getName();
 		if (parsedMsg.getParams().size() > 1) {
 			message += " " + parsedMsg.getParams()[1].getValue();
 		}
 		message += Reply::getDelimiter();
 		Server::sendNonBlocking(user->getFd(), message.c_str(), message.size());
-		for (std::vector<User *>::const_iterator memberIt = (*channelIt)->getMembers().begin(); memberIt != (*channelIt)->getMembers().end(); memberIt++) {
+		for (std::vector<User *>::const_iterator memberIt = channel->getMembers().begin(); memberIt != channel->getMembers().end(); memberIt++) {
 			Server::sendNonBlocking((*memberIt)->getFd(), message.c_str(), message.size());
 		}
-		if ((*channelIt)->getMembers().size() == 0) {
-			info->eraseChannel(channelIt);
+		if (channel->getMembers().size() == 0) {
+			info->eraseChannel(channel);
 		}
 	} catch (std::exception& e) {
 #ifdef DEBUG
