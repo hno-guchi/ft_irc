@@ -23,22 +23,14 @@ class Info : public Config {
 	 const std::vector<Channel*>&			getChannels() const;
 	 // SETTER
 
-	 // std::vector<User*>::iterator			findUser(const std::string& name);
-	 // std::vector<User*>::const_iterator		findUser(const std::string& name) const;
-	 // std::vector<User*>::iterator			findUser(int fd);
-	 // std::vector<User*>::const_iterator		findUser(int fd) const;
-	 // std::vector<Channel*>::iterator		findChannel(const std::string& name);
-	 // std::vector<Channel*>::const_iterator	findChannel(const std::string& name) const;
-	 User*			findUser(const std::string& name);
-	 const User*	findUser(const std::string& name) const;
-	 User*			findUser(int fd);
-	 const User*	findUser(int fd) const;
-	 Channel*		findChannel(const std::string& name);
-	 const Channel*	findChannel(const std::string& name) const;
+	 User*									findUser(const std::string& name);
+	 const User*							findUser(const std::string& name) const;
+	 User*									findUser(int fd);
+	 const User*							findUser(int fd) const;
+	 Channel*								findChannel(const std::string& name);
+	 const Channel*							findChannel(const std::string& name) const;
 	 void									pushBackUser(User* user);
 	 void									pushBackChannel(Channel* channel);
-	 // void									eraseUser(std::vector<User*>::iterator it);
-	 // void									eraseChannel(std::vector<Channel*>::iterator it);
 	 void									eraseUser(User* user);
 	 void									eraseChannel(Channel* channel);
 	 void									eraseUserInChannel(User* user, Channel* channel);
