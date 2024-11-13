@@ -1,16 +1,21 @@
 NAME := mini_serv
 
 $(NAME): mini_serv.c
-	gcc -Wall -Wextra -Werror mini_serv.c -o $(NAME)
+	cc -Wall -Wextra -Werror mini_serv.c -o $(NAME)
 
 all: $(NAME)
 
 PHONY: clean
 clean:
-	rm -f $(NAME)
+	$(RM) -r $(NAME)
+	$(RM) -r $(NAME).dSYM
 
 PHONY: fclean
 fclean: clean
 
 PHONY: re
 re: fclean all
+
+PHONY: debug
+debug: fclean
+	cc -g -fsanitize=address mini_serv.c -o $(NAME)
