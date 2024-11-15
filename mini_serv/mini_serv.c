@@ -10,6 +10,7 @@
 # define RCVBUFSIZE 32
 # define ARGS_ERR_MSG "Wrong number of arguments\n"
 # define FATAL_ERR_MSG "Fatal error\n"
+# define SAFE_FREE(x) (free(x),(x)=NULL)
 
 typedef struct s_socket t_socket;
 typedef struct s_client t_client;
@@ -305,32 +306,37 @@ int	main(int argc, char **argv) {
 					client = next_client;
 					continue;
 				} else {
-					// client %d: <改行までの文字列>の形式で送信
-					// char* msg = NULL;
-					// if (client->data->msg != NULL) {
-					// 	char* nlp = strstr(client->data->msg, "\n");
-					// 	if (nlp == NULL) {
-					// 		msg = (char*)ft_xcalloc(strlen(client->data->msg), sizeof(char));
-					// 	} else {
-					// 		msg = (char*)ft_xcalloc(nlp - client->data->msg, sizeof(char));
-					// 	}
-					// }
-					// char* nlp = strstr(buf, "\n");
-					// if (nlp == NULL) {
-					// 	client->data->msg = (char*)ft_xcalloc(strlen(buf) + 1, sizeof(char));
-					// 	client->data->msg = strcpy(client->data->msg, buf);
-					// } else if (strlen(nlp) > 1) {
-					// 	client->data->msg = (char*)ft_xcalloc((strlen(buf) - strlen(nlp)) + 1, sizeof(char));
-					// 	client->data->msg = strcpy(client->data->msg, nlp + 1);
-					// }
-					// char	sufix[20] = {0};
-					// sprintf(sufix, "client %d: ", client->data->idx);
-					// for (t_list* target = server.clients; target != NULL; target = target->next) {
-					// 	if (target->data->socket.fd != client->data->socket.fd) {
-					// 		ft_xsend(target->data->socket.fd, sufix);
-					// 		ft_xsend(target->data->socket.fd, buf);
-					// 	}
-					// }
+					char*	msg = NULL;
+					if (client->data->msg != NULL) {
+						msg = (char*)ft_xcalloc(strlen(client->data->msg) + strlen(buf) + 1, sizeof(char));
+						msg = strcpy(msg, client->data->msg);
+						msg = strcat(msg, buf);
+						SAFE_FREE(client->data->msg);
+					} else {
+						msg = (char*)ft_xcalloc(strlen(buf) + 1, sizeof(char));
+						msg = strcpy(msg, buf);
+					}
+					char*	nlp = strstr(msg, "\n");
+					if (nlp == NULL) {
+						client->data->msg = (char*)ft_xcalloc(strlen(msg) + 1, sizeof(char));
+						client->data->msg = strcpy(client->data->msg, msg);
+						SAFE_FREE(msg);
+					} else {
+						if (*(nlp + 1) != '\0') {
+							client->data->msg = (char*)ft_xcalloc(strlen(nlp + 1) + 1, sizeof(char));
+							client->data->msg = strcpy(client->data->msg, nlp + 1);
+							*(nlp + 1) = '\0';
+						}
+						char	sufix[20] = {0};
+						sprintf(sufix, "client %d: ", client->data->idx);
+						for (t_list* target = server.clients; target != NULL; target = target->next) {
+							if (target->data->socket.fd != client->data->socket.fd) {
+								ft_xsend(target->data->socket.fd, sufix);
+								ft_xsend(target->data->socket.fd, msg);
+							}
+						}
+					}
+					SAFE_FREE(msg);
 				}
 			}
 			client = client->next;
