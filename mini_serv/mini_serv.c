@@ -7,9 +7,11 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-# define RCVBUFSIZE 32
+# define RCVBUFSIZE 2048
 # define ARGS_ERR_MSG "Wrong number of arguments\n"
 # define FATAL_ERR_MSG "Fatal error\n"
+# define ACCEPTED_MSG "server: client %d just arrived\n"
+# define LEFT_MSG "server: client %d just left\n"
 # define SAFE_FREE(x) (free(x),(x)=NULL)
 
 typedef struct s_socket t_socket;
@@ -96,6 +98,14 @@ static void	ft_xlisten(t_socket* socket) {
 	if (listen(socket->fd, 3)) {
 		error_exit(FATAL_ERR_MSG);
 	}
+}
+
+static int ft_xselect(int max_fd, fd_set* read, fd_set* write, fd_set* except, struct timeval* timeout) {
+	int result = select(max_fd + 1, read, write, except, timeout);
+	if (result < 0) {
+		error_exit(FATAL_ERR_MSG);
+	}
+	return (result);
 }
 
 static ssize_t	ft_xrecv(int fd, char* buf, size_t size) {
@@ -212,97 +222,105 @@ static void	remove_node(t_list** lst, t_list* target) {
 }
 
 void	debug_print_clients(t_list* clients) {
-	printf("idx[x] : socket.fd[x]\n");
+	printf("idx[x] : socket.fd[x] | msg\n");
 	for (t_list* client = clients; client != NULL; client = client->next) {
 		if (client == NULL) {
 			break;
 		}
-		printf("   [%d] :          [%d]\n", client->data->idx, client->data->socket.fd);
+		printf("   [%d] :          [%d] | [%s]\n", client->data->idx, client->data->socket.fd, client->data->msg);
 	}
 	printf("---------------------\n\n");
 }
 
-int	main(int argc, char **argv) {
-	if (argc != 2) {
-		error_exit(ARGS_ERR_MSG);
+static void	set_max_fd(t_server* server) {
+	server->max_fd = server->socket.fd;
+	for (t_list* client = server->clients; client != NULL; client = client->next) {
+		if (client == NULL) {
+			break;
+		}
+		if (client->data->socket.fd > server->max_fd) {
+			server->max_fd = client->data->socket.fd;
+		}
 	}
-	t_server	server = {0};
-	// _____ INIT SERVER _____
-	server.port = ft_xatoi(argv[1]);
-	server.socket.fd = ft_xsocket();
-	ft_xfcntl(server.socket.fd);
-	server.socket.addr_len = sizeof(server.socket.addr);
-	server.socket.addr.sin_family = AF_INET;
-	server.socket.addr.sin_addr.s_addr = htonl(2130706433); // 127.0.0.1
-	// server.socket.addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	// server.socket.addr.sin_addr.s_addr = inet_addr("224.10.10.2");
-	server.socket.addr.sin_port = htons(server.port);
-	ft_xbind(&(server.socket));
-	ft_xlisten(&(server.socket));
-	printf("Listening on port [%d]\n", server.port);
-	// -----------------------
+}
 
+static void	init_server_socket(t_server* server, int port) {
+	server->port = port;
+	server->socket.fd = ft_xsocket();
+	ft_xfcntl(server->socket.fd);
+	server->socket.addr_len = sizeof(server->socket.addr);
+	server->socket.addr.sin_family = AF_INET;
+	server->socket.addr.sin_addr.s_addr = htonl(2130706433); // 127.0.0.1 // htonl(INADDR_ANY); // inet_addr("224.10.10.2");
+	server->socket.addr.sin_port = htons(server->port);
+	ft_xbind(&(server->socket));
+	ft_xlisten(&(server->socket));
+	// printf("Listening on port [%d]\n", server.port);
+}
+
+static void	set_fd_set(t_server* server, fd_set* fds) {
+	set_max_fd(server);
+	FD_ZERO(fds);
+	// FD_SET(STDIN_FILENO, read_fds);
+	FD_SET(server->socket.fd, fds);
+	for (t_list* client = server->clients; client != NULL; client = client->next) {
+		if (client == NULL) {
+			break;
+		}
+		FD_SET(client->data->socket.fd, fds);
+	}
+}
+
+static void	send_all_clients(t_list* from, t_list* clients, const char* msg) {
+	for (t_list* target = clients; target != NULL; target = target->next) {
+		if (from == NULL || from->data != target->data) {
+			ft_xsend(target->data->socket.fd, msg);
+		}
+	}
+}
+
+static void	accept_client(t_server* server) {
+	t_list*	accepted_client = ft_lstnew(new_client(server->socket.fd));
+	accepted_client->data->idx = server->clients_count;
+	ft_lstadd_back(&server->clients, accepted_client);
+	char msg[41] = {0};
+	sprintf(msg, ACCEPTED_MSG, accepted_client->data->idx);
+	send_all_clients(accepted_client, server->clients, msg);
+	server->clients_count += 1;
+	debug_print_clients(server->clients);
+}
+
+static void	remove_client(t_server* server, t_list* client) {
+	char	msg[36] = {0};
+	sprintf(msg, LEFT_MSG, client->data->idx);
+	server->clients_count -= 1;
+	remove_node(&server->clients, client);
+	send_all_clients(NULL, server->clients, msg);
+	debug_print_clients(server->clients);
+}
+
+static void	run(t_server* server) {
 	struct timeval	timeout = {0};
-	int				max_fd = server.socket.fd;
 	fd_set			read_fds = {0};
 	while (1) {
-		FD_ZERO(&read_fds);
-		FD_SET(STDIN_FILENO, &read_fds);
-		FD_SET(server.socket.fd, &read_fds);
-		for (t_list* client = server.clients; client != NULL; client = client->next) {
-			if (client == NULL) {
-				break;
-			}
-			FD_SET(client->data->socket.fd, &read_fds);
-		}
+		set_fd_set(server, &read_fds);
 		timeout.tv_sec = 3;
 		timeout.tv_usec = 0;
-		// TODO: error handling
-		if ((select(max_fd + 1, &read_fds, NULL, NULL, &timeout)) == 0) {
+		int	result = ft_xselect(server->max_fd + 1, &read_fds, NULL, NULL, &timeout);
+		if (result == 0) {
 			// printf("timeout 3 seconds...\n");
 			continue;
 		}
-		if (FD_ISSET(server.socket.fd, &read_fds)) {
-			// accept_client(&server);
-			t_list*	accepted_client = ft_lstnew(new_client(server.socket.fd));
-			accepted_client->data->idx = server.clients_count;
-			// send all users
-			char msg[41] = {0};
-			sprintf(msg, "server: client %d just arrived\n", accepted_client->data->idx);
-			for (t_list* target = server.clients; target != NULL; target = target->next) {
-				ft_xsend(target->data->socket.fd, msg);
-			}
-			if (accepted_client->data->socket.fd > max_fd) {
-				max_fd = accepted_client->data->socket.fd;
-			}
-			ft_lstadd_back(&server.clients, accepted_client);
-			server.clients_count += 1;
-			debug_print_clients(server.clients);
+		if (FD_ISSET(server->socket.fd, &read_fds)) {
+			accept_client(server);
 		}
-		t_list* client = server.clients;
+		t_list*	client = server->clients;
 		while (client != NULL) {
 			if (FD_ISSET(client->data->socket.fd, &read_fds)) {
 				char	buf[RCVBUFSIZE] = {0};
 				ssize_t	recv_size = ft_xrecv(client->data->socket.fd, buf, RCVBUFSIZE - 1);
 				if (recv_size == 0) {
-					// remove client
 					t_list*	next_client = client->next;
-					char	msg[36] = {0};
-					sprintf(msg, "server: client %d just left\n", client->data->idx);
-					server.clients_count -= 1;
-					if (client->data->socket.fd == max_fd) {
-						max_fd = server.socket.fd;
-						for (t_list* target = server.clients; target != NULL; target = target->next) {
-							if (target->data->socket.fd > max_fd) {
-								max_fd = target->data->socket.fd;
-							}
-						}
-					}
-					remove_node(&server.clients, client);
-					for (t_list* target = server.clients; target != NULL; target = target->next) {
-						ft_xsend(target->data->socket.fd, msg);
-					}
-					debug_print_clients(server.clients);
+					remove_client(server, client);
 					client = next_client;
 					continue;
 				} else {
@@ -316,31 +334,56 @@ int	main(int argc, char **argv) {
 						msg = (char*)ft_xcalloc(strlen(buf) + 1, sizeof(char));
 						msg = strcpy(msg, buf);
 					}
-					char*	nlp = strstr(msg, "\n");
-					if (nlp == NULL) {
-						client->data->msg = (char*)ft_xcalloc(strlen(msg) + 1, sizeof(char));
-						client->data->msg = strcpy(client->data->msg, msg);
-						SAFE_FREE(msg);
-					} else {
-						if (*(nlp + 1) != '\0') {
-							client->data->msg = (char*)ft_xcalloc(strlen(nlp + 1) + 1, sizeof(char));
-							client->data->msg = strcpy(client->data->msg, nlp + 1);
-							*(nlp + 1) = '\0';
+					while (1) {
+						if (msg == NULL) {
+							break;
 						}
-						char	sufix[20] = {0};
-						sprintf(sufix, "client %d: ", client->data->idx);
-						for (t_list* target = server.clients; target != NULL; target = target->next) {
-							if (target->data->socket.fd != client->data->socket.fd) {
-								ft_xsend(target->data->socket.fd, sufix);
-								ft_xsend(target->data->socket.fd, msg);
+						char*	nlp = strstr(msg, "\n");
+						if (nlp == NULL) {
+							client->data->msg = (char*)ft_xcalloc(strlen(msg) + 1, sizeof(char));
+							client->data->msg = strcpy(client->data->msg, msg);
+							SAFE_FREE(msg);
+							// debug_print_clients(server->clients);
+							break;
+						} else {
+							if (*(nlp + 1) != '\0') {
+								client->data->msg = (char*)ft_xcalloc(strlen(nlp + 1) + 1, sizeof(char));
+								client->data->msg = strcpy(client->data->msg, nlp + 1);
+								*(nlp + 1) = '\0';
 							}
+							char	sufix[20] = {0};
+							sprintf(sufix, "client %d: ", client->data->idx);
+							for (t_list* target = server->clients; target != NULL; target = target->next) {
+								if (target->data->socket.fd != client->data->socket.fd) {
+									ft_xsend(target->data->socket.fd, sufix);
+									ft_xsend(target->data->socket.fd, msg);
+								}
+							}
+							SAFE_FREE(msg);
+							if (client->data->msg == NULL) {
+								break;
+							}
+							msg = ft_xcalloc(strlen(client->data->msg) + 1, sizeof(char));
+							msg = strcpy(msg, client->data->msg);
+							SAFE_FREE(client->data->msg);
+							// printf("%s", msg);
 						}
 					}
-					SAFE_FREE(msg);
 				}
 			}
 			client = client->next;
 		}
 	}
+
+}
+
+int	main(int argc, char **argv) {
+	if (argc != 2) {
+		error_exit(ARGS_ERR_MSG);
+	}
+	t_server	server = {0};
+
+	init_server_socket(&server, ft_xatoi(argv[1]));
+	run(&server);
 	return (EXIT_SUCCESS);
 }
