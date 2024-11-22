@@ -8,9 +8,7 @@
 #include <sys/socket.h>
 
 # define RCV_BUF_SIZE 2048
-# define SUFIX_SIZE 20
-# define ACCEPTED_MSG_SIZE 41
-# define LEFT_MSG_SIZE 36
+# define TEMPLATE_MSG_SIZE 50
 # define ARGS_ERR_MSG "Wrong number of arguments\n"
 # define FATAL_ERR_MSG "Fatal error\n"
 # define ACCEPTED_MSG "server: client %d just arrived\n"
@@ -95,13 +93,13 @@ static int	ft_xsocket() {
 }
 
 static void	ft_xbind(t_socket* socket) {
-	if (bind(socket->fd, (struct sockaddr*)&socket->addr, socket->addr_len)) {
+	if (bind(socket->fd, (struct sockaddr*)&socket->addr, socket->addr_len) < 0) {
 		error_exit(FATAL_ERR_MSG);
 	}
 }
 
 static void	ft_xlisten(t_socket* socket) {
-	if (listen(socket->fd, 3)) {
+	if (listen(socket->fd, 3) < 0) {
 		error_exit(FATAL_ERR_MSG);
 	}
 }
@@ -134,10 +132,9 @@ static t_client*	new_client(int socket_fd) {
 		error_exit(FATAL_ERR_MSG);
 	}
 	t_client* client = (t_client*)ft_xcalloc(1, sizeof(t_client));
-	client->socket.addr_len = sizeof(client->socket.addr);
-	client->socket.fd = ft_xaccept(socket_fd, &(client->socket));
 	client->idx = -1;
-	client->next = NULL;
+	client->socket.fd = ft_xaccept(socket_fd, &(client->socket));
+	client->socket.addr_len = sizeof(client->socket.addr);
 	return (client);
 }
 
@@ -170,9 +167,7 @@ static void	client_delone(t_client* client) {
 	client->socket.fd = -1;
 	client->socket.addr_len = 0;
 	client->idx = -1;
-	if (client->msg != NULL) {
-		SAFE_FREE(client->msg);
-	}
+	SAFE_FREE(client->msg);
 	SAFE_FREE(client);
 }
 
@@ -189,8 +184,7 @@ static void	lst_delone(t_client** lst, t_client* target) {
 			} else {
 				*lst = current->next;
 			}
-			client_delone(current);
-			return;
+			return client_delone(current);
 		}
 		prev = current;
 		current = current->next;
@@ -221,7 +215,6 @@ static void	init_server_socket(t_server* server, int port) {
 static void	set_fd_sets(t_server* server, fd_set* r_fds, fd_set* w_fds) {
 	FD_ZERO(r_fds);
 	FD_ZERO(w_fds);
-	FD_SET(STDIN_FILENO, r_fds);
 	FD_SET(server->socket.fd, r_fds);
 	FD_SET(server->socket.fd, w_fds);
 	for (t_client* n = server->clients; n != NULL; n = n->next) {
@@ -243,7 +236,7 @@ static void	accept_client(t_server* server, fd_set* w_fds) {
 	t_client*	new = new_client(server->socket.fd);
 	new->idx = server->clients_count;
 	lst_add_back(&server->clients, new);
-	char msg[ACCEPTED_MSG_SIZE] = {0};
+	char msg[TEMPLATE_MSG_SIZE] = {0};
 	sprintf(msg, ACCEPTED_MSG, new->idx);
 	send_all_clients(new, server->clients, msg, w_fds);
 	server->clients_count += 1;
@@ -253,7 +246,7 @@ static void	accept_client(t_server* server, fd_set* w_fds) {
 static t_client*	left_client(t_server* server, t_client* client, fd_set* w_fds) {
 	debug_print_clients("BEFORE: left_client()", server);
 	t_client*	next = client->next;
-	char	msg[LEFT_MSG_SIZE] = {0};
+	char	msg[TEMPLATE_MSG_SIZE] = {0};
 	sprintf(msg, LEFT_MSG, client->idx);
 	lst_delone(&server->clients, client);
 	send_all_clients(NULL, server->clients, msg, w_fds);
@@ -298,7 +291,7 @@ static t_client* handle_message(t_server* server, t_client* client, char* buf, f
 				client->msg = ft_strdup(nlp + 1);
 				*(nlp + 1) = '\0';
 			}
-			char*	sufix = (char*)ft_xcalloc(SUFIX_SIZE, sizeof(char));
+			char*	sufix = (char*)ft_xcalloc(TEMPLATE_MSG_SIZE, sizeof(char));
 			sprintf(sufix, MSG_SUFIX, client->idx);
 			char*	send_msg = ft_strjoin(&sufix, &msg);
 			send_all_clients(client, server->clients, send_msg, w_fds);
@@ -310,23 +303,17 @@ static t_client* handle_message(t_server* server, t_client* client, char* buf, f
 	return (client->next);
 }
 
-static void	handle_clients(t_server* server, fd_set* r_fds, fd_set* w_fds) {
-	t_client*	client = server->clients;
-	while (client != NULL) {
-		if (FD_ISSET(client->socket.fd, r_fds)) {
-			char	buf[RCV_BUF_SIZE] = {0};
-			ssize_t	recv_size = ft_xrecv(client->socket.fd, buf, RCV_BUF_SIZE - 1);
-			if (recv_size < 0) {
-				client = client->next;
-			} else if (recv_size == 0) {
-				client = left_client(server, client, w_fds);
-			} else {
-				client = handle_message(server, client, buf, w_fds);
-			}
-		} else {
-			client = client->next;
+static t_client*	handle_client(t_server* server, t_client* client, fd_set* r_fds, fd_set* w_fds) {
+	if (FD_ISSET(client->socket.fd, r_fds)) {
+		char	buf[RCV_BUF_SIZE] = {0};
+		ssize_t	recv_size = ft_xrecv(client->socket.fd, buf, RCV_BUF_SIZE - 1);
+		if (recv_size == 0) {
+			return (left_client(server, client, w_fds));
+		} else if (recv_size > 0) {
+			return (handle_message(server, client, buf, w_fds));
 		}
 	}
+	return (client->next);
 }
 
 static void	run(t_server* server) {
@@ -336,19 +323,16 @@ static void	run(t_server* server) {
 		set_max_fd(server);
 		set_fd_sets(server, &read_fds, &write_fds);
 		int	result = ft_xselect(server->max_fd + 1, &read_fds, &write_fds, NULL, NULL);
-		if (result < 0) {
-			error_exit(FATAL_ERR_MSG);
-		} else if (result == 0) {
-			// printf("timeout NULL...\n");
+		if (result == 0) {
 			continue;
-		}
-		if (FD_ISSET(STDIN_FILENO, &read_fds)) {
-			break ;
 		}
 		if (FD_ISSET(server->socket.fd, &read_fds)) {
 			accept_client(server, &write_fds);
 		}
-		handle_clients(server, &read_fds, &write_fds);
+		t_client*	next = NULL;
+		for (t_client* c = server->clients; c != NULL; c = next) {
+			next = handle_client(server, c, &read_fds, &write_fds);
+		}
 	}
 }
 
@@ -360,6 +344,5 @@ int	main(int argc, char **argv) {
 
 	init_server_socket(&server, ft_xatoi(argv[1]));
 	run(&server);
-	// system("leaks mini_serv");
 	return (EXIT_SUCCESS);
 }

@@ -19,3 +19,4 @@ re: fclean all
 PHONY: debug
 debug: fclean
 	cc -g -fsanitize=address mini_serv.c -o $(NAME)
+
