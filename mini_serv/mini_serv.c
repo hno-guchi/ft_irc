@@ -42,6 +42,7 @@ struct s_server {
 	int				max_fd;
 };
 
+// #ifdef DEBUG
 void	debug_print_clients(const char* title, t_server* s) {
 	printf("[%s]\n", title);
 	printf("port         [%d]\n", s->port);
@@ -54,6 +55,7 @@ void	debug_print_clients(const char* title, t_server* s) {
 	}
 	printf("----------------------\n\n");
 }
+// #endif  // DEBUG
 
 static void	error_exit(char *msg) {
 	write(STDERR_FILENO, msg, strlen(msg));
@@ -68,12 +70,12 @@ static void* ft_xcalloc(size_t count, size_t size) {
 	return (ptr);
 }
 
-static int ft_xaccept(int fd, t_socket *socket) {
-	int new_socket = accept(fd, (struct sockaddr*)&socket->addr, &socket->addr_len);
-	if (new_socket < 0) {
+static int ft_xaccept(int fd, t_socket *sock) {
+	int sockfd = accept(fd, (struct sockaddr*)&sock->addr, &sock->addr_len);
+	if (sockfd < 0) {
 		error_exit(FATAL_ERR_MSG);
 	}
-	return (new_socket);
+	return (sockfd);
 }
 
 static int	ft_xatoi(const char* nptr) {
@@ -84,32 +86,32 @@ static int	ft_xatoi(const char* nptr) {
 	return (res);
 }
 
-static int	ft_xsocket() {
-	int sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock < 0) {
+static int	ft_xsocket(void) {
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0) {
 		error_exit(FATAL_ERR_MSG);
 	}
-	return (sock);
+	return (sockfd);
 }
 
-static void	ft_xbind(t_socket* socket) {
-	if (bind(socket->fd, (struct sockaddr*)&socket->addr, socket->addr_len) < 0) {
+static void	ft_xbind(t_socket* sock) {
+	if (bind(sock->fd, (struct sockaddr*)&sock->addr, sock->addr_len) < 0) {
 		error_exit(FATAL_ERR_MSG);
 	}
 }
 
-static void	ft_xlisten(t_socket* socket) {
-	if (listen(socket->fd, 3) < 0) {
+static void	ft_xlisten(t_socket* sock) {
+	if (listen(sock->fd, 3) < 0) {
 		error_exit(FATAL_ERR_MSG);
 	}
 }
 
 static int	ft_xselect(int max_fd, fd_set* r_fds, fd_set* w_fds, fd_set* e_fds, struct timeval* timeout) {
-	int	result = select(max_fd + 1, r_fds, w_fds, e_fds, timeout);
-	if (result < 0) {
+	int	ret = select(max_fd + 1, r_fds, w_fds, e_fds, timeout);
+	if (ret < 0) {
 		error_exit(FATAL_ERR_MSG);
 	}
-	return (result);
+	return (ret);
 }
 
 static ssize_t	ft_xrecv(int fd, char* buf, size_t size) {
@@ -127,15 +129,15 @@ static void	ft_xsend(int fd, const char* msg) {
 	}
 }
 
-static t_client*	new_client(int socket_fd) {
-	if (socket_fd < 0) {
+static t_client*	new_client(int sockfd) {
+	if (sockfd < 0) {
 		error_exit(FATAL_ERR_MSG);
 	}
-	t_client* client = (t_client*)ft_xcalloc(1, sizeof(t_client));
-	client->idx = -1;
-	client->socket.fd = ft_xaccept(socket_fd, &(client->socket));
-	client->socket.addr_len = sizeof(client->socket.addr);
-	return (client);
+	t_client* new = (t_client*)ft_xcalloc(1, sizeof(t_client));
+	new->idx = -1;
+	new->socket.fd = ft_xaccept(sockfd, &(new->socket));
+	new->socket.addr_len = sizeof(new->socket.addr);
+	return (new);
 }
 
 static t_client* lst_last(t_client *lst) {
@@ -159,16 +161,16 @@ static void	lst_add_back(t_client **lst, t_client *new) {
 	}
 }
 
-static void	client_delone(t_client* client) {
-	if (client == NULL) {
+static void	delone_client(t_client* c) {
+	if (c == NULL) {
 		return ;
 	}
-	close(client->socket.fd);
-	client->socket.fd = -1;
-	client->socket.addr_len = 0;
-	client->idx = -1;
-	SAFE_FREE(client->msg);
-	SAFE_FREE(client);
+	close(c->socket.fd);
+	c->socket.fd = -1;
+	c->socket.addr_len = 0;
+	c->idx = -1;
+	SAFE_FREE(c->msg);
+	SAFE_FREE(c);
 }
 
 static void	lst_delone(t_client** lst, t_client* target) {
@@ -184,42 +186,42 @@ static void	lst_delone(t_client** lst, t_client* target) {
 			} else {
 				*lst = current->next;
 			}
-			return client_delone(current);
+			return (delone_client(current));
 		}
 		prev = current;
 		current = current->next;
 	}
 }
 
-static void	set_max_fd(t_server* server) {
-	server->max_fd = server->socket.fd;
-	for (t_client* n = server->clients; n != NULL; n = n->next) {
-		if (n->socket.fd > server->max_fd) {
-			server->max_fd = n->socket.fd;
+static void	set_max_fd(t_server* serv) {
+	serv->max_fd = serv->socket.fd;
+	for (t_client* c = serv->clients; c != NULL; c = c->next) {
+		if (c->socket.fd > serv->max_fd) {
+			serv->max_fd = c->socket.fd;
 		}
 	}
 }
 
-static void	init_server_socket(t_server* server, int port) {
-	server->port = port;
-	server->socket.fd = ft_xsocket();
-	server->socket.addr_len = sizeof(server->socket.addr);
-	server->socket.addr.sin_family = AF_INET;
-	server->socket.addr.sin_addr.s_addr = htonl(2130706433); // 127.0.0.1
-	server->socket.addr.sin_port = htons(server->port);
-	ft_xbind(&(server->socket));
-	ft_xlisten(&(server->socket));
+static void	init_serv(t_server* serv, int port) {
+	serv->port = port;
+	serv->socket.fd = ft_xsocket();
+	serv->socket.addr_len = sizeof(serv->socket.addr);
+	serv->socket.addr.sin_family = AF_INET;
+	serv->socket.addr.sin_addr.s_addr = htonl(2130706433); // 127.0.0.1
+	serv->socket.addr.sin_port = htons(serv->port);
+	ft_xbind(&(serv->socket));
+	ft_xlisten(&(serv->socket));
 	// printf("Listening on port [%d]\n", server.port);
 }
 
-static void	set_fd_sets(t_server* server, fd_set* r_fds, fd_set* w_fds) {
+static void	set_fd_sets(t_server* serv, fd_set* r_fds, fd_set* w_fds) {
 	FD_ZERO(r_fds);
 	FD_ZERO(w_fds);
-	FD_SET(server->socket.fd, r_fds);
-	FD_SET(server->socket.fd, w_fds);
-	for (t_client* n = server->clients; n != NULL; n = n->next) {
-		FD_SET(n->socket.fd, r_fds);
-		FD_SET(n->socket.fd, w_fds);
+	FD_SET(serv->socket.fd, r_fds);
+	FD_SET(serv->socket.fd, w_fds);
+	for (t_client* c = serv->clients; c != NULL; c = c->next) {
+		FD_SET(c->socket.fd, r_fds);
+		FD_SET(c->socket.fd, w_fds);
 	}
 }
 
@@ -231,27 +233,27 @@ static void	send_all_clients(t_client* from, t_client* lst, const char* msg, fd_
 	}
 }
 
-static void	accept_client(t_server* server, fd_set* w_fds) {
-	debug_print_clients("BEFORE: accept_client()", server);
-	t_client*	new = new_client(server->socket.fd);
-	new->idx = server->clients_count;
-	lst_add_back(&server->clients, new);
+static void	accept_client(t_server* serv, fd_set* w_fds) {
+	debug_print_clients("BEFORE: accept_client()", serv);
+	t_client*	new = new_client(serv->socket.fd);
+	new->idx = serv->clients_count;
+	lst_add_back(&serv->clients, new);
 	char msg[TEMPLATE_MSG_SIZE] = {0};
 	sprintf(msg, ACCEPTED_MSG, new->idx);
-	send_all_clients(new, server->clients, msg, w_fds);
-	server->clients_count += 1;
-	debug_print_clients("AFTER : accept_client()", server);
+	send_all_clients(new, serv->clients, msg, w_fds);
+	serv->clients_count += 1;
+	debug_print_clients("AFTER : accept_client()", serv);
 }
 
-static t_client*	left_client(t_server* server, t_client* client, fd_set* w_fds) {
-	debug_print_clients("BEFORE: left_client()", server);
-	t_client*	next = client->next;
+static t_client*	left_client(t_server* serv, t_client* c, fd_set* w_fds) {
+	debug_print_clients("BEFORE: left_client()", serv);
+	t_client*	next = c->next;
 	char	msg[TEMPLATE_MSG_SIZE] = {0};
-	sprintf(msg, LEFT_MSG, client->idx);
-	lst_delone(&server->clients, client);
-	send_all_clients(NULL, server->clients, msg, w_fds);
-	server->clients_count -= 1;
-	debug_print_clients("AFTER : left_client()", server);
+	sprintf(msg, LEFT_MSG, c->idx);
+	lst_delone(&serv->clients, c);
+	send_all_clients(NULL, serv->clients, msg, w_fds);
+	serv->clients_count -= 1;
+	debug_print_clients("AFTER : left_client()", serv);
 	return (next);
 }
 
@@ -276,62 +278,62 @@ static char*	ft_strjoin(char** s1, char** s2) {
 	return (ret);
 }
 
-static t_client* handle_message(t_server* server, t_client* client, char* buf, fd_set* w_fds) {
+static t_client* handle_message(t_server* serv, t_client* c, char* buf, fd_set* w_fds) {
 	char*	msg = ft_strdup(buf);
-	if (client->msg != NULL) {
-		msg = ft_strjoin(&client->msg, &msg);
+	if (c->msg != NULL) {
+		msg = ft_strjoin(&c->msg, &msg);
 	}
 	while (msg != NULL) {
 		char*	nlp = strstr(msg, "\n");
 		if (nlp == NULL) {
-			client->msg = ft_strdup(msg);
+			c->msg = ft_strdup(msg);
 			SAFE_FREE(msg);
 		} else {
 			if (*(nlp + 1) != '\0') {
-				client->msg = ft_strdup(nlp + 1);
+				c->msg = ft_strdup(nlp + 1);
 				*(nlp + 1) = '\0';
 			}
 			char*	sufix = (char*)ft_xcalloc(TEMPLATE_MSG_SIZE, sizeof(char));
-			sprintf(sufix, MSG_SUFIX, client->idx);
+			sprintf(sufix, MSG_SUFIX, c->idx);
 			char*	send_msg = ft_strjoin(&sufix, &msg);
-			send_all_clients(client, server->clients, send_msg, w_fds);
+			send_all_clients(c, serv->clients, send_msg, w_fds);
 			SAFE_FREE(send_msg);
-			msg = ft_strdup(client->msg);
-			SAFE_FREE(client->msg);
+			msg = ft_strdup(c->msg);
+			SAFE_FREE(c->msg);
 		}
 	}
-	return (client->next);
+	return (c->next);
 }
 
-static t_client*	handle_client(t_server* server, t_client* client, fd_set* r_fds, fd_set* w_fds) {
-	if (FD_ISSET(client->socket.fd, r_fds)) {
+static t_client*	handle_client(t_server* serv, t_client* c, fd_set* r_fds, fd_set* w_fds) {
+	if (FD_ISSET(c->socket.fd, r_fds)) {
 		char	buf[RCV_BUF_SIZE] = {0};
-		ssize_t	recv_size = ft_xrecv(client->socket.fd, buf, RCV_BUF_SIZE - 1);
-		if (recv_size == 0) {
-			return (left_client(server, client, w_fds));
-		} else if (recv_size > 0) {
-			return (handle_message(server, client, buf, w_fds));
+		ssize_t	ret = ft_xrecv(c->socket.fd, buf, RCV_BUF_SIZE - 1);
+		if (ret == 0) {
+			return (left_client(serv, c, w_fds));
+		} else if (ret > 0) {
+			return (handle_message(serv, c, buf, w_fds));
 		}
 	}
-	return (client->next);
+	return (c->next);
 }
 
-static void	run(t_server* server) {
+static void	run_serv(t_server* serv) {
 	fd_set	read_fds = {0};
 	fd_set	write_fds = {0};
 	while (1) {
-		set_max_fd(server);
-		set_fd_sets(server, &read_fds, &write_fds);
-		int	result = ft_xselect(server->max_fd + 1, &read_fds, &write_fds, NULL, NULL);
-		if (result == 0) {
+		set_max_fd(serv);
+		set_fd_sets(serv, &read_fds, &write_fds);
+		int	ret = ft_xselect(serv->max_fd + 1, &read_fds, &write_fds, NULL, NULL);
+		if (ret == 0) {
 			continue;
 		}
-		if (FD_ISSET(server->socket.fd, &read_fds)) {
-			accept_client(server, &write_fds);
+		if (FD_ISSET(serv->socket.fd, &read_fds)) {
+			accept_client(serv, &write_fds);
 		}
 		t_client*	next = NULL;
-		for (t_client* c = server->clients; c != NULL; c = next) {
-			next = handle_client(server, c, &read_fds, &write_fds);
+		for (t_client* c = serv->clients; c != NULL; c = next) {
+			next = handle_client(serv, c, &read_fds, &write_fds);
 		}
 	}
 }
@@ -340,9 +342,10 @@ int	main(int argc, char **argv) {
 	if (argc != 2) {
 		error_exit(ARGS_ERR_MSG);
 	}
-	t_server	server = {0};
+	t_server	serv = {0};
 
-	init_server_socket(&server, ft_xatoi(argv[1]));
-	run(&server);
+	init_serv(&serv, ft_xatoi(argv[1]));
+	run_serv(&serv);
+	// destruct_serv(&serv);
 	return (EXIT_SUCCESS);
 }
