@@ -33,7 +33,6 @@ struct s_client {
 	t_client	*next;
 };
 
-
 struct s_server {
 	unsigned short	port;
 	t_socket		socket;
@@ -194,6 +193,9 @@ static void	lst_delone(t_client** lst, t_client* target) {
 }
 
 static void	set_max_fd(t_server* serv) {
+	if (serv == NULL) {
+		error_exit(FATAL_ERR_MSG);
+	}
 	serv->max_fd = serv->socket.fd;
 	for (t_client* c = serv->clients; c != NULL; c = c->next) {
 		if (c->socket.fd > serv->max_fd) {
@@ -203,6 +205,9 @@ static void	set_max_fd(t_server* serv) {
 }
 
 static void	init_serv(t_server* serv, int port) {
+	if (serv == NULL || port < 0) {
+		error_exit(FATAL_ERR_MSG);
+	}
 	serv->port = port;
 	serv->socket.fd = ft_xsocket();
 	serv->socket.addr_len = sizeof(serv->socket.addr);
@@ -215,6 +220,9 @@ static void	init_serv(t_server* serv, int port) {
 }
 
 static void	set_fd_sets(t_server* serv, fd_set* r_fds, fd_set* w_fds) {
+	if (serv == NULL || r_fds == NULL || w_fds == NULL) {
+		error_exit(FATAL_ERR_MSG);
+	}
 	FD_ZERO(r_fds);
 	FD_ZERO(w_fds);
 	FD_SET(serv->socket.fd, r_fds);
@@ -225,7 +233,10 @@ static void	set_fd_sets(t_server* serv, fd_set* r_fds, fd_set* w_fds) {
 	}
 }
 
-static void	send_all_clients(t_client* from, t_client* lst, const char* msg, fd_set* w_fds) {
+static void	send_all_clients(t_client* lst, t_client* from, const char* msg, fd_set* w_fds) {
+	if (lst == NULL || msg == NULL || w_fds == NULL) {
+		error_exit(FATAL_ERR_MSG);
+	}
 	for (t_client* to = lst; to != NULL; to = to->next) {
 		if (from != to && FD_ISSET(to->socket.fd, w_fds)) {
 			ft_xsend(to->socket.fd, msg);
@@ -234,6 +245,9 @@ static void	send_all_clients(t_client* from, t_client* lst, const char* msg, fd_
 }
 
 static void	accept_client(t_server* serv, fd_set* w_fds) {
+	if (serv == NULL || w_fds == NULL) {
+		error_exit(FATAL_ERR_MSG);
+	}
 	debug_print_clients("BEFORE: accept_client()", serv);
 	t_client*	new = new_client(serv->socket.fd);
 	new->idx = serv->clients_count;
@@ -246,6 +260,9 @@ static void	accept_client(t_server* serv, fd_set* w_fds) {
 }
 
 static t_client*	left_client(t_server* serv, t_client* c, fd_set* w_fds) {
+	if (serv == NULL || c == NULL || w_fds == NULL) {
+		error_exit(FATAL_ERR_MSG);
+	}
 	debug_print_clients("BEFORE: left_client()", serv);
 	t_client*	next = c->next;
 	char	msg[TEMPLATE_MSG_SIZE] = {0};
@@ -262,8 +279,7 @@ static char* ft_strdup(char* s1) {
 		return (NULL);
 	}
 	char*	ret = (char*)ft_xcalloc(strlen(s1) + 1, sizeof(char));
-	ret = strcpy(ret, s1);
-	return (ret);
+	return(strcpy(ret, s1));
 }
 
 static char*	ft_strjoin(char** s1, char** s2) {
@@ -279,6 +295,9 @@ static char*	ft_strjoin(char** s1, char** s2) {
 }
 
 static t_client* handle_message(t_server* serv, t_client* c, char* buf, fd_set* w_fds) {
+	if (serv == NULL || c == NULL || buf == NULL || w_fds == NULL) {
+		return (NULL);
+	}
 	char*	msg = ft_strdup(buf);
 	if (c->msg != NULL) {
 		msg = ft_strjoin(&c->msg, &msg);
@@ -306,6 +325,9 @@ static t_client* handle_message(t_server* serv, t_client* c, char* buf, fd_set* 
 }
 
 static t_client*	handle_client(t_server* serv, t_client* c, fd_set* r_fds, fd_set* w_fds) {
+	if (serv == NULL || c == NULL || r_fds == NULL || w_fds == NULL) {
+		return (NULL);
+	}
 	if (FD_ISSET(c->socket.fd, r_fds)) {
 		char	buf[RCV_BUF_SIZE] = {0};
 		ssize_t	ret = ft_xrecv(c->socket.fd, buf, RCV_BUF_SIZE - 1);
@@ -318,7 +340,10 @@ static t_client*	handle_client(t_server* serv, t_client* c, fd_set* r_fds, fd_se
 	return (c->next);
 }
 
-static void	run_serv(t_server* serv) {
+static void	loop_serv(t_server* serv) {
+	if (serv == NULL) {
+		error_exit(FATAL_ERR_MSG);
+	}
 	fd_set	read_fds = {0};
 	fd_set	write_fds = {0};
 	while (1) {
@@ -345,7 +370,7 @@ int	main(int argc, char **argv) {
 	t_server	serv = {0};
 
 	init_serv(&serv, ft_xatoi(argv[1]));
-	run_serv(&serv);
+	loop_serv(&serv);
 	// destruct_serv(&serv);
 	return (EXIT_SUCCESS);
 }
